@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
   const OmniTopBar({super.key});
@@ -19,15 +18,15 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(LucideIcons.monitorSmartphone, color: colorScheme.onSurfaceVariant),
+          icon: Icon(Icons.devices, color: colorScheme.onSurfaceVariant),
           onPressed: () {},
         ),
         IconButton(
-          icon: Icon(LucideIcons.refreshCw, color: colorScheme.onSurfaceVariant),
+          icon: Icon(Icons.refresh, color: colorScheme.onSurfaceVariant),
           onPressed: () {},
         ),
         IconButton(
-          icon: Icon(LucideIcons.settings, color: colorScheme.onSurfaceVariant),
+          icon: Icon(Icons.settings, color: colorScheme.onSurfaceVariant),
           onPressed: () {},
         ),
         Padding(

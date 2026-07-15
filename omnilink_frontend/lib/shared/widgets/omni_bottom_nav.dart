@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'omni_glass_container.dart';
 
 class OmniBottomNav extends StatelessWidget {
@@ -22,19 +21,19 @@ class OmniBottomNav extends StatelessWidget {
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.clipboard),
+            icon: Icon(Icons.content_paste),
             label: 'Clip',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.folder),
+            icon: Icon(Icons.folder),
             label: 'Files',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.refreshCw),
+            icon: Icon(Icons.refresh),
             label: 'Sync',
           ),
           BottomNavigationBarItem(
-            icon: Icon(LucideIcons.settings),
+            icon: Icon(Icons.settings),
             label: 'Settings',
           ),
         ],

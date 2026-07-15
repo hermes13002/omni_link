@@ -54,7 +54,12 @@ dependencies:
   file_picker: ^11.0.2
   image_picker: ^1.2.3
   google_fonts: ^8.1.0
-  lucide_icons: ^0.257.0
+  path_provider: ^2.1.2
+  json_annotation: ^4.12.0
+  freezed_annotation: ^3.1.0
+  flutter_secure_storage: ^10.3.1
+  uuid: ^3.0.7
+  device_info_plus: ^12.4.0
 
 dev_dependencies:
   flutter_test:

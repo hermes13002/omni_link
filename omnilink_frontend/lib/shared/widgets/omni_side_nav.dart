@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 
 class OmniSideNav extends StatefulWidget {
   const OmniSideNav({super.key});
@@ -91,7 +91,7 @@ class _OmniSideNavState extends State<OmniSideNav> {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(LucideIcons.chevronLeft, size: 20, color: colorScheme.onSurfaceVariant),
+                              icon: Icon(Icons.chevron_left, size: 20, color: colorScheme.onSurfaceVariant),
                               onPressed: _toggleExpanded,
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
@@ -103,25 +103,25 @@ class _OmniSideNavState extends State<OmniSideNav> {
                     if (!_isExpanded)
                       Center(
                         child: IconButton(
-                          icon: Icon(LucideIcons.chevronRight, size: 20, color: colorScheme.onSurfaceVariant),
+                          icon: Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurfaceVariant),
                           onPressed: _toggleExpanded,
                         ),
                       ),
                     const SizedBox(height: 16),
                     _SideNavItem(
-                      icon: LucideIcons.clipboard,
+                      icon: Icons.content_paste,
                       label: 'Clipboard',
                       isExpanded: _isExpanded,
                       onTap: () {},
                     ),
                     _SideNavItem(
-                      icon: LucideIcons.folder,
+                      icon: Icons.folder,
                       label: 'Files',
                       isExpanded: _isExpanded,
                       onTap: () {},
                     ),
                     _SideNavItem(
-                      icon: LucideIcons.monitorSmartphone,
+                      icon: Icons.devices,
                       label: 'Devices',
                       isExpanded: _isExpanded,
                       onTap: () {},
@@ -134,7 +134,7 @@ class _OmniSideNavState extends State<OmniSideNav> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: _SideNavItem(
-                          icon: LucideIcons.history,
+                          icon: Icons.history,
                           label: 'History',
                           isExpanded: _isExpanded,
                           iconColor: colorScheme.onSecondaryContainer,
@@ -149,7 +149,7 @@ class _OmniSideNavState extends State<OmniSideNav> {
                       child: _isExpanded 
                           ? ElevatedButton.icon(
                               onPressed: () {},
-                              icon: const Icon(LucideIcons.plus, size: 18),
+                              icon: const Icon(Icons.add, size: 18),
                               label: const Text('Send New File'),
                               style: ElevatedButton.styleFrom(
                                 minimumSize: const Size(double.infinity, 48),
@@ -167,21 +167,29 @@ class _OmniSideNavState extends State<OmniSideNav> {
                                 foregroundColor: colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
-                              child: const Icon(LucideIcons.plus, size: 20),
+                              child: const Icon(Icons.add, size: 20),
                             ),
                     ),
                     const SizedBox(height: 16),
                     _SideNavItem(
-                      icon: LucideIcons.bookOpen,
+                      icon: Icons.menu_book,
                       label: 'Docs',
                       isExpanded: _isExpanded,
                       onTap: () {},
                     ),
                     _SideNavItem(
-                      icon: LucideIcons.helpCircle,
+                      icon: Icons.help_outline,
                       label: 'Support',
                       isExpanded: _isExpanded,
                       onTap: () {},
+                    ),
+                    _SideNavItem(
+                      icon: Icons.settings,
+                      label: 'Settings',
+                      isExpanded: _isExpanded,
+                      onTap: () {
+                        GoRouter.of(context).push('/settings');
+                      },
                     ),
                     const SizedBox(height: 24),
                   ],

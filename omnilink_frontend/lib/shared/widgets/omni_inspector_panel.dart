@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'omni_drop_zone.dart';
 
 class OmniInspectorPanel extends StatelessWidget {
@@ -29,12 +28,12 @@ class OmniInspectorPanel extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: Icon(LucideIcons.minimize2, color: colorScheme.onSurfaceVariant),
+                  icon: Icon(Icons.close_fullscreen, color: colorScheme.onSurfaceVariant),
                   onPressed: () {},
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(LucideIcons.settings, color: colorScheme.onSurfaceVariant),
+                  icon: Icon(Icons.settings, color: colorScheme.onSurfaceVariant),
                   onPressed: () {},
                 ),
               ],
@@ -73,7 +72,7 @@ class OmniInspectorPanel extends StatelessWidget {
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
-                                        LucideIcons.cloud,
+                                        Icons.cloud,
                                         size: 32,
                                         color: colorScheme.onSurfaceVariant,
                                       ),

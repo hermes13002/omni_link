@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 enum TimelineCardType { image, code, file }
 
@@ -48,7 +47,7 @@ class OmniTimelineCard extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: Icon(
-                      LucideIcons.image,
+                      Icons.image,
                       size: 48,
                       color: colorScheme.onSurfaceVariant.withAlpha(51),
                     ),
@@ -100,7 +99,7 @@ class OmniTimelineCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    LucideIcons.fileArchive,
+                    Icons.archive,
                     color: colorScheme.tertiary,
                     size: 32,
                   ),
@@ -133,8 +132,8 @@ class OmniTimelineCard extends StatelessWidget {
                       children: [
                         Icon(
                           type == TimelineCardType.image
-                              ? LucideIcons.smartphone
-                              : LucideIcons.monitor,
+                              ? Icons.smartphone
+                              : Icons.monitor,
                           size: 14,
                           color: colorScheme.onSurfaceVariant,
                         ),

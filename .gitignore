@@ -1,1 +1,26 @@
 /DESIGN.md
+
+# credentials — never commit
+.env
+*.env
+.env.example
+gcp-credentials.json
+OmniLink_API.postman_collection.json
+
+# python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# alembic generated artifacts (keep versions tracked)
+*.pyc
+
+# flutter
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies

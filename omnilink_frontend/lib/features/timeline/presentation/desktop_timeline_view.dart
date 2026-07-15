@@ -1,12 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/widgets/omni_side_nav.dart';
 import '../../../shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_inspector_panel.dart';
+import 'bloc/timeline_bloc.dart';
+import 'bloc/timeline_state.dart';
+import 'bloc/timeline_event.dart';
 
-class DesktopTimelineView extends StatelessWidget {
+class DesktopTimelineView extends StatefulWidget {
   const DesktopTimelineView({super.key});
+
+  @override
+  State<DesktopTimelineView> createState() => _DesktopTimelineViewState();
+}
+
+class _DesktopTimelineViewState extends State<DesktopTimelineView> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<TimelineBloc>().add(const TimelineLoadRequested());
+  }
+
+  TimelineCardType _mapCardType(String cardType) {
+    if (cardType == 'text') return TimelineCardType.code;
+    if (cardType == 'metadata') return TimelineCardType.image;
+    return TimelineCardType.file;
+  }
+
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
+    return 'just now';
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +65,7 @@ class DesktopTimelineView extends StatelessWidget {
                       const Spacer(),
                       IconButton(
                         icon: Icon(
-                          LucideIcons.filter,
+                          Icons.filter_alt,
                           color: colorScheme.onSurfaceVariant,
                         ),
                         onPressed: () {},
@@ -44,7 +73,7 @@ class DesktopTimelineView extends StatelessWidget {
                       const SizedBox(width: 8),
                       IconButton(
                         icon: Icon(
-                          LucideIcons.layoutGrid,
+                          Icons.grid_view,
                           color: colorScheme.onSurfaceVariant,
                         ),
                         onPressed: () {},
@@ -53,52 +82,39 @@ class DesktopTimelineView extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: MasonryGridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24.0,
-                      vertical: 8.0,
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return OmniTimelineCard(
-                          type: TimelineCardType.code,
-                          title: 'API_Notes.txt',
-                          subtitle: '12.4 KB',
-                          timeAgo: '2m ago',
-                          tag: '#work',
-                          tagColor: colorScheme.secondary,
-                        );
-                      } else if (index == 1) {
-                        return OmniTimelineCard(
-                          type: TimelineCardType.image,
-                          title: 'Database_Schema_v2.png',
-                          subtitle: '4.2 MB',
-                          timeAgo: '15m ago',
-                          tag: '#design',
-                          tagColor: colorScheme.tertiary,
-                        );
-                      } else if (index == 2) {
-                        return OmniTimelineCard(
-                          type: TimelineCardType.file,
-                          title: 'release-v2.1.apk',
-                          subtitle: '45.2 MB',
-                          timeAgo: '3h ago',
-                          tag: '#build',
-                          tagColor: colorScheme.tertiary,
-                        );
-                      } else {
-                        return OmniTimelineCard(
-                          type: TimelineCardType.image,
-                          title: 'abstract_bg_v2.png',
-                          subtitle: '1.2 MB',
-                          timeAgo: '1d ago',
-                          tag: '#design',
+                  child: BlocBuilder<TimelineBloc, TimelineState>(
+                    builder: (context, state) {
+                      if (state is TimelineLoading || state is TimelineInitial) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is TimelineError) {
+                        return Center(child: Text(state.message));
+                      } else if (state is TimelineLoaded) {
+                        if (state.cards.isEmpty) {
+                          return const Center(child: Text("No cards found"));
+                        }
+                        return MasonryGridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24.0,
+                            vertical: 8.0,
+                          ),
+                          itemCount: state.cards.length,
+                          itemBuilder: (context, index) {
+                            final card = state.cards[index];
+                            return OmniTimelineCard(
+                              type: _mapCardType(card.cardType),
+                              title: card.title ?? card.body ?? 'Untitled',
+                              subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
+                              timeAgo: _timeAgo(card.createdAt),
+                              tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
+                              tagColor: colorScheme.secondary,
+                            );
+                          },
                         );
                       }
+                      return const SizedBox.shrink();
                     },
                   ),
                 ),
