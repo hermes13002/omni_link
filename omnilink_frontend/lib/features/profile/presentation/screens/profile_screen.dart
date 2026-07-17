@@ -12,6 +12,7 @@ import '../../../device/presentation/bloc/device_bloc.dart';
 import '../../../device/presentation/bloc/device_state.dart';
 import '../../../timeline/presentation/bloc/timeline_bloc.dart';
 import '../../../timeline/presentation/bloc/timeline_state.dart';
+import '../../../../shared/utils/omni_toast.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -151,6 +152,15 @@ class ProfileScreen extends StatelessWidget {
                           value: user.id.length > 10 ? '${user.id.substring(0, 10)}...' : user.id,
                         ),
                         const SizedBox(height: 48),
+                        OmniButton.primary(
+                          text: 'Test Notification Toast',
+                          icon: Icons.notifications,
+                          isFullWidth: true,
+                          onPressed: () {
+                            OmniToast.showInfo(context, 'This is a test notification!');
+                          },
+                        ),
+                        const SizedBox(height: 16),
                         OmniButton.outlined(
                           text: 'Logout',
                           icon: Icons.logout,

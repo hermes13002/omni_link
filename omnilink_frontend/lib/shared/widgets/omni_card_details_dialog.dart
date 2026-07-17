@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 import '../../features/timeline/data/models/card_model.dart';
 import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
@@ -78,9 +79,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e')),
-          );
+          OmniToast.showError(context, 'Failed to delete: $e');
         }
       }
     }
@@ -100,9 +99,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e')),
-        );
+        OmniToast.showError(context, 'Failed to update: $e');
       }
     } finally {
       if (mounted) {
@@ -204,9 +201,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                         await launchUrl(uri);
                       } else {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Could not open file URL')),
-                          );
+                          OmniToast.showError(context, 'Could not open file URL');
                         }
                       }
                     },
@@ -347,9 +342,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                         final textToCopy = widget.card.body ?? '';
                         if (textToCopy.isNotEmpty) {
                           Clipboard.setData(ClipboardData(text: textToCopy));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Copied to clipboard')),
-                          );
+                          OmniToast.showInfo(context, 'Copied to clipboard');
                         }
                       },
                     ),
@@ -442,9 +435,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                     await launchUrl(uri);
                   } else {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not open file URL')),
-                      );
+                      OmniToast.showError(context, 'Could not open file URL');
                     }
                   }
                 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 
 enum TimelineCardType { image, code, file, pdf }
 
@@ -114,9 +115,7 @@ class OmniTimelineCard extends StatelessWidget {
                         final textToCopy = body ?? title;
                         if (textToCopy.isNotEmpty) {
                           Clipboard.setData(ClipboardData(text: textToCopy));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Copied to clipboard')),
-                          );
+                          OmniToast.showInfo(context, 'Copied to clipboard');
                         }
                       },
                     ),

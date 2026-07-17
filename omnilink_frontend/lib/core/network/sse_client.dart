@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
-import '../globals.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import '../../features/device/data/repositories/device_repository.dart';
-import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
-import '../../features/timeline/presentation/bloc/timeline_event.dart';
+import 'package:omnilink_frontend/features/device/data/repositories/device_repository.dart';
+import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_bloc.dart';
+import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_event.dart';
+import '../../shared/utils/omni_toast.dart';
 
 @lazySingleton
 class SseClient {
@@ -57,13 +56,7 @@ class SseClient {
                 final decoded = jsonDecode(dataStr);
                 if (decoded is Map<String, dynamic> && decoded['type'] == 'ping') {
                   final message = decoded['message'] ?? 'Ping received!';
-                  scaffoldMessengerKey.currentState?.showSnackBar(
-                    SnackBar(
-                      content: Text(message),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: Colors.blueAccent,
-                    ),
-                  );
+                  OmniToast.showInfo(null, message);
                 } else {
                   _timelineBloc.add(const TimelineLoadRequested());
                 }

@@ -4,6 +4,7 @@ import 'package:cross_file/cross_file.dart';
 import 'omni_drop_zone.dart';
 import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
+import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 
 // ... class definition
 
@@ -28,15 +29,11 @@ class _OmniInspectorPanelState extends State<OmniInspectorPanel> {
         await getIt<CardsApi>().createFileCard(file.path, tagIds: []);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Uploaded ${files.length} file(s)')),
-        );
+        OmniToast.showSuccess(context, 'Uploaded ${files.length} file(s)');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to upload dropped files: $e')),
-        );
+        OmniToast.showError(context, 'Failed to upload dropped files: $e');
       }
     } finally {
       if (mounted) {

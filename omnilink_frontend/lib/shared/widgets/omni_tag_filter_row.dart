@@ -9,6 +9,7 @@ import 'omni_filter_chip.dart';
 import 'omni_button.dart';
 import 'omni_text_field.dart';
 import 'omni_glass_container.dart';
+import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 
 class OmniTagFilterRow extends StatefulWidget {
   final String? activeTagId;
@@ -56,9 +57,7 @@ class _OmniTagFilterRowState extends State<OmniTagFilterRow> {
                 Navigator.pop(ctx);
               } else if (isSubmitting && state is TagsError) {
                 setState(() => isSubmitting = false);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message)),
-                );
+                OmniToast.showError(context, state.message);
               }
             },
             builder: (context, state) {

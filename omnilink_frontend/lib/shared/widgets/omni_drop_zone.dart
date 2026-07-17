@@ -7,6 +7,7 @@ import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_state.dart';
+import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 
 class OmniDropZone extends StatefulWidget {
   const OmniDropZone({super.key});
@@ -90,9 +91,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send: $e')),
-        );
+        OmniToast.showError(context, 'Failed to send: $e');
       }
     } finally {
       if (mounted) {
@@ -113,9 +112,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to upload image: $e')),
-        );
+        OmniToast.showError(context, 'Failed to upload image: $e');
       }
     } finally {
       if (mounted) {
@@ -135,9 +132,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to upload file: $e')),
-        );
+        OmniToast.showError(context, 'Failed to upload file: $e');
       }
     } finally {
       if (mounted) {

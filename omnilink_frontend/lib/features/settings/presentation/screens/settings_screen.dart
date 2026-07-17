@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:omnilink_frontend/shared/widgets/omni_action_button.dart';
 
 import '../../../device/presentation/bloc/device_bloc.dart';
 import '../../../device/presentation/bloc/device_state.dart';
@@ -12,7 +13,6 @@ import '../../../timeline/presentation/bloc/tags_event.dart';
 
 import '../../../../shared/widgets/omni_glass_container.dart';
 import '../../../../shared/widgets/omni_loaders.dart';
-import '../../../../shared/widgets/omni_action_button.dart';
 import '../../../../shared/widgets/omni_button.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -319,15 +319,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return Wrap(
                   spacing: 8.0,
                   runSpacing: 8.0,
-                  children: state.tags.map((tag) => Chip(
-                    label: Text('#${tag.name}', style: textTheme.labelMedium),
-                    backgroundColor: colorScheme.secondaryContainer.withAlpha(100),
-                    side: BorderSide.none,
-                    deleteIconColor: colorScheme.onSurfaceVariant,
-                    onDeleted: () {
-                      context.read<TagsBloc>().add(TagDeleteRequested(tag.id));
-                    },
-                  )).toList(),
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    ...state.tags.map((tag) => Chip(
+                      label: Text('#${tag.name}', style: textTheme.labelMedium),
+                      backgroundColor: colorScheme.secondaryContainer.withAlpha(100),
+                      side: BorderSide.none,
+                      deleteIconColor: colorScheme.onSurfaceVariant,
+                      onDeleted: () {
+                        context.read<TagsBloc>().add(TagDeleteRequested(tag.id));
+                      },
+                    )),
+                    if (!_isAddingTag)
+                      ActionChip(
+                        avatar: Icon(Icons.add, size: 16, color: colorScheme.primary),
+                        label: Text('Add Tag', style: textTheme.labelMedium?.copyWith(color: colorScheme.primary)),
+                        backgroundColor: Colors.transparent,
+                        side: BorderSide(color: colorScheme.outlineVariant),
+                        onPressed: () {
+                          setState(() {
+                            _isAddingTag = true;
+                          });
+                        },
+                      ),
+                  ],
                 );
               }
               return const SizedBox.shrink();
@@ -373,17 +388,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             )
-          else
-            OmniButton.outlined(
-              text: 'Add Tag',
-              icon: Icons.add,
-              isFullWidth: true,
-              onPressed: () {
-                setState(() {
-                  _isAddingTag = true;
-                });
-              },
-            ),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
+import 'package:dio/dio.dart';
 
 import '../devices_api.dart';
 import '../models/device_model.dart';
@@ -31,13 +32,29 @@ class DeviceRepository {
     final clientUuid = await getClientUuid();
     final friendlyName = await _getDeviceName();
 
-    final device = await _api.registerDevice(clientUuid, friendlyName);
-    
-    if (device.deviceSecret != null) {
-      await _storage.write(key: 'device_secret', value: device.deviceSecret);
+    try {
+      final device = await _api.registerDevice(clientUuid, friendlyName);
+      
+      if (device.deviceSecret != null) {
+        await _storage.write(key: 'device_secret', value: device.deviceSecret);
+      }
+      
+      return device;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        // The client_uuid is already registered (likely to another user account on this machine).
+        // Generate a new one and retry.
+        await _storage.delete(key: 'client_uuid');
+        final newClientUuid = await getClientUuid();
+        
+        final device = await _api.registerDevice(newClientUuid, friendlyName);
+        if (device.deviceSecret != null) {
+          await _storage.write(key: 'device_secret', value: device.deviceSecret);
+        }
+        return device;
+      }
+      rethrow;
     }
-    
-    return device;
   }
 
   Future<String> getClientUuid() async {

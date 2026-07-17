@@ -8,6 +8,7 @@ import '../../../../shared/widgets/omni_text_field.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../../shared/utils/omni_toast.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -59,9 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              OmniToast.showError(context, state.message);
             }
           },
           child: Center(
