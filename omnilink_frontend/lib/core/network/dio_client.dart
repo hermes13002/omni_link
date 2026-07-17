@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 
@@ -25,9 +26,44 @@ abstract class NetworkModule {
     dio.interceptors.addAll([
       AuthInterceptor(storage, dio),
       EnvelopeInterceptor(),
-      LogInterceptor(responseBody: true, requestBody: true),
+      OmniLogInterceptor(),
     ]);
 
     return dio;
+  }
+}
+
+class OmniLogInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    debugPrint('*** Request ***');
+    debugPrint('url: ${options.uri}');
+    if (options.data != null) {
+      print('request data: ${options.data}');
+    }
+    super.onRequest(options, handler);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    debugPrint('*** Response ***');
+    debugPrint('url: ${response.requestOptions.uri}');
+    if (response.data is ResponseBody) {
+      debugPrint('response stream: [Streaming Data]');
+    } else {
+      debugPrint('response data: ${response.data}');
+    }
+    super.onResponse(response, handler);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    debugPrint('*** Error ***');
+    debugPrint('url: ${err.requestOptions.uri}');
+    debugPrint('error message: ${err.message}');
+    if (err.response != null && err.response!.data != null) {
+      debugPrint('error data: ${err.response?.data}');
+    }
+    super.onError(err, handler);
   }
 }

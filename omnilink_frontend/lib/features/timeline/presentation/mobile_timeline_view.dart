@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:omnilink_frontend/features/timeline/data/models/card_model.dart';
+import 'package:omnilink_frontend/shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_top_bar.dart';
 import '../../../shared/widgets/omni_bottom_nav.dart';
 import '../../../shared/widgets/omni_filter_chip.dart';
-import '../../../shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_drop_zone.dart';
+import '../../../shared/widgets/omni_loaders.dart';
+import '../../../shared/widgets/omni_tag_filter_row.dart';
+import '../../../shared/widgets/omni_card_details_dialog.dart';
 import 'bloc/timeline_bloc.dart';
 import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
+import 'bloc/tags_bloc.dart';
+import 'bloc/tags_state.dart';
+import 'bloc/tags_event.dart';
 
 class MobileTimelineView extends StatefulWidget {
   const MobileTimelineView({super.key});
@@ -18,16 +25,30 @@ class MobileTimelineView extends StatefulWidget {
 }
 
 class _MobileTimelineViewState extends State<MobileTimelineView> {
+  String? _activeTagId;
+
   @override
   void initState() {
     super.initState();
     context.read<TimelineBloc>().add(const TimelineLoadRequested());
+    context.read<TagsBloc>().add(TagsLoadRequested());
   }
 
-  TimelineCardType _mapCardType(String cardType) {
-    if (cardType == 'text') return TimelineCardType.code;
-    if (cardType == 'metadata') return TimelineCardType.image;
-    return TimelineCardType.file;
+  TimelineCardType _mapCardType(CardModel card) {
+    if (card.cardType == 'text') return TimelineCardType.code;
+    if (card.cardType == 'metadata') return TimelineCardType.image;
+    if (card.cardType == 'file') {
+      final titleLower = card.title?.toLowerCase() ?? '';
+      final isImage = card.mimeType?.startsWith('image/') == true || 
+          titleLower.endsWith('.jpg') || titleLower.endsWith('.png') || titleLower.endsWith('.jpeg') || titleLower.endsWith('.webp');
+      if (isImage) return TimelineCardType.image;
+
+      final isPdf = card.mimeType == 'application/pdf' || titleLower.endsWith('.pdf');
+      if (isPdf) return TimelineCardType.pdf;
+
+      return TimelineCardType.file;
+    }
+    return TimelineCardType.code;
   }
 
   String _timeAgo(DateTime dt) {
@@ -47,34 +68,12 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
       appBar: const OmniTopBar(),
       body: Column(
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                OmniFilterChip(
-                  label: 'All Stream',
-                  isActive: true,
-                  onTap: () {},
-                ),
-                const SizedBox(width: 8),
-                OmniFilterChip(
-                  label: '#work',
-                  onTap: () {},
-                ),
-                const SizedBox(width: 8),
-                OmniFilterChip(
-                  label: '#personal',
-                  onTap: () {},
-                ),
-                const SizedBox(width: 8),
-                OmniFilterChip(
-                  label: 'MacBook Pro',
-                  icon: Icons.laptop,
-                  onTap: () {},
-                ),
-              ],
-            ),
+          OmniTagFilterRow(
+            activeTagId: _activeTagId,
+            onTagSelected: (tagId) {
+              setState(() => _activeTagId = tagId);
+              context.read<TimelineBloc>().add(TimelineLoadRequested(tagId: tagId));
+            },
           ),
           Expanded(
             child: Stack(
@@ -82,7 +81,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                 BlocBuilder<TimelineBloc, TimelineState>(
                   builder: (context, state) {
                     if (state is TimelineLoading || state is TimelineInitial) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: OmniDotsLoader());
                     } else if (state is TimelineError) {
                       return Center(child: Text(state.message));
                     } else if (state is TimelineLoaded) {
@@ -98,12 +97,20 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                         itemBuilder: (context, index) {
                           final card = state.cards[index];
                           return OmniTimelineCard(
-                            type: _mapCardType(card.cardType),
+                            type: _mapCardType(card),
                             title: card.title ?? card.body ?? 'Untitled',
                             subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
                             timeAgo: _timeAgo(card.createdAt),
                             tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
                             tagColor: colorScheme.secondary,
+                            body: card.body,
+                            imageUrl: card.gcsSignedUrl,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => OmniCardDetailsDialog(card: card),
+                              );
+                            },
                           );
                         },
                       );

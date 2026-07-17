@@ -25,10 +25,6 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
           icon: Icon(Icons.refresh, color: colorScheme.onSurfaceVariant),
           onPressed: () {},
         ),
-        IconButton(
-          icon: Icon(Icons.settings, color: colorScheme.onSurfaceVariant),
-          onPressed: () {},
-        ),
         Padding(
           padding: const EdgeInsets.only(right: 16.0, left: 8.0),
           child: CircleAvatar(

@@ -66,11 +66,12 @@ class CardsApi {
     return CardModel.fromJson(response.data);
   }
 
-  Future<CardModel> updateCard(String cardId, {String? title, String? body, bool? pinned}) async {
+  Future<CardModel> updateCard(String cardId, {String? title, String? body, bool? pinned, List<String>? tagIds}) async {
     final data = <String, dynamic>{};
     if (title != null) data['title'] = title;
     if (body != null) data['body'] = body;
     if (pinned != null) data['pinned'] = pinned;
+    if (tagIds != null) data['tag_ids'] = tagIds;
 
     final response = await _dio.patch('/api/v1/cards/$cardId', data: data);
     return CardModel.fromJson(response.data);

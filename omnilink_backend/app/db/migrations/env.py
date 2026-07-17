@@ -39,7 +39,12 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    _connect_args = {"ssl": True} if settings.database_ssl else {}
+    import ssl
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    
+    _connect_args = {"ssl": ssl_context} if settings.database_ssl else {}
     connectable = create_async_engine(
         settings.database_url,
         poolclass=pool.NullPool,

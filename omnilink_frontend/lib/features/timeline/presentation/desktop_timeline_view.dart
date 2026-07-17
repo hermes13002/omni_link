@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:omnilink_frontend/features/timeline/data/models/card_model.dart';
 import '../../../shared/widgets/omni_side_nav.dart';
 import '../../../shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_inspector_panel.dart';
+import '../../../shared/widgets/omni_loaders.dart';
+import '../../../shared/widgets/omni_tag_filter_row.dart';
+import '../../../shared/widgets/omni_card_details_dialog.dart';
 import 'bloc/timeline_bloc.dart';
 import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
@@ -16,16 +20,29 @@ class DesktopTimelineView extends StatefulWidget {
 }
 
 class _DesktopTimelineViewState extends State<DesktopTimelineView> {
+  String? _activeTagId;
+
   @override
   void initState() {
     super.initState();
     context.read<TimelineBloc>().add(const TimelineLoadRequested());
   }
 
-  TimelineCardType _mapCardType(String cardType) {
-    if (cardType == 'text') return TimelineCardType.code;
-    if (cardType == 'metadata') return TimelineCardType.image;
-    return TimelineCardType.file;
+  TimelineCardType _mapCardType(CardModel card) {
+    if (card.cardType == 'text') return TimelineCardType.code;
+    if (card.cardType == 'metadata') return TimelineCardType.image;
+    if (card.cardType == 'file') {
+      final titleLower = card.title?.toLowerCase() ?? '';
+      final isImage = card.mimeType?.startsWith('image/') == true || 
+          titleLower.endsWith('.jpg') || titleLower.endsWith('.png') || titleLower.endsWith('.jpeg') || titleLower.endsWith('.webp');
+      if (isImage) return TimelineCardType.image;
+
+      final isPdf = card.mimeType == 'application/pdf' || titleLower.endsWith('.pdf');
+      if (isPdf) return TimelineCardType.pdf;
+
+      return TimelineCardType.file;
+    }
+    return TimelineCardType.code;
   }
 
   String _timeAgo(DateTime dt) {
@@ -51,7 +68,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.only(left: 24.0, top: 24.0, right: 24.0, bottom: 8.0),
                   child: Row(
                     children: [
                       Text(
@@ -81,11 +98,18 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                     ],
                   ),
                 ),
+                OmniTagFilterRow(
+                  activeTagId: _activeTagId,
+                  onTagSelected: (tagId) {
+                    setState(() => _activeTagId = tagId);
+                    context.read<TimelineBloc>().add(TimelineLoadRequested(tagId: tagId));
+                  },
+                ),
                 Expanded(
                   child: BlocBuilder<TimelineBloc, TimelineState>(
                     builder: (context, state) {
                       if (state is TimelineLoading || state is TimelineInitial) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(child: OmniDotsLoader());
                       } else if (state is TimelineError) {
                         return Center(child: Text(state.message));
                       } else if (state is TimelineLoaded) {
@@ -104,12 +128,20 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                           itemBuilder: (context, index) {
                             final card = state.cards[index];
                             return OmniTimelineCard(
-                              type: _mapCardType(card.cardType),
+                              type: _mapCardType(card),
                               title: card.title ?? card.body ?? 'Untitled',
                               subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
                               timeAgo: _timeAgo(card.createdAt),
                               tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
                               tagColor: colorScheme.secondary,
+                              body: card.body,
+                              imageUrl: card.gcsSignedUrl,
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => OmniCardDetailsDialog(card: card),
+                                );
+                              },
                             );
                           },
                         );

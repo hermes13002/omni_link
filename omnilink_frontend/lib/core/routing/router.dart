@@ -6,6 +6,7 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/timeline/presentation/timeline_screen.dart';
 import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
@@ -24,9 +25,14 @@ GoRouter createRouter(AuthBloc authBloc) {
       final authState = authBloc.state;
       final isGoingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
-      if (authState is AuthInitial || authState is AuthLoading) {
+      if (authState is AuthInitial) {
         if (state.matchedLocation == '/splash') return null;
         return '/splash';
+      }
+
+      if (authState is AuthLoading) {
+        // do not redirect on loading so inline loaders (like OmniButton's) can be seen.
+        return null;
       }
 
       if (authState is AuthUnauthenticated || authState is AuthError) {
@@ -82,6 +88,16 @@ GoRouter createRouter(AuthBloc authBloc) {
             BlocProvider.value(value: getIt<TagsBloc>()),
           ],
           child: const SettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: getIt<DeviceBloc>()),
+            BlocProvider.value(value: getIt<TimelineBloc>()),
+          ],
+          child: const ProfileScreen(),
         ),
       ),
     ],

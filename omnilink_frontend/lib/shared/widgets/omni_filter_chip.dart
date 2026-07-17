@@ -5,6 +5,7 @@ class OmniFilterChip extends StatelessWidget {
   final bool isActive;
   final IconData? icon;
   final VoidCallback onTap;
+  final Color? tagColor;
 
   const OmniFilterChip({
     super.key,
@@ -12,6 +13,7 @@ class OmniFilterChip extends StatelessWidget {
     this.isActive = false,
     this.icon,
     required this.onTap,
+    this.tagColor,
   });
 
   @override
@@ -19,18 +21,20 @@ class OmniFilterChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
+    final activeColor = tagColor ?? colorScheme.primary;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isActive 
-              ? colorScheme.primaryContainer.withAlpha(51) 
+              ? activeColor.withAlpha(51) 
               : colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(9999),
           border: Border.all(
             color: isActive 
-                ? colorScheme.primary.withAlpha(76) 
+                ? activeColor.withAlpha(76) 
                 : colorScheme.onSurface.withAlpha(25),
             width: 1,
           ),
@@ -44,7 +48,17 @@ class OmniFilterChip extends StatelessWidget {
                 height: 8,
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary,
+                  color: activeColor,
+                  shape: BoxShape.circle,
+                ),
+              )
+            else if (tagColor != null)
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: tagColor!.withAlpha(128),
                   shape: BoxShape.circle,
                 ),
               )
@@ -57,11 +71,14 @@ class OmniFilterChip extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+            Flexible(
+              child: Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: isActive ? activeColor : colorScheme.onSurfaceVariant,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

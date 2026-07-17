@@ -1,5 +1,6 @@
 import re
 import uuid
+import mimetypes
 from urllib.parse import urlparse
 
 import httpx
@@ -20,6 +21,7 @@ from app.schemas.card import (
     TextCardCreate,
 )
 from app.storage.gcs_client import delete_object, generate_signed_url, upload_file_bytes
+from app.services.pubsub_service import publish_to_user_channel
 
 
 def _is_valid_url(text: str) -> bool:
@@ -136,6 +138,7 @@ async def create_text_card(
     if payload.body and _is_valid_url(payload.body):
         background_tasks.add_task(_backfill_url_metadata, card.id, payload.body)
 
+    await publish_to_user_channel(user_id, {"event": "card_created", "card_id": str(card.id)})
     return await _build_card_response(card)
 
 
@@ -156,6 +159,7 @@ async def create_metadata_card(
     db.add(card)
     await db.commit()
     await db.refresh(card, ["tags"])
+    await publish_to_user_channel(user_id, {"event": "card_created", "card_id": str(card.id)})
     return await _build_card_response(card)
 
 
@@ -168,7 +172,11 @@ async def create_file_card(
 ) -> CardResponse:
     file_bytes = await file.read()
     object_key = f"cards/{user_id}/{uuid.uuid4()}/{file.filename}"
-    content_type = file.content_type or "application/octet-stream"
+    content_type = file.content_type
+    if not content_type or content_type == "application/octet-stream":
+        guessed, _ = mimetypes.guess_type(file.filename)
+        content_type = guessed or "application/octet-stream"
+        
     await upload_file_bytes(object_key, file_bytes, content_type)
 
     tags = await _resolve_tags(tag_ids, user_id, db)
@@ -185,6 +193,7 @@ async def create_file_card(
     db.add(card)
     await db.commit()
     await db.refresh(card, ["tags"])
+    await publish_to_user_channel(user_id, {"event": "card_created", "card_id": str(card.id)})
     return await _build_card_response(card)
 
 
@@ -265,6 +274,7 @@ async def patch_card(
 
     await db.commit()
     await db.refresh(card, ["tags"])
+    await publish_to_user_channel(user_id, {"event": "card_updated", "card_id": str(card.id)})
     return await _build_card_response(card)
 
 
@@ -282,3 +292,4 @@ async def delete_card(
         await delete_object(card.gcs_object_key)
     await db.delete(card)
     await db.commit()
+    await publish_to_user_channel(user_id, {"event": "card_deleted", "card_id": str(card_id)})

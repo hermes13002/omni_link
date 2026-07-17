@@ -32,6 +32,7 @@ class SseClient {
         queryParameters: {'device_secret': secret},
         options: Options(
           responseType: ResponseType.stream,
+          receiveTimeout: const Duration(milliseconds: 0),
           headers: {
             'Accept': 'text/event-stream',
             'Cache-Control': 'no-cache',

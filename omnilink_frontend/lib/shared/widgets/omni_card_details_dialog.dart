@@ -1,0 +1,440 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../features/timeline/data/models/card_model.dart';
+import '../../features/timeline/data/cards_api.dart';
+import '../../features/timeline/presentation/bloc/tags_bloc.dart';
+import '../../features/timeline/presentation/bloc/tags_state.dart';
+import '../../features/timeline/presentation/bloc/tags_event.dart';
+import '../../core/di/injection.dart';
+import 'omni_glass_container.dart';
+
+class OmniCardDetailsDialog extends StatefulWidget {
+  final CardModel card;
+  
+  const OmniCardDetailsDialog({super.key, required this.card});
+
+  @override
+  State<OmniCardDetailsDialog> createState() => _OmniCardDetailsDialogState();
+}
+
+class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
+  bool _isEditing = false;
+  bool _isSaving = false;
+  late TextEditingController _titleController;
+  late TextEditingController _bodyController;
+  late Set<String> _selectedTagIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.card.title ?? '');
+    _bodyController = TextEditingController(text: widget.card.body ?? '');
+    _selectedTagIds = widget.card.tags.map((t) => t.id).toSet();
+    getIt<TagsBloc>().add(TagsLoadRequested());
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  String _formatFileSize(int? bytes) {
+    if (bytes == null) return 'Unknown size';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).round()} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  Future<void> _handleDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Card'),
+        content: const Text('Are you sure you want to delete this card?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await getIt<CardsApi>().deleteCard(widget.card.id);
+        if (mounted) Navigator.pop(context);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleSave() async {
+    setState(() => _isSaving = true);
+    try {
+      await getIt<CardsApi>().updateCard(
+        widget.card.id,
+        title: _titleController.text.isNotEmpty ? _titleController.text : null,
+        body: _bodyController.text.isNotEmpty ? _bodyController.text : null,
+        tagIds: _selectedTagIds.toList(),
+      );
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    IconData headerIcon = Icons.article;
+    final titleLower = widget.card.title?.toLowerCase() ?? '';
+    final isImage = widget.card.mimeType?.startsWith('image/') == true || 
+          titleLower.endsWith('.jpg') || titleLower.endsWith('.png') || titleLower.endsWith('.jpeg') || titleLower.endsWith('.webp');
+    final isPdf = widget.card.mimeType == 'application/pdf' || titleLower.endsWith('.pdf');
+
+    if (widget.card.cardType == 'text') headerIcon = Icons.code;
+    else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) headerIcon = Icons.image;
+    else if (widget.card.cardType == 'file' && isPdf) headerIcon = Icons.picture_as_pdf;
+    else headerIcon = Icons.file_present;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.all(24),
+      child: OmniGlassContainer(
+        padding: const EdgeInsets.all(24.0),
+        borderRadius: 24.0,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(headerIcon, color: isPdf ? colorScheme.error : colorScheme.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _isEditing
+                      ? TextField(
+                          controller: _titleController,
+                          decoration: InputDecoration(
+                            hintText: 'Title',
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        )
+                      : Text(
+                          widget.card.title ?? widget.card.body ?? 'Untitled',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                ),
+                if (!_isEditing) ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => setState(() => _isEditing = true),
+                    color: colorScheme.onSurfaceVariant,
+                    tooltip: 'Edit',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: _handleDelete,
+                    color: colorScheme.error,
+                    tooltip: 'Delete',
+                  ),
+                ],
+                if (_isEditing)
+                  _isSaving
+                      ? const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.check),
+                          onPressed: _handleSave,
+                          color: colorScheme.primary,
+                          tooltip: 'Save',
+                        ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                child: _buildContent(context, colorScheme, isImage, isPdf),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // Footer Info
+            if (_isEditing)
+              _buildTagEditor(context, colorScheme)
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildChip(
+                    context, 
+                    Icons.access_time, 
+                    '${widget.card.createdAt.toLocal().toString().split('.')[0]}'
+                  ),
+                  if (widget.card.fileSizeBytes != null)
+                    _buildChip(
+                      context, 
+                      Icons.sd_storage, 
+                      _formatFileSize(widget.card.fileSizeBytes)
+                    ),
+                  ...widget.card.tags.map((tag) => _buildChip(
+                    context, 
+                    Icons.tag, 
+                    '#${tag.name}',
+                    backgroundColor: colorScheme.secondaryContainer,
+                    textColor: colorScheme.onSecondaryContainer,
+                  )),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagEditor(BuildContext context, ColorScheme colorScheme) {
+    return BlocBuilder<TagsBloc, TagsState>(
+      bloc: getIt<TagsBloc>(),
+      builder: (context, state) {
+        if (state is TagsLoaded) {
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: state.tags.map((tag) {
+              final isSelected = _selectedTagIds.contains(tag.id);
+              return FilterChip(
+                label: Text('#${tag.name}'),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedTagIds.add(tag.id);
+                    } else {
+                      _selectedTagIds.remove(tag.id);
+                    }
+                  });
+                },
+                selectedColor: colorScheme.secondaryContainer,
+                checkmarkColor: colorScheme.onSecondaryContainer,
+                labelStyle: TextStyle(
+                  color: isSelected ? colorScheme.onSecondaryContainer : colorScheme.onSurfaceVariant,
+                ),
+              );
+            }).toList(),
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ColorScheme colorScheme, bool isImage, bool isPdf) {
+    if (widget.card.cardType == 'text') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withAlpha(128),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: _isEditing
+            ? TextField(
+                controller: _bodyController,
+                maxLines: null,
+                minLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Body content',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  contentPadding: const EdgeInsets.all(12),
+                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'JetBrains Mono',
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              )
+            : Text(
+                widget.card.body ?? '',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'JetBrains Mono',
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+      );
+    } else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) {
+      return Container(
+        height: 250,
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withAlpha(128),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: widget.card.gcsSignedUrl != null 
+          ? Image.network(
+              widget.card.gcsSignedUrl!, 
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.broken_image,
+                size: 64,
+                color: colorScheme.onSurfaceVariant.withAlpha(100),
+              ),
+            )
+          : Center(
+              child: Icon(
+                Icons.image,
+                size: 64,
+                color: colorScheme.onSurfaceVariant.withAlpha(100),
+              ),
+            ),
+      );
+    } else if (widget.card.cardType == 'file' && isPdf) {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: colorScheme.errorContainer.withAlpha(128),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.picture_as_pdf,
+                size: 64,
+                color: colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'PDF Document',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withAlpha(128),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: colorScheme.tertiaryContainer.withAlpha(51),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.archive,
+                color: colorScheme.tertiary,
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.download),
+              label: const Text('Download File'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildChip(
+    BuildContext context, 
+    IconData icon, 
+    String label, {
+    Color? backgroundColor,
+    Color? textColor,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: textColor ?? colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: textColor ?? colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

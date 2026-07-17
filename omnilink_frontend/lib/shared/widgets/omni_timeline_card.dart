@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum TimelineCardType { image, code, file }
+enum TimelineCardType { image, code, file, pdf }
 
 class OmniTimelineCard extends StatelessWidget {
   final TimelineCardType type;
@@ -9,6 +9,9 @@ class OmniTimelineCard extends StatelessWidget {
   final String timeAgo;
   final String tag;
   final Color? tagColor;
+  final String? body;
+  final String? imageUrl;
+  final VoidCallback? onTap;
 
   const OmniTimelineCard({
     super.key,
@@ -18,6 +21,9 @@ class OmniTimelineCard extends StatelessWidget {
     required this.timeAgo,
     required this.tag,
     this.tagColor,
+    this.body,
+    this.imageUrl,
+    this.onTap,
   });
 
   @override
@@ -27,9 +33,11 @@ class OmniTimelineCard extends StatelessWidget {
     
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           if (type == TimelineCardType.image)
             Container(
               height: 200,
@@ -45,13 +53,26 @@ class OmniTimelineCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  Positioned.fill(
-                    child: Icon(
-                      Icons.image,
-                      size: 48,
-                      color: colorScheme.onSurfaceVariant.withAlpha(51),
+                  if (imageUrl != null)
+                    Positioned.fill(
+                      child: Image.network(
+                        imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.broken_image,
+                          size: 48,
+                          color: colorScheme.onSurfaceVariant.withAlpha(51),
+                        ),
+                      ),
+                    )
+                  else
+                    Positioned.fill(
+                      child: Icon(
+                        Icons.image,
+                        size: 48,
+                        color: colorScheme.onSurfaceVariant.withAlpha(51),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -69,7 +90,7 @@ class OmniTimelineCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Project notes regarding the new API structure. We need to ensure that the middleware handles the authentication tokens correctly before passing the request object down to the controller layer. Also check the...',
+                body ?? title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontFamily: 'JetBrains Mono',
                   color: colorScheme.onSurfaceVariant,
@@ -101,6 +122,34 @@ class OmniTimelineCard extends StatelessWidget {
                   child: Icon(
                     Icons.archive,
                     color: colorScheme.tertiary,
+                    size: 32,
+                  ),
+                ),
+              ),
+            ),
+          if (type == TimelineCardType.pdf)
+            Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    colorScheme.errorContainer.withAlpha(128),
+                    colorScheme.errorContainer.withAlpha(0),
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: colorScheme.error.withAlpha(51),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.picture_as_pdf,
+                    color: colorScheme.error,
                     size: 32,
                   ),
                 ),
@@ -166,6 +215,6 @@ class OmniTimelineCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
