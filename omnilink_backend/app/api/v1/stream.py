@@ -57,9 +57,14 @@ async def stream_inbox(
 
         except asyncio.CancelledError:
             pass
+        except Exception as e:
+            print(f"SSE stream error: {e}")
         finally:
-            await pubsub.unsubscribe(channel)
-            await pubsub.aclose()
+            try:
+                await pubsub.unsubscribe(channel)
+                await pubsub.close()
+            except Exception as cleanup_err:
+                print(f"SSE stream cleanup error: {cleanup_err}")
 
     return StreamingResponse(
         event_generator(),
