@@ -65,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             elevation: 0,
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-              onPressed: () => context.pop(),
+              onPressed: () => context.go('/'),
             ),
             title: Text(
               'Settings',

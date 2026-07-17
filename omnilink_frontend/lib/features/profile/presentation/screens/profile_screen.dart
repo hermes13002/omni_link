@@ -41,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
                       backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(150),
                       child: IconButton(
                         icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-                        onPressed: () => context.pop(),
+                        onPressed: () => context.go('/'),
                       ),
                     ),
                   ),
