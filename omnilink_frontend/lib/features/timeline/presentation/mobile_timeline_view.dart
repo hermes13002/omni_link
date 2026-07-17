@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -10,6 +11,7 @@ import '../../../shared/widgets/omni_drop_zone.dart';
 import '../../../shared/widgets/omni_loaders.dart';
 import '../../../shared/widgets/omni_tag_filter_row.dart';
 import '../../../shared/widgets/omni_card_details_dialog.dart';
+import '../../../shared/widgets/omni_text_field.dart';
 import 'bloc/timeline_bloc.dart';
 import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
@@ -26,12 +28,35 @@ class MobileTimelineView extends StatefulWidget {
 
 class _MobileTimelineViewState extends State<MobileTimelineView> {
   String? _activeTagId;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     context.read<TimelineBloc>().add(const TimelineLoadRequested());
     context.read<TagsBloc>().add(TagsLoadRequested());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchQuery != query) {
+        setState(() => _searchQuery = query);
+        context.read<TimelineBloc>().add(TimelineLoadRequested(
+          tagId: _activeTagId,
+          searchQuery: query.isEmpty ? null : query,
+        ));
+      }
+    });
   }
 
   TimelineCardType _mapCardType(CardModel card) {
@@ -68,11 +93,22 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
       appBar: const OmniTopBar(),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: OmniTextField.search(
+              controller: _searchController,
+              hintText: 'Search cards, links, or files...',
+              onChanged: _onSearchChanged,
+            ),
+          ),
           OmniTagFilterRow(
             activeTagId: _activeTagId,
             onTagSelected: (tagId) {
               setState(() => _activeTagId = tagId);
-              context.read<TimelineBloc>().add(TimelineLoadRequested(tagId: tagId));
+              context.read<TimelineBloc>().add(TimelineLoadRequested(
+                tagId: tagId,
+                searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+              ));
             },
           ),
           Expanded(

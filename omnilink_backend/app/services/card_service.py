@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 
 import httpx
 from fastapi import BackgroundTasks, UploadFile
-from sqlalchemy import func, select
+from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -212,6 +212,7 @@ async def list_cards(
     card_type: CardType | None = None,
     tag_id: int | None = None,
     pinned: bool | None = None,
+    search: str | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> CardListResponse:
@@ -222,6 +223,16 @@ async def list_cards(
         base_filters.append(Card.pinned == pinned)
     if tag_id is not None:
         base_filters.append(Card.tags.any(Tag.id == tag_id))
+    if search is not None and search.strip():
+        search_term = f"%{search.strip()}%"
+        base_filters.append(
+            or_(
+                Card.title.ilike(search_term),
+                Card.body.ilike(search_term),
+                Card.og_title.ilike(search_term),
+                Card.gcs_object_key.ilike(search_term),
+            )
+        )
 
     total = await db.scalar(select(func.count(Card.id)).where(*base_filters)) or 0
 

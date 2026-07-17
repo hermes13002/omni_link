@@ -22,23 +22,7 @@ class OmniInspectorPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.close_fullscreen, color: colorScheme.onSurfaceVariant),
-                  onPressed: () {},
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(Icons.settings, color: colorScheme.onSurfaceVariant),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 24),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),

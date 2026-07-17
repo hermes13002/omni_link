@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 enum TimelineCardType { image, code, file, pdf }
 
@@ -89,14 +90,38 @@ class OmniTimelineCard extends StatelessWidget {
                   ],
                 ),
               ),
-              child: Text(
-                body ?? title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'JetBrains Mono',
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 6,
-                overflow: TextOverflow.ellipsis,
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 32.0),
+                    child: Text(
+                      body ?? title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'JetBrains Mono',
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 6,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Positioned(
+                    top: -12,
+                    right: -12,
+                    child: IconButton(
+                      icon: Icon(Icons.copy, size: 16, color: colorScheme.onSurfaceVariant),
+                      tooltip: 'Copy text',
+                      onPressed: () {
+                        final textToCopy = body ?? title;
+                        if (textToCopy.isNotEmpty) {
+                          Clipboard.setData(ClipboardData(text: textToCopy));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Copied to clipboard')),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           if (type == TimelineCardType.file)

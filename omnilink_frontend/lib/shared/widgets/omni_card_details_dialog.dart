@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/timeline/data/models/card_model.dart';
 import '../../features/timeline/data/cards_api.dart';
@@ -324,12 +325,36 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                   color: colorScheme.onSurfaceVariant,
                 ),
               )
-            : Text(
-                widget.card.body ?? '',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontFamily: 'JetBrains Mono',
-                  color: colorScheme.onSurfaceVariant,
-                ),
+            : Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 32.0),
+                    child: Text(
+                      widget.card.body ?? '',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'JetBrains Mono',
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: -12,
+                    right: -12,
+                    child: IconButton(
+                      icon: Icon(Icons.copy, size: 16, color: colorScheme.onSurfaceVariant),
+                      tooltip: 'Copy text',
+                      onPressed: () {
+                        final textToCopy = widget.card.body ?? '';
+                        if (textToCopy.isNotEmpty) {
+                          Clipboard.setData(ClipboardData(text: textToCopy));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Copied to clipboard')),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
       );
     } else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) {

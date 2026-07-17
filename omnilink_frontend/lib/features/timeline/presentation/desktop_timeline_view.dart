@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -8,6 +9,7 @@ import '../../../shared/widgets/omni_inspector_panel.dart';
 import '../../../shared/widgets/omni_loaders.dart';
 import '../../../shared/widgets/omni_tag_filter_row.dart';
 import '../../../shared/widgets/omni_card_details_dialog.dart';
+import '../../../shared/widgets/omni_text_field.dart';
 import 'bloc/timeline_bloc.dart';
 import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
@@ -21,11 +23,34 @@ class DesktopTimelineView extends StatefulWidget {
 
 class _DesktopTimelineViewState extends State<DesktopTimelineView> {
   String? _activeTagId;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     context.read<TimelineBloc>().add(const TimelineLoadRequested());
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_searchQuery != query) {
+        setState(() => _searchQuery = query);
+        context.read<TimelineBloc>().add(TimelineLoadRequested(
+          tagId: _activeTagId,
+          searchQuery: query.isEmpty ? null : query,
+        ));
+      }
+    });
   }
 
   TimelineCardType _mapCardType(CardModel card) {
@@ -79,21 +104,23 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                               color: colorScheme.onSurface,
                             ),
                       ),
-                      const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          Icons.filter_alt,
-                          color: colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 24),
+                      Expanded(
+                        child: OmniTextField.search(
+                          controller: _searchController,
+                          hintText: 'Search cards, links, or files...',
+                          onChanged: _onSearchChanged,
                         ),
-                        onPressed: () {},
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 16),
                       IconButton(
                         icon: Icon(
-                          Icons.grid_view,
+                          Icons.refresh,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          context.read<TimelineBloc>().add(const TimelineLoadRequested());
+                        },
                       ),
                     ],
                   ),
@@ -102,7 +129,10 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                   activeTagId: _activeTagId,
                   onTagSelected: (tagId) {
                     setState(() => _activeTagId = tagId);
-                    context.read<TimelineBloc>().add(TimelineLoadRequested(tagId: tagId));
+                    context.read<TimelineBloc>().add(TimelineLoadRequested(
+                      tagId: tagId,
+                      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                    ));
                   },
                 ),
                 Expanded(

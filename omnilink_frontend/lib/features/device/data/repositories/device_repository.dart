@@ -53,6 +53,10 @@ class DeviceRepository {
     return await _storage.read(key: 'device_secret');
   }
 
+  Future<void> clearDeviceSecret() async {
+    await _storage.delete(key: 'device_secret');
+  }
+
   Future<void> deleteDevice(String deviceId) async {
     await _api.deleteDevice(deviceId);
   }

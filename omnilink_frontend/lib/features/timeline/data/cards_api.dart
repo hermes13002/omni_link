@@ -15,6 +15,7 @@ class CardsApi {
     String? cardType,
     String? tagId,
     bool? pinned,
+    String? search,
   }) async {
     final query = <String, dynamic>{
       'page': page,
@@ -23,6 +24,7 @@ class CardsApi {
     if (cardType != null) query['card_type'] = cardType;
     if (tagId != null) query['tag_id'] = tagId;
     if (pinned != null) query['pinned'] = pinned;
+    if (search != null && search.isNotEmpty) query['search'] = search;
 
     final response = await _dio.get('/api/v1/cards', queryParameters: query);
     final items = response.data['items'] as List<dynamic>;

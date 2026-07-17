@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/device/presentation/bloc/device_bloc.dart';
+import '../../features/device/presentation/bloc/device_state.dart';
 
 class OmniSideNav extends StatefulWidget {
   const OmniSideNav({super.key});
@@ -79,13 +82,23 @@ class _OmniSideNavState extends State<OmniSideNav> {
                                     maxLines: 1,
                                     overflow: TextOverflow.clip,
                                   ),
-                                  Text(
-                                    '3 Devices',
-                                    style: textTheme.labelSmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.clip,
+                                  BlocBuilder<DeviceBloc, DeviceState>(
+                                    builder: (context, state) {
+                                      String deviceText = 'Loading...';
+                                      if (state is DevicesLoaded) {
+                                        deviceText = '${state.devices.length} Devices';
+                                      } else if (state is DeviceError) {
+                                        deviceText = 'Error';
+                                      }
+                                      return Text(
+                                        deviceText,
+                                        style: textTheme.labelSmall?.copyWith(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.clip,
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
@@ -108,24 +121,6 @@ class _OmniSideNavState extends State<OmniSideNav> {
                         ),
                       ),
                     const SizedBox(height: 16),
-                    _SideNavItem(
-                      icon: Icons.content_paste,
-                      label: 'Clipboard',
-                      isExpanded: _isExpanded,
-                      onTap: () {},
-                    ),
-                    _SideNavItem(
-                      icon: Icons.folder,
-                      label: 'Files',
-                      isExpanded: _isExpanded,
-                      onTap: () {},
-                    ),
-                    _SideNavItem(
-                      icon: Icons.devices,
-                      label: 'Devices',
-                      isExpanded: _isExpanded,
-                      onTap: () {},
-                    ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: _isExpanded ? 16.0 : 8.0, vertical: 8.0),
                       child: Container(
@@ -134,8 +129,8 @@ class _OmniSideNavState extends State<OmniSideNav> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: _SideNavItem(
-                          icon: Icons.history,
-                          label: 'History',
+                          icon: Icons.content_paste,
+                          label: 'Clip',
                           isExpanded: _isExpanded,
                           iconColor: colorScheme.onSecondaryContainer,
                           textColor: colorScheme.onSecondaryContainer,
@@ -143,46 +138,27 @@ class _OmniSideNavState extends State<OmniSideNav> {
                         ),
                       ),
                     ),
+                    _SideNavItem(
+                      icon: Icons.folder,
+                      label: 'Files',
+                      isExpanded: _isExpanded,
+                      onTap: () {},
+                    ),
+                    _SideNavItem(
+                      icon: Icons.refresh,
+                      label: 'Sync',
+                      isExpanded: _isExpanded,
+                      onTap: () {},
+                    ),
+                    _SideNavItem(
+                      icon: Icons.person,
+                      label: 'Profile',
+                      isExpanded: _isExpanded,
+                      onTap: () {
+                        context.push('/profile');
+                      },
+                    ),
                     const Spacer(),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: _isExpanded ? 16.0 : 16.0),
-                      child: _isExpanded 
-                          ? ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Send New File'),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(double.infinity, 48),
-                                backgroundColor: colorScheme.primary,
-                                foregroundColor: colorScheme.onPrimary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                            )
-                          : ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(48, 48),
-                                padding: EdgeInsets.zero,
-                                backgroundColor: colorScheme.primary,
-                                foregroundColor: colorScheme.onPrimary,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: const Icon(Icons.add, size: 20),
-                            ),
-                    ),
-                    const SizedBox(height: 16),
-                    _SideNavItem(
-                      icon: Icons.menu_book,
-                      label: 'Docs',
-                      isExpanded: _isExpanded,
-                      onTap: () {},
-                    ),
-                    _SideNavItem(
-                      icon: Icons.help_outline,
-                      label: 'Support',
-                      isExpanded: _isExpanded,
-                      onTap: () {},
-                    ),
                     _SideNavItem(
                       icon: Icons.settings,
                       label: 'Settings',

@@ -26,12 +26,27 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
       final devices = await _deviceRepository.getDevices();
       final clientUuid = await _deviceRepository.getClientUuid();
       
-      final currentDevice = devices.cast<dynamic>().firstWhere(
+      var currentDevice = devices.cast<dynamic>().firstWhere(
         (d) => d.clientUuid == clientUuid, 
         orElse: () => null,
       );
       
-      emit(DevicesLoaded(devices, currentDevice: currentDevice));
+      var finalDevices = devices;
+
+      if (currentDevice == null) {
+        // The device is missing from the backend (wiped, or from previous user session).
+        // Clear the stale secret and re-register.
+        await _deviceRepository.clearDeviceSecret();
+        await _deviceRepository.autoRegisterDevice();
+        
+        finalDevices = await _deviceRepository.getDevices();
+        currentDevice = finalDevices.cast<dynamic>().firstWhere(
+          (d) => d.clientUuid == clientUuid, 
+          orElse: () => null,
+        );
+      }
+
+      emit(DevicesLoaded(finalDevices, currentDevice: currentDevice));
     } catch (e) {
       emit(DeviceError(e.toString()));
     }

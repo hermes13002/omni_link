@@ -25,13 +25,14 @@ async def list_cards(
     card_type: CardType | None = Query(None),
     tag_id: PrefixedTagId | None = Query(None),
     pinned: bool | None = Query(None),
+    search: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ApiResponse[CardListResponse]:
     return ApiResponse(data=await card_service.list_cards(
-        current_user.id, db, card_type, tag_id, pinned, page, page_size
+        current_user.id, db, card_type, tag_id, pinned, search, page, page_size
     ))
 
 

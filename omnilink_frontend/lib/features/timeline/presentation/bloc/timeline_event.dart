@@ -12,11 +12,12 @@ class TimelineLoadRequested extends TimelineEvent {
   final String? cardType;
   final String? tagId;
   final bool? pinned;
+  final String? searchQuery;
 
-  const TimelineLoadRequested({this.cardType, this.tagId, this.pinned});
+  const TimelineLoadRequested({this.cardType, this.tagId, this.pinned, this.searchQuery});
 
   @override
-  List<Object?> get props => [cardType, tagId, pinned];
+  List<Object?> get props => [cardType, tagId, pinned, searchQuery];
 }
 
 class TimelineCardCreated extends TimelineEvent {

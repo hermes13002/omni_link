@@ -27,6 +27,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
         cardType: event.cardType,
         tagId: event.tagId,
         pinned: event.pinned,
+        search: event.searchQuery,
       );
       emit(TimelineLoaded(cards));
     } catch (e) {
