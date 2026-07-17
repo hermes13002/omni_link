@@ -147,6 +147,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  IconData _getDeviceIcon(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('mac') || lower.contains('pc') || lower.contains('windows') || lower.contains('linux')) {
+      return Icons.laptop_mac;
+    } else if (lower.contains('iphone') || lower.contains('android') || lower.contains('phone')) {
+      return Icons.phone_iphone;
+    } else if (lower.contains('ipad') || lower.contains('tablet')) {
+      return Icons.tablet_mac;
+    } else if (lower.contains('web') || lower.contains('browser') || lower.contains('chrome') || lower.contains('safari')) {
+      return Icons.language;
+    }
+    return Icons.devices;
+  }
+
+  void _showRenameDeviceDialog(BuildContext context, String deviceId, String currentName) {
+    final controller = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rename Device'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'New device name'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                context.read<DeviceBloc>().add(DeviceUpdateRequested(deviceId, controller.text.trim()));
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDevicesCard(BuildContext context, ColorScheme colorScheme, TextTheme textTheme) {
     return OmniGlassContainer(
       padding: const EdgeInsets.all(16.0),
@@ -177,20 +218,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
               separatorBuilder: (context, index) => Divider(height: 1, color: colorScheme.outlineVariant.withAlpha(100)),
               itemBuilder: (context, index) {
                 final device = state.devices[index];
+                final isCurrent = state.currentDevice?.id == device.id;
+                
                 return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                  leading: Icon(Icons.devices, color: colorScheme.onSurfaceVariant),
-                  title: Text(device.friendlyName, style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                  leading: CircleAvatar(
+                    backgroundColor: colorScheme.primaryContainer,
+                    child: Icon(_getDeviceIcon(device.friendlyName), color: colorScheme.onPrimaryContainer),
+                  ),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          device.friendlyName, 
+                          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isCurrent)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colorScheme.tertiaryContainer,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'This Device',
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onTertiaryContainer,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   subtitle: Text(
                     'Last seen: ${device.lastSeen ?? 'Unknown'}',
                     style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
-                  trailing: OmniActionButton(
-                    icon: Icons.delete_outline,
-                    variant: OmniActionButtonVariant.error,
-                    onPressed: () {
-                      context.read<DeviceBloc>().add(DeviceDeleteRequested(device.id));
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isCurrent)
+                        IconButton(
+                          icon: const Icon(Icons.sensors),
+                          tooltip: 'Ping Device',
+                          color: colorScheme.primary,
+                          iconSize: 20,
+                          onPressed: () {
+                            context.read<DeviceBloc>().add(DevicePingRequested(device.id));
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        tooltip: 'Rename Device',
+                        color: colorScheme.onSurfaceVariant,
+                        iconSize: 20,
+                        onPressed: () => _showRenameDeviceDialog(context, device.id, device.friendlyName),
+                      ),
+                      OmniActionButton(
+                        icon: Icons.delete_outline,
+                        variant: OmniActionButtonVariant.error,
+                        onPressed: () {
+                          context.read<DeviceBloc>().add(DeviceDeleteRequested(device.id));
+                        },
+                      ),
+                    ],
                   ),
                 );
               },

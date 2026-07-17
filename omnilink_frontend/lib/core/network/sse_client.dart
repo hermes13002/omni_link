@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import '../globals.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../features/device/data/repositories/device_repository.dart';
@@ -52,11 +54,22 @@ class SseClient {
             final dataStr = line.substring(6).trim();
             if (dataStr.isNotEmpty) {
               try {
-                // If a new event arrives, we can just trigger a reload for now
-                // Or parse it if it contains the full card
-                _timelineBloc.add(const TimelineLoadRequested());
+                final decoded = jsonDecode(dataStr);
+                if (decoded is Map<String, dynamic> && decoded['type'] == 'ping') {
+                  final message = decoded['message'] ?? 'Ping received!';
+                  scaffoldMessengerKey.currentState?.showSnackBar(
+                    SnackBar(
+                      content: Text(message),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                } else {
+                  _timelineBloc.add(const TimelineLoadRequested());
+                }
               } catch (e) {
-                print('Error processing SSE data: $e');
+                // Not json, maybe just trigger reload
+                _timelineBloc.add(const TimelineLoadRequested());
               }
             }
           } else if (line == ': keepalive') {

@@ -22,8 +22,6 @@ class OmniBottomNav extends StatelessWidget {
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         onTap: (index) {
           if (index == 3) {
-            context.push('/settings');
-          } else if (index == 4) {
             context.push('/profile');
           }
         },
@@ -39,10 +37,6 @@ class OmniBottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.refresh),
             label: 'Sync',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

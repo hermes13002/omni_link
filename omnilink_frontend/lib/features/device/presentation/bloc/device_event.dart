@@ -19,3 +19,22 @@ class DeviceDeleteRequested extends DeviceEvent {
   @override
   List<Object?> get props => [deviceId];
 }
+
+class DeviceUpdateRequested extends DeviceEvent {
+  final String deviceId;
+  final String friendlyName;
+
+  const DeviceUpdateRequested(this.deviceId, this.friendlyName);
+
+  @override
+  List<Object?> get props => [deviceId, friendlyName];
+}
+
+class DevicePingRequested extends DeviceEvent {
+  final String deviceId;
+
+  const DevicePingRequested(this.deviceId);
+
+  @override
+  List<Object?> get props => [deviceId];
+}

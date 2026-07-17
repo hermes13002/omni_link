@@ -23,3 +23,7 @@ class DeviceResponse(BaseModel):
 
 class DeviceRegisterResponse(DeviceResponse):
     device_secret: str
+
+
+class DevicePatch(BaseModel):
+    friendly_name: str

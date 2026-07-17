@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
+import '../../features/timeline/presentation/bloc/timeline_event.dart';
 
 class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
   const OmniTopBar({super.key});
@@ -10,30 +14,29 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       title: Text(
-        'Omnilink',
-        style: textTheme.headlineMedium?.copyWith(
+        'Welcome back! 👋',
+        style: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
           color: colorScheme.onSurface,
+          letterSpacing: -0.5,
         ),
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.devices, color: colorScheme.onSurfaceVariant),
-          onPressed: () {},
-        ),
-        IconButton(
           icon: Icon(Icons.refresh, color: colorScheme.onSurfaceVariant),
-          onPressed: () {},
+          tooltip: 'Sync Timeline',
+          onPressed: () {
+            context.read<TimelineBloc>().add(const TimelineLoadRequested());
+          },
         ),
         Padding(
-          padding: const EdgeInsets.only(right: 16.0, left: 8.0),
-          child: CircleAvatar(
-            backgroundColor: colorScheme.primaryContainer,
-            radius: 16,
-            child: Text(
-              'U',
-              style: textTheme.labelMedium?.copyWith(color: colorScheme.onPrimaryContainer),
-            ),
+          padding: const EdgeInsets.only(right: 8.0),
+          child: IconButton(
+            icon: Icon(Icons.settings, color: colorScheme.onSurfaceVariant),
+            tooltip: 'Settings',
+            onPressed: () {
+              context.go('/settings');
+            },
           ),
         ),
       ],

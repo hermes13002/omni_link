@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.core.identifiers import PrefixedDeviceId
 from app.db.models.user import User
-from app.schemas.device import DeviceRegisterRequest, DeviceRegisterResponse, DeviceResponse
+from app.schemas.device import DeviceRegisterRequest, DeviceRegisterResponse, DeviceResponse, DevicePatch
 from app.schemas.response import ApiResponse
 from app.services import device_service
 
@@ -42,3 +42,16 @@ async def delete_device(
 ) -> ApiResponse[None]:
     await device_service.delete_device(device_id, current_user.id, db)
     return ApiResponse(data=None)
+
+
+@router.patch("/{device_id}", response_model=ApiResponse[DeviceResponse])
+async def update_device(
+    device_id: PrefixedDeviceId,
+    payload: DevicePatch,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ApiResponse[DeviceResponse]:
+    return ApiResponse(
+        data=await device_service.update_device(device_id, payload, current_user.id, db)
+    )
+

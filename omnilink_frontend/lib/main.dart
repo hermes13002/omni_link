@@ -6,6 +6,8 @@ import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 
+import 'core/globals.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   configureDependencies();
@@ -47,6 +49,7 @@ class _OmniLinkAppState extends State<OmniLinkApp> {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.dark,
+        scaffoldMessengerKey: scaffoldMessengerKey,
         routerConfig: _router,
         debugShowCheckedModeBanner: false,
       ),

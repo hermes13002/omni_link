@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../devices_api.dart';
@@ -17,19 +20,16 @@ class DeviceRepository {
     return await _api.getDevices();
   }
 
-  Future<DeviceModel> autoRegisterDevice() async {
+  Future<DeviceModel?> autoRegisterDevice() async {
     final storedSecret = await _storage.read(key: 'device_secret');
     if (storedSecret != null) {
-      // Device is already registered. 
-      // We could return the current device or just rely on the API to list it.
-      // For now, if we need to return it, we might need an API to get current device by secret.
-      // But we just skip registration.
-      throw Exception('Device already registered on this client.');
+      // Device is already registered, skip registration.
+      return null;
     }
 
     // Since we don't have a device info package yet, generate a client UUID.
-    final clientUuid = await _getClientUuid();
-    final friendlyName = 'Flutter Client'; // TODO: use device_info_plus to get actual model name
+    final clientUuid = await getClientUuid();
+    final friendlyName = await _getDeviceName();
 
     final device = await _api.registerDevice(clientUuid, friendlyName);
     
@@ -40,7 +40,7 @@ class DeviceRepository {
     return device;
   }
 
-  Future<String> _getClientUuid() async {
+  Future<String> getClientUuid() async {
     var clientUuid = await _storage.read(key: 'client_uuid');
     if (clientUuid == null) {
       clientUuid = _uuid.v4();
@@ -55,5 +55,41 @@ class DeviceRepository {
 
   Future<void> deleteDevice(String deviceId) async {
     await _api.deleteDevice(deviceId);
+  }
+
+  Future<DeviceModel> updateDevice(String deviceId, String friendlyName) async {
+    return await _api.updateDevice(deviceId, friendlyName);
+  }
+
+  Future<void> pingDevice(String deviceId) async {
+    await _api.pingDevice(deviceId);
+  }
+
+  Future<String> _getDeviceName() async {
+    final deviceInfo = DeviceInfoPlugin();
+    try {
+      if (kIsWeb) {
+        final webBrowserInfo = await deviceInfo.webBrowserInfo;
+        return 'Web Browser (${webBrowserInfo.browserName.name})';
+      } else if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        return androidInfo.model;
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return iosInfo.name;
+      } else if (Platform.isMacOS) {
+        final macOsInfo = await deviceInfo.macOsInfo;
+        return macOsInfo.computerName;
+      } else if (Platform.isWindows) {
+        final windowsInfo = await deviceInfo.windowsInfo;
+        return windowsInfo.computerName;
+      } else if (Platform.isLinux) {
+        final linuxInfo = await deviceInfo.linuxInfo;
+        return linuxInfo.prettyName;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return 'Unknown Device';
   }
 }

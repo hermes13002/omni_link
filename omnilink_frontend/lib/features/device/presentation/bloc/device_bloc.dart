@@ -13,6 +13,8 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     on<DevicesLoadRequested>(_onLoadRequested);
     on<DeviceAutoRegisterRequested>(_onAutoRegisterRequested);
     on<DeviceDeleteRequested>(_onDeleteRequested);
+    on<DeviceUpdateRequested>(_onUpdateRequested);
+    on<DevicePingRequested>(_onPingRequested);
   }
 
   Future<void> _onLoadRequested(
@@ -22,9 +24,14 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
     emit(DeviceLoading());
     try {
       final devices = await _deviceRepository.getDevices();
-      // Optionally find the current device from the list
-      // final currentSecret = await _deviceRepository.getDeviceSecret();
-      emit(DevicesLoaded(devices));
+      final clientUuid = await _deviceRepository.getClientUuid();
+      
+      final currentDevice = devices.cast<dynamic>().firstWhere(
+        (d) => d.clientUuid == clientUuid, 
+        orElse: () => null,
+      );
+      
+      emit(DevicesLoaded(devices, currentDevice: currentDevice));
     } catch (e) {
       emit(DeviceError(e.toString()));
     }
@@ -57,6 +64,39 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
         final updated = currentState.devices.where((d) => d.id != event.deviceId).toList();
         emit(DevicesLoaded(updated, currentDevice: currentState.currentDevice));
       } catch (e) {
+        emit(DeviceError(e.toString()));
+        emit(currentState);
+      }
+    }
+  }
+
+  Future<void> _onUpdateRequested(
+    DeviceUpdateRequested event,
+    Emitter<DeviceState> emit,
+  ) async {
+    if (state is DevicesLoaded) {
+      final currentState = state as DevicesLoaded;
+      try {
+        final updatedDevice = await _deviceRepository.updateDevice(event.deviceId, event.friendlyName);
+        final updated = currentState.devices.map((d) => d.id == event.deviceId ? updatedDevice : d).toList();
+        final currentDevice = currentState.currentDevice?.id == event.deviceId ? updatedDevice : currentState.currentDevice;
+        emit(DevicesLoaded(updated, currentDevice: currentDevice));
+      } catch (e) {
+        emit(DeviceError(e.toString()));
+        emit(currentState);
+      }
+    }
+  }
+
+  Future<void> _onPingRequested(
+    DevicePingRequested event,
+    Emitter<DeviceState> emit,
+  ) async {
+    try {
+      await _deviceRepository.pingDevice(event.deviceId);
+    } catch (e) {
+      if (state is DevicesLoaded) {
+        final currentState = state as DevicesLoaded;
         emit(DeviceError(e.toString()));
         emit(currentState);
       }
