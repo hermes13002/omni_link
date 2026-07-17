@@ -77,7 +77,16 @@ async def _resolve_tags(
     db: AsyncSession,
 ) -> list[Tag]:
     if not tag_ids:
-        return []
+        result = await db.scalars(
+            select(Tag).where(func.lower(Tag.name) == 'general', Tag.user_id == user_id)
+        )
+        general_tag = result.first()
+        if not general_tag:
+            general_tag = Tag(name="General", user_id=user_id, color_hex="#808080")
+            db.add(general_tag)
+            await db.flush()
+        return [general_tag]
+
     result = await db.scalars(
         select(Tag).where(Tag.id.in_(tag_ids), Tag.user_id == user_id)
     )

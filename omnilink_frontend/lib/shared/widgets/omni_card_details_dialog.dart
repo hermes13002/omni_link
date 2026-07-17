@@ -7,6 +7,7 @@ import '../../features/timeline/presentation/bloc/tags_state.dart';
 import '../../features/timeline/presentation/bloc/tags_event.dart';
 import '../../core/di/injection.dart';
 import 'omni_glass_container.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OmniCardDetailsDialog extends StatefulWidget {
   final CardModel card;
@@ -192,6 +193,25 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                           color: colorScheme.primary,
                           tooltip: 'Save',
                         ),
+                if (widget.card.gcsSignedUrl != null)
+                  IconButton(
+                    icon: const Icon(Icons.download),
+                    onPressed: () async {
+                      final url = widget.card.gcsSignedUrl!;
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      } else {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not open file URL')),
+                          );
+                        }
+                      }
+                    },
+                    color: colorScheme.onSurfaceVariant,
+                    tooltip: 'Download',
+                  ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
@@ -389,7 +409,21 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () async {
+                final url = widget.card.gcsSignedUrl;
+                if (url != null) {
+                  final uri = Uri.parse(url);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not open file URL')),
+                      );
+                    }
+                  }
+                }
+              },
               icon: const Icon(Icons.download),
               label: const Text('Download File'),
               style: ElevatedButton.styleFrom(
