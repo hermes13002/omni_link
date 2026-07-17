@@ -15,6 +15,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     on<TimelineCardCreated>(_onCardCreated);
     on<TimelineCardDeleted>(_onCardDeleted);
     on<TimelineCardUpdated>(_onCardUpdated);
+    on<TimelineTogglePinRequested>(_onTogglePinRequested);
   }
 
   Future<void> _onLoadRequested(
@@ -66,6 +67,37 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
         return c.id == event.card.id ? event.card : c;
       }).toList();
       emit(TimelineLoaded(updatedCards));
+    }
+  }
+
+  Future<void> _onTogglePinRequested(
+    TimelineTogglePinRequested event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (state is TimelineLoaded) {
+      final currentCards = (state as TimelineLoaded).cards;
+      
+      // Optimistic update
+      final newPinnedState = !event.card.pinned;
+      final optimisticCard = event.card.copyWith(pinned: newPinnedState);
+      
+      final optimisticCards = currentCards.map((c) {
+        return c.id == event.card.id ? optimisticCard : c;
+      }).toList();
+      emit(TimelineLoaded(optimisticCards));
+
+      try {
+        final updatedCard = await _cardsApi.updateCard(event.card.id, pinned: newPinnedState);
+        add(TimelineCardUpdated(updatedCard));
+      } catch (e) {
+        // Revert optimistic update on failure
+        final revertCards = currentCards.map((c) {
+          return c.id == event.card.id ? event.card : c;
+        }).toList();
+        emit(TimelineLoaded(revertCards));
+        emit(TimelineError("Failed to pin card: $e"));
+        emit(TimelineLoaded(revertCards));
+      }
     }
   }
 }

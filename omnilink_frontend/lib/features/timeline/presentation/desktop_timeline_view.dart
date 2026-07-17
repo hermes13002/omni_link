@@ -15,7 +15,8 @@ import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
 
 class DesktopTimelineView extends StatefulWidget {
-  const DesktopTimelineView({super.key});
+  final bool showFavorites;
+  const DesktopTimelineView({super.key, this.showFavorites = false});
 
   @override
   State<DesktopTimelineView> createState() => _DesktopTimelineViewState();
@@ -30,7 +31,19 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
   @override
   void initState() {
     super.initState();
-    context.read<TimelineBloc>().add(const TimelineLoadRequested());
+    context.read<TimelineBloc>().add(TimelineLoadRequested(pinned: widget.showFavorites ? true : null));
+  }
+
+  @override
+  void didUpdateWidget(DesktopTimelineView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showFavorites != widget.showFavorites) {
+      context.read<TimelineBloc>().add(TimelineLoadRequested(
+        tagId: _activeTagId,
+        searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+        pinned: widget.showFavorites ? true : null,
+      ));
+    }
   }
 
   @override
@@ -48,6 +61,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
         context.read<TimelineBloc>().add(TimelineLoadRequested(
           tagId: _activeTagId,
           searchQuery: query.isEmpty ? null : query,
+          pinned: widget.showFavorites ? true : null,
         ));
       }
     });
@@ -86,7 +100,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
     return Scaffold(
       body: Row(
         children: [
-          const OmniSideNav(),
+          OmniSideNav(currentIndex: widget.showFavorites ? 1 : 0),
           Expanded(
             flex: 2,
             child: Column(
@@ -119,7 +133,11 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                           color: colorScheme.onSurfaceVariant,
                         ),
                         onPressed: () {
-                          context.read<TimelineBloc>().add(const TimelineLoadRequested());
+                          context.read<TimelineBloc>().add(TimelineLoadRequested(
+                            tagId: _activeTagId,
+                            searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                            pinned: widget.showFavorites ? true : null,
+                          ));
                         },
                       ),
                     ],
@@ -132,6 +150,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                     context.read<TimelineBloc>().add(TimelineLoadRequested(
                       tagId: tagId,
                       searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                      pinned: widget.showFavorites ? true : null,
                     ));
                   },
                 ),
@@ -166,6 +185,14 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                               tagColor: colorScheme.secondary,
                               body: card.body,
                               imageUrl: card.gcsSignedUrl,
+                              isPinned: card.pinned,
+                              onTogglePin: () {
+                                context.read<TimelineBloc>().add(TimelineLoadRequested(
+                                  tagId: _activeTagId,
+                                  searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                                  pinned: widget.showFavorites ? true : null,
+                                ));
+                              },
                               onTap: () {
                                 showDialog(
                                   context: context,

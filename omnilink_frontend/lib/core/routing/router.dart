@@ -76,7 +76,24 @@ GoRouter createRouter(AuthBloc authBloc) {
               BlocProvider.value(value: getIt<TagsBloc>()),
               BlocProvider.value(value: deviceBloc),
             ],
-            child: const TimelineScreen(),
+            child: const TimelineScreen(showFavorites: false),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/favorites',
+        builder: (context, state) {
+          final deviceBloc = getIt<DeviceBloc>();
+          // Connect to SSE stream
+          getIt<SseClient>().connect();
+          
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider.value(value: getIt<TimelineBloc>()),
+              BlocProvider.value(value: getIt<TagsBloc>()),
+              BlocProvider.value(value: deviceBloc),
+            ],
+            child: const TimelineScreen(showFavorites: true),
           );
         },
       ),

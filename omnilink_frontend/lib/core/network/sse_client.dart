@@ -15,6 +15,7 @@ class SseClient {
   
   StreamSubscription? _subscription;
   bool _isConnected = false;
+  String? _currentDeviceId;
 
   SseClient(this._dio, this._deviceRepository, this._timelineBloc);
 
@@ -25,6 +26,15 @@ class SseClient {
     if (secret == null) {
       print('Cannot connect to SSE: device secret is null');
       return;
+    }
+
+    try {
+      final devices = await _deviceRepository.getDevices();
+      final clientUuid = await _deviceRepository.getClientUuid();
+      final currentDevice = devices.cast<dynamic>().firstWhere((d) => d.clientUuid == clientUuid, orElse: () => null);
+      _currentDeviceId = currentDevice?.id;
+    } catch (e) {
+      print('Failed to get current device ID for SSE filtering: $e');
     }
 
     try {
@@ -54,9 +64,25 @@ class SseClient {
             if (dataStr.isNotEmpty) {
               try {
                 final decoded = jsonDecode(dataStr);
-                if (decoded is Map<String, dynamic> && decoded['type'] == 'ping') {
-                  final message = decoded['message'] ?? 'Ping received!';
-                  OmniToast.showInfo(null, message);
+                if (decoded is Map<String, dynamic>) {
+                  final payload = decoded['payload'];
+                  final targetDeviceIds = decoded['target_device_ids'] as List<dynamic>?;
+
+                  // If this event is targeted at specific devices, check if we are one of them
+                  bool isTargetedAtMe = true;
+                  if (targetDeviceIds != null && targetDeviceIds.isNotEmpty) {
+                    isTargetedAtMe = _currentDeviceId != null && targetDeviceIds.contains(_currentDeviceId);
+                  }
+
+                  if (isTargetedAtMe && payload is Map<String, dynamic> && payload['type'] == 'ping') {
+                    final message = payload['message'] ?? 'Ping received!';
+                    OmniToast.showInfo(null, message);
+                  } else {
+                    // It's a broadcast event (like new card) or targeted at us, trigger reload
+                    if (isTargetedAtMe || payload is Map<String, dynamic> && payload['type'] != 'ping') {
+                      _timelineBloc.add(const TimelineLoadRequested());
+                    }
+                  }
                 } else {
                   _timelineBloc.add(const TimelineLoadRequested());
                 }

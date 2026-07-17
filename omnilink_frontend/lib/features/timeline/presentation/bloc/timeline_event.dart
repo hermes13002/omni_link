@@ -45,3 +45,12 @@ class TimelineCardUpdated extends TimelineEvent {
   @override
   List<Object?> get props => [card];
 }
+
+class TimelineTogglePinRequested extends TimelineEvent {
+  final CardModel card;
+
+  const TimelineTogglePinRequested(this.card);
+
+  @override
+  List<Object?> get props => [card];
+}

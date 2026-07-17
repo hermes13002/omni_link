@@ -33,6 +33,40 @@ class CardModel {
     required this.updatedAt,
   });
 
+  CardModel copyWith({
+    String? id,
+    String? cardType,
+    String? title,
+    String? body,
+    bool? pinned,
+    List<TagModel>? tags,
+    String? gcsSignedUrl,
+    String? mimeType,
+    int? fileSizeBytes,
+    String? ogTitle,
+    String? ogImage,
+    String? sourceDeviceId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return CardModel(
+      id: id ?? this.id,
+      cardType: cardType ?? this.cardType,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      pinned: pinned ?? this.pinned,
+      tags: tags ?? this.tags,
+      gcsSignedUrl: gcsSignedUrl ?? this.gcsSignedUrl,
+      mimeType: mimeType ?? this.mimeType,
+      fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
+      ogTitle: ogTitle ?? this.ogTitle,
+      ogImage: ogImage ?? this.ogImage,
+      sourceDeviceId: sourceDeviceId ?? this.sourceDeviceId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   factory CardModel.fromJson(Map<String, dynamic> json) {
     return CardModel(
       id: json['id'] as String,

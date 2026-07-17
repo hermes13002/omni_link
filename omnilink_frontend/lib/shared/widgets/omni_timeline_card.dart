@@ -13,6 +13,8 @@ class OmniTimelineCard extends StatelessWidget {
   final Color? tagColor;
   final String? body;
   final String? imageUrl;
+  final bool isPinned;
+  final VoidCallback? onTogglePin;
   final VoidCallback? onTap;
 
   const OmniTimelineCard({
@@ -25,6 +27,8 @@ class OmniTimelineCard extends StatelessWidget {
     this.tagColor,
     this.body,
     this.imageUrl,
+    this.isPinned = false,
+    this.onTogglePin,
     this.onTap,
   });
 
@@ -184,14 +188,33 @@ class OmniTimelineCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (onTogglePin != null)
+                      GestureDetector(
+                        onTap: onTogglePin,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Icon(
+                            isPinned ? Icons.star : Icons.star_outline,
+                            color: isPinned ? Colors.amber : colorScheme.onSurfaceVariant,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Wrap(

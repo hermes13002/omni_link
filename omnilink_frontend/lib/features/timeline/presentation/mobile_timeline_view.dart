@@ -20,7 +20,8 @@ import 'bloc/tags_state.dart';
 import 'bloc/tags_event.dart';
 
 class MobileTimelineView extends StatefulWidget {
-  const MobileTimelineView({super.key});
+  final bool showFavorites;
+  const MobileTimelineView({super.key, this.showFavorites = false});
 
   @override
   State<MobileTimelineView> createState() => _MobileTimelineViewState();
@@ -35,8 +36,20 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
   @override
   void initState() {
     super.initState();
-    context.read<TimelineBloc>().add(const TimelineLoadRequested());
+    context.read<TimelineBloc>().add(TimelineLoadRequested(pinned: widget.showFavorites ? true : null));
     context.read<TagsBloc>().add(TagsLoadRequested());
+  }
+
+  @override
+  void didUpdateWidget(MobileTimelineView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showFavorites != widget.showFavorites) {
+      context.read<TimelineBloc>().add(TimelineLoadRequested(
+        tagId: _activeTagId,
+        searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+        pinned: widget.showFavorites ? true : null,
+      ));
+    }
   }
 
   @override
@@ -54,6 +67,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
         context.read<TimelineBloc>().add(TimelineLoadRequested(
           tagId: _activeTagId,
           searchQuery: query.isEmpty ? null : query,
+          pinned: widget.showFavorites ? true : null,
         ));
       }
     });
@@ -108,6 +122,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
               context.read<TimelineBloc>().add(TimelineLoadRequested(
                 tagId: tagId,
                 searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                pinned: widget.showFavorites ? true : null,
               ));
             },
           ),
@@ -141,6 +156,14 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                             tagColor: colorScheme.secondary,
                             body: card.body,
                             imageUrl: card.gcsSignedUrl,
+                            isPinned: card.pinned,
+                            onTogglePin: () {
+                              context.read<TimelineBloc>().add(TimelineLoadRequested(
+                                tagId: _activeTagId,
+                                searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                                pinned: widget.showFavorites ? true : null,
+                              ));
+                            },
                             onTap: () {
                               showDialog(
                                 context: context,
@@ -165,7 +188,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
           ),
         ],
       ),
-      bottomNavigationBar: const OmniBottomNav(),
+      bottomNavigationBar: OmniBottomNav(currentIndex: widget.showFavorites ? 1 : 0),
     );
   }
 }

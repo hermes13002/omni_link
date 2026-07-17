@@ -4,14 +4,15 @@ import 'desktop_timeline_view.dart';
 import 'mobile_timeline_view.dart';
 
 class TimelineScreen extends StatelessWidget {
-  const TimelineScreen({super.key});
+  final bool showFavorites;
+  const TimelineScreen({super.key, this.showFavorites = false});
 
   @override
   Widget build(BuildContext context) {
     return ScreenTypeLayout.builder(
-      mobile: (BuildContext context) => const MobileTimelineView(),
-      tablet: (BuildContext context) => const DesktopTimelineView(),
-      desktop: (BuildContext context) => const DesktopTimelineView(),
+      mobile: (BuildContext context) => MobileTimelineView(showFavorites: showFavorites),
+      tablet: (BuildContext context) => DesktopTimelineView(showFavorites: showFavorites),
+      desktop: (BuildContext context) => DesktopTimelineView(showFavorites: showFavorites),
     );
   }
 }

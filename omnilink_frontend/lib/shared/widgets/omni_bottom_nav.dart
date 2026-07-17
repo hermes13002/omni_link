@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'omni_glass_container.dart';
 
 class OmniBottomNav extends StatelessWidget {
-  const OmniBottomNav({super.key});
+  final int currentIndex;
+  const OmniBottomNav({super.key, this.currentIndex = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +21,17 @@ class OmniBottomNav extends StatelessWidget {
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.onSurfaceVariant,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        currentIndex: currentIndex,
         onTap: (index) {
-          if (index == 3) {
+          if (index == 0) {
+            context.go('/');
+          } else if (index == 1) {
+            context.go('/favorites');
+          } else if (index == 2) {
+            // Sync is currently just an icon or could trigger load, 
+            // but we might want it to remain on current screen and dispatch event.
+            // For now, let's keep it as is.
+          } else if (index == 3) {
             context.push('/profile');
           }
         },
@@ -31,8 +41,8 @@ class OmniBottomNav extends StatelessWidget {
             label: 'Clip',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
-            label: 'Files',
+            icon: Icon(Icons.star),
+            label: 'Favorites',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.refresh),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_bloc.dart';
+import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_event.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 import '../../features/timeline/data/models/card_model.dart';
 import '../../features/timeline/data/cards_api.dart';
@@ -23,6 +25,7 @@ class OmniCardDetailsDialog extends StatefulWidget {
 class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
   bool _isEditing = false;
   bool _isSaving = false;
+  late bool _isPinned;
   late TextEditingController _titleController;
   late TextEditingController _bodyController;
   late Set<String> _selectedTagIds;
@@ -30,6 +33,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
   @override
   void initState() {
     super.initState();
+    _isPinned = widget.card.pinned;
     _titleController = TextEditingController(text: widget.card.title ?? '');
     _bodyController = TextEditingController(text: widget.card.body ?? '');
     _selectedTagIds = widget.card.tags.map((t) => t.id).toSet();
@@ -41,6 +45,15 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
     _titleController.dispose();
     _bodyController.dispose();
     super.dispose();
+  }
+
+  void _togglePin() {
+    setState(() {
+      _isPinned = !_isPinned;
+    });
+    // Create a fake old card so the bloc correctly computes the new state as _isPinned
+    final fakeOldCard = widget.card.copyWith(pinned: !_isPinned);
+    getIt<TimelineBloc>().add(TimelineTogglePinRequested(fakeOldCard));
   }
 
   String _formatFileSize(int? bytes) {
@@ -166,6 +179,12 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                         ),
                 ),
                 if (!_isEditing) ...[
+                  IconButton(
+                    icon: Icon(_isPinned ? Icons.star : Icons.star_outline),
+                    onPressed: _togglePin,
+                    color: _isPinned ? Colors.amber : colorScheme.onSurfaceVariant,
+                    tooltip: _isPinned ? 'Unpin' : 'Pin',
+                  ),
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () => setState(() => _isEditing = true),
