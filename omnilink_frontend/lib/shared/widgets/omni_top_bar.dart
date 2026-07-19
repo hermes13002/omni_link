@@ -14,7 +14,7 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       title: Text(
-        'Welcome back! 👋',
+        'Welcome',
         style: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
           color: colorScheme.onSurface,

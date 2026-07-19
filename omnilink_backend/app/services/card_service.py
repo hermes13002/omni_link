@@ -20,8 +20,10 @@ from app.schemas.card import (
     MetadataCardCreate,
     TextCardCreate,
 )
-from app.storage.gcs_client import delete_object, generate_signed_url, upload_file_bytes
+from app.storage.gcs_client import delete_object, generate_signed_url, upload_file_stream
 from app.services.pubsub_service import publish_to_user_channel
+import socket
+import ipaddress
 
 
 def _is_valid_url(text: str) -> bool:
@@ -52,7 +54,23 @@ def _extract_meta_content(html: str, prop: str) -> str | None:
     return None
 
 
+def is_safe_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        ip = socket.gethostbyname(hostname)
+        ip_obj = ipaddress.ip_address(ip)
+        return ip_obj.is_global and not ip_obj.is_loopback and not ip_obj.is_link_local
+    except socket.error:
+        return False
+    except ValueError:
+        return False
+
 async def _fetch_og_metadata(url: str) -> tuple[str | None, str | None]:
+    if not is_safe_url(url):
+        return None, None
     try:
         async with httpx.AsyncClient(
             timeout=8.0, follow_redirects=True
@@ -179,14 +197,13 @@ async def create_file_card(
     user_id: uuid.UUID,
     db: AsyncSession,
 ) -> CardResponse:
-    file_bytes = await file.read()
     object_key = f"cards/{user_id}/{uuid.uuid4()}/{file.filename}"
     content_type = file.content_type
     if not content_type or content_type == "application/octet-stream":
         guessed, _ = mimetypes.guess_type(file.filename)
         content_type = guessed or "application/octet-stream"
         
-    await upload_file_bytes(object_key, file_bytes, content_type)
+    await upload_file_stream(object_key, file.file, content_type)
 
     tags = await _resolve_tags(tag_ids, user_id, db)
     card = Card(
@@ -196,7 +213,7 @@ async def create_file_card(
         title=file.filename,
         gcs_object_key=object_key,
         mime_type=content_type,
-        file_size_bytes=len(file_bytes),
+        file_size_bytes=file.size or 0,
         tags=tags,
     )
     db.add(card)

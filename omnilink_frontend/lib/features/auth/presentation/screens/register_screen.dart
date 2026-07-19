@@ -95,6 +95,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your display name';
                       }
+                      if (!RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value)) {
+                        return 'Only letters, numbers, and spaces are allowed';
+                      }
                       return null;
                     },
                   ),
@@ -120,6 +123,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a password';
+                      }
+                      if (value.length < 8) {
+                        return 'Password must be at least 8 characters long';
+                      }
+                      if (!RegExp(r'^(?=.*[a-zA-Z])(?=.*\d).+$').hasMatch(value)) {
+                        return 'Password must contain at least one letter and one number';
                       }
                       return null;
                     },

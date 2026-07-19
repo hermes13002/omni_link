@@ -12,3 +12,23 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
         return response
+
+
+class ContentSizeLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, max_upload_size: int) -> None:
+        super().__init__(app)
+        self.max_upload_size = max_upload_size
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > self.max_upload_size:
+                    from fastapi.responses import JSONResponse
+                    return JSONResponse(
+                        status_code=413,
+                        content={"success": False, "message": "Payload Too Large"}
+                    )
+            except ValueError:
+                pass
+        return await call_next(request)

@@ -10,7 +10,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.v1.router import router
 from app.schemas.response import ApiResponse
 from app.cache.redis_client import close_redis_pool, init_redis_pool
-from app.core.middleware import RequestIdMiddleware
+from app.core.middleware import RequestIdMiddleware, ContentSizeLimitMiddleware
+from app.core.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.storage.gcs_client import init_gcs_client
 
 
@@ -30,11 +33,16 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(RequestIdMiddleware)
+# 50MB limit
+app.add_middleware(ContentSizeLimitMiddleware, max_upload_size=50 * 1024 * 1024)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

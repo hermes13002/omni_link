@@ -41,6 +41,17 @@ async def upload_file_bytes(object_key: str, data: bytes, content_type: str) -> 
     )
 
 
+async def upload_file_stream(object_key: str, file_obj, content_type: str) -> None:
+    loop = asyncio.get_event_loop()
+    client = get_gcs_client()
+    bucket = client.bucket(settings.gcs_bucket_name)
+    blob = bucket.blob(object_key)
+    await loop.run_in_executor(
+        None,
+        partial(blob.upload_from_file, file_obj, content_type=content_type),
+    )
+
+
 async def generate_signed_url(object_key: str) -> str:
     loop = asyncio.get_event_loop()
     client = get_gcs_client()

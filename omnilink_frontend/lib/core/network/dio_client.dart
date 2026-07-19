@@ -15,9 +15,10 @@ abstract class NetworkModule {
   Dio dio(FlutterSecureStorage storage) {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'http://127.0.0.1:8000', // Changed to localhost for Windows desktop
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        // baseUrl: 'http://127.0.0.1:8000', // localhost
+        baseUrl: 'https://omnilink-backend.onrender.com',
+        connectTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 60),
         contentType: 'application/json',
       ),
     );
@@ -36,7 +37,7 @@ abstract class NetworkModule {
 class OmniLogInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    debugPrint('*** Request ***');
+    debugPrint('=== Request ===');
     debugPrint('url: ${options.uri}');
     if (options.data != null) {
       print('request data: ${options.data}');
@@ -46,7 +47,7 @@ class OmniLogInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    debugPrint('*** Response ***');
+    debugPrint('=== Response ===');
     debugPrint('url: ${response.requestOptions.uri}');
     if (response.data is ResponseBody) {
       debugPrint('response stream: [Streaming Data]');
@@ -58,7 +59,7 @@ class OmniLogInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    debugPrint('*** Error ***');
+    debugPrint('=== Error ===');
     debugPrint('url: ${err.requestOptions.uri}');
     debugPrint('error message: ${err.message}');
     if (err.response != null && err.response!.data != null) {
