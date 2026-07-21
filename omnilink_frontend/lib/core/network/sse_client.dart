@@ -1,30 +1,30 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'package:omnilink_frontend/features/device/data/repositories/device_repository.dart';
-import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_bloc.dart';
-import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_event.dart';
+import 'package:omnilink_frontend/core/events/event_bus.dart';
 import '../../shared/utils/omni_toast.dart';
 
 @lazySingleton
 class SseClient {
   final Dio _dio;
   final DeviceRepository _deviceRepository;
-  final TimelineBloc _timelineBloc;
+  final GlobalEventBus _eventBus;
   
   StreamSubscription? _subscription;
   bool _isConnected = false;
   String? _currentDeviceId;
 
-  SseClient(this._dio, this._deviceRepository, this._timelineBloc);
+  SseClient(this._dio, this._deviceRepository, this._eventBus);
 
   Future<void> connect() async {
     if (_isConnected) return;
 
     final secret = await _deviceRepository.getDeviceSecret();
     if (secret == null) {
-      print('Cannot connect to SSE: device secret is null');
+      debugPrint('Cannot connect to SSE: device secret is null');
       return;
     }
 
@@ -34,7 +34,7 @@ class SseClient {
       final currentDevice = devices.cast<dynamic>().firstWhere((d) => d.clientUuid == clientUuid, orElse: () => null);
       _currentDeviceId = currentDevice?.id;
     } catch (e) {
-      print('Failed to get current device ID for SSE filtering: $e');
+      debugPrint('Failed to get current device ID for SSE filtering: $e');
     }
 
     try {
@@ -80,15 +80,15 @@ class SseClient {
                   } else {
                     // It's a broadcast event (like new card) or targeted at us, trigger reload
                     if (isTargetedAtMe || payload is Map<String, dynamic> && payload['type'] != 'ping') {
-                      _timelineBloc.add(const TimelineLoadRequested());
+                      _eventBus.fire('reload');
                     }
                   }
                 } else {
-                  _timelineBloc.add(const TimelineLoadRequested());
+                  _eventBus.fire('reload');
                 }
               } catch (e) {
                 // Not json, maybe just trigger reload
-                _timelineBloc.add(const TimelineLoadRequested());
+                _eventBus.fire('reload');
               }
             }
           } else if (line == ': keepalive') {
@@ -96,17 +96,17 @@ class SseClient {
           }
         },
         onError: (e) {
-          print('SSE stream error: $e');
+          debugPrint('SSE stream error: $e');
           _reconnect();
         },
         onDone: () {
-          print('SSE stream done');
+          debugPrint('SSE stream done');
           _reconnect();
         },
         cancelOnError: true,
       );
     } catch (e) {
-      print('Failed to connect to SSE: $e');
+      debugPrint('Failed to connect to SSE: $e');
       _reconnect();
     }
   }

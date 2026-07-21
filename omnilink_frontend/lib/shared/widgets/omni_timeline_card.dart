@@ -180,8 +180,8 @@ class OmniTimelineCard extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colorScheme.errorContainer.withAlpha(128),
-                    colorScheme.errorContainer.withAlpha(0),
+                    colorScheme.surfaceContainerHighest.withAlpha(128),
+                    colorScheme.surfaceContainerHighest.withAlpha(0),
                   ],
                 ),
               ),
@@ -189,12 +189,12 @@ class OmniTimelineCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: colorScheme.error.withAlpha(51),
+                    color: colorScheme.tertiaryContainer.withAlpha(51),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.picture_as_pdf,
-                    color: colorScheme.error,
+                    color: colorScheme.tertiary,
                     size: 32,
                   ),
                 ),

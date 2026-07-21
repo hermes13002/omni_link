@@ -1,23 +1,43 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:isar/isar.dart';
+import 'package:omnilink_frontend/core/events/event_bus.dart';
 
 import '../../data/cards_api.dart';
 import '../../data/models/isar_models.dart';
 import 'timeline_event.dart';
 import 'timeline_state.dart';
 
-@lazySingleton
+@injectable
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
   final CardsApi _cardsApi;
   final Isar _isar;
+  final GlobalEventBus _eventBus;
+  StreamSubscription? _eventSubscription;
 
-  TimelineBloc(this._cardsApi, this._isar) : super(TimelineInitial()) {
+  TimelineBloc(this._cardsApi, this._isar, this._eventBus) : super(TimelineInitial()) {
     on<TimelineLoadRequested>(_onLoadRequested);
     on<TimelineCardCreated>(_onCardCreated);
     on<TimelineCardDeleted>(_onCardDeleted);
     on<TimelineCardUpdated>(_onCardUpdated);
     on<TimelineTogglePinRequested>(_onTogglePinRequested);
+
+    _eventSubscription = _eventBus.stream.listen((event) {
+      if (event == 'reload') {
+        // preserve current filters by reloading with current state
+        if (state is TimelineLoaded) {
+          // just trigger a generic reload
+          add(const TimelineLoadRequested());
+        }
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _eventSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onLoadRequested(

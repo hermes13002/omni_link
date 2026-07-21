@@ -204,6 +204,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
           Row(
             children: [
               Container(
+                height: 40,
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(20),
@@ -223,6 +224,8 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                           icon: Icon(Icons.add, color: colorScheme.onSurface),
                           onPressed: _toggleMenu,
                           iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                       ),
                     ),
@@ -232,20 +235,38 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.camera_alt, color: colorScheme.onSurface),
-                            onPressed: () => _pickImage(ImageSource.camera),
-                            iconSize: 20,
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: IconButton(
+                              icon: Icon(Icons.camera_alt, color: colorScheme.onSurface),
+                              onPressed: () => _pickImage(ImageSource.camera),
+                              iconSize: 20,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.image, color: colorScheme.onSurface),
-                            onPressed: () => _pickImage(ImageSource.gallery),
-                            iconSize: 20,
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: IconButton(
+                              icon: Icon(Icons.image, color: colorScheme.onSurface),
+                              onPressed: () => _pickImage(ImageSource.gallery),
+                              iconSize: 20,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.attach_file, color: colorScheme.onSurface),
-                            onPressed: _pickFile,
-                            iconSize: 20,
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: IconButton(
+                              icon: Icon(Icons.attach_file, color: colorScheme.onSurface),
+                              onPressed: _pickFile,
+                              iconSize: 20,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           ),
                           const SizedBox(width: 4),
                         ],

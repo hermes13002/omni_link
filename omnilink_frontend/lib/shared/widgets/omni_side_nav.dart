@@ -5,8 +5,8 @@ import '../../features/device/presentation/bloc/device_bloc.dart';
 import '../../features/device/presentation/bloc/device_state.dart';
 
 class OmniSideNav extends StatefulWidget {
-  final int currentIndex;
-  const OmniSideNav({super.key, this.currentIndex = 0});
+  final StatefulNavigationShell navigationShell;
+  const OmniSideNav({super.key, required this.navigationShell});
 
   @override
   State<OmniSideNav> createState() => _OmniSideNavState();
@@ -126,17 +126,20 @@ class _OmniSideNavState extends State<OmniSideNav> {
                       padding: EdgeInsets.symmetric(horizontal: _isExpanded ? 16.0 : 8.0, vertical: 8.0),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: widget.currentIndex == 0 ? colorScheme.secondaryContainer : Colors.transparent,
+                          color: widget.navigationShell.currentIndex == 0 ? colorScheme.secondaryContainer : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: _SideNavItem(
                           icon: Icons.content_paste,
                           label: 'Clip',
                           isExpanded: _isExpanded,
-                          iconColor: widget.currentIndex == 0 ? colorScheme.onSecondaryContainer : null,
-                          textColor: widget.currentIndex == 0 ? colorScheme.onSecondaryContainer : null,
+                          iconColor: widget.navigationShell.currentIndex == 0 ? colorScheme.onSecondaryContainer : null,
+                          textColor: widget.navigationShell.currentIndex == 0 ? colorScheme.onSecondaryContainer : null,
                           onTap: () {
-                            context.go('/');
+                            widget.navigationShell.goBranch(
+                              0,
+                              initialLocation: 0 == widget.navigationShell.currentIndex,
+                            );
                           },
                         ),
                       ),
@@ -145,17 +148,20 @@ class _OmniSideNavState extends State<OmniSideNav> {
                       padding: EdgeInsets.symmetric(horizontal: _isExpanded ? 16.0 : 8.0, vertical: 8.0),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: widget.currentIndex == 1 ? colorScheme.secondaryContainer : Colors.transparent,
+                          color: widget.navigationShell.currentIndex == 1 ? colorScheme.secondaryContainer : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: _SideNavItem(
                           icon: Icons.star,
                           label: 'Favorites',
                           isExpanded: _isExpanded,
-                          iconColor: widget.currentIndex == 1 ? colorScheme.onSecondaryContainer : null,
-                          textColor: widget.currentIndex == 1 ? colorScheme.onSecondaryContainer : null,
+                          iconColor: widget.navigationShell.currentIndex == 1 ? colorScheme.onSecondaryContainer : null,
+                          textColor: widget.navigationShell.currentIndex == 1 ? colorScheme.onSecondaryContainer : null,
                           onTap: () {
-                            context.go('/favorites');
+                            widget.navigationShell.goBranch(
+                              1,
+                              initialLocation: 1 == widget.navigationShell.currentIndex,
+                            );
                           },
                         ),
                       ),

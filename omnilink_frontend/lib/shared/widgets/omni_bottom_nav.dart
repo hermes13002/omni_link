@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'omni_glass_container.dart';
 
 class OmniBottomNav extends StatelessWidget {
-  final int currentIndex;
-  const OmniBottomNav({super.key, this.currentIndex = 0});
+  final StatefulNavigationShell navigationShell;
+  const OmniBottomNav({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +21,13 @@ class OmniBottomNav extends StatelessWidget {
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.onSurfaceVariant,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        currentIndex: currentIndex,
+        currentIndex: navigationShell.currentIndex,
         onTap: (index) {
-          if (index == 0) {
-            context.go('/');
-          } else if (index == 1) {
-            context.go('/favorites');
+          if (index == 0 || index == 1) {
+            navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            );
           } else if (index == 2) {
             // Sync is currently just an icon or could trigger load, 
             // but we might want it to remain on current screen and dispatch event.

@@ -5,7 +5,6 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:omnilink_frontend/features/timeline/data/models/card_model.dart';
 import 'package:omnilink_frontend/shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_top_bar.dart';
-import '../../../shared/widgets/omni_bottom_nav.dart';
 import '../../../shared/widgets/omni_drop_zone.dart';
 import '../../../shared/widgets/omni_loaders.dart';
 import '../../../shared/widgets/omni_tag_filter_row.dart';
@@ -182,7 +181,6 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
           ),
         ],
       ),
-      bottomNavigationBar: OmniBottomNav(currentIndex: widget.showFavorites ? 1 : 0),
     );
   }
 }

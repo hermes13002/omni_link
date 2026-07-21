@@ -16,6 +16,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../network/sse_client.dart';
 import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
+import '../../shared/widgets/app_shell.dart';
 
 GoRouter createRouter(AuthBloc authBloc) {
   return GoRouter(
@@ -60,9 +61,8 @@ GoRouter createRouter(AuthBloc authBloc) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '/',
-        builder: (context, state) {
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
           final deviceBloc = getIt<DeviceBloc>();
           // Only trigger auto-register once.
           deviceBloc.add(DeviceAutoRegisterRequested());
@@ -72,30 +72,40 @@ GoRouter createRouter(AuthBloc authBloc) {
           
           return MultiBlocProvider(
             providers: [
-              BlocProvider.value(value: getIt<TimelineBloc>()),
               BlocProvider.value(value: getIt<TagsBloc>()),
               BlocProvider.value(value: deviceBloc),
             ],
-            child: const TimelineScreen(showFavorites: false),
+            child: AppShell(navigationShell: navigationShell),
           );
         },
-      ),
-      GoRoute(
-        path: '/favorites',
-        builder: (context, state) {
-          final deviceBloc = getIt<DeviceBloc>();
-          // Connect to SSE stream
-          getIt<SseClient>().connect();
-          
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider.value(value: getIt<TimelineBloc>()),
-              BlocProvider.value(value: getIt<TagsBloc>()),
-              BlocProvider.value(value: deviceBloc),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (context, state) {
+                  return BlocProvider(
+                    create: (_) => getIt<TimelineBloc>(),
+                    child: const TimelineScreen(showFavorites: false),
+                  );
+                },
+              ),
             ],
-            child: const TimelineScreen(showFavorites: true),
-          );
-        },
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/favorites',
+                builder: (context, state) {
+                  return BlocProvider(
+                    create: (_) => getIt<TimelineBloc>(),
+                    child: const TimelineScreen(showFavorites: true),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/settings',
@@ -112,7 +122,7 @@ GoRouter createRouter(AuthBloc authBloc) {
         builder: (context, state) => MultiBlocProvider(
           providers: [
             BlocProvider.value(value: getIt<DeviceBloc>()),
-            BlocProvider.value(value: getIt<TimelineBloc>()),
+            BlocProvider(create: (_) => getIt<TimelineBloc>()),
           ],
           child: const ProfileScreen(),
         ),

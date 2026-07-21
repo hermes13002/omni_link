@@ -47,38 +47,45 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
-                    background: ShaderMask(
-                      shaderCallback: (rect) {
-                        return const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.black, Colors.black, Colors.transparent],
-                          stops: [0.0, 0.9, 1.0],
-                        ).createShader(rect);
-                      },
-                      blendMode: BlendMode.dstIn,
-                      child: Stack(
-                        fit: StackFit.expand,
+                    background: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        // Background Gradient
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                colorScheme.primary.withAlpha(100),
-                                colorScheme.secondary.withAlpha(100),
-                                colorScheme.surface,
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Glass effect overlay
-                        Positioned.fill(
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                            child: Container(color: Colors.transparent),
+                        // Background Gradient and Glass effect wrapped in ShaderMask
+                        ShaderMask(
+                          shaderCallback: (rect) {
+                            return const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.black, Colors.black, Colors.transparent],
+                              stops: [0.0, 0.6, 1.0],
+                            ).createShader(rect);
+                          },
+                          blendMode: BlendMode.dstIn,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // Background Gradient
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      colorScheme.primary.withAlpha(100),
+                                      colorScheme.secondary.withAlpha(100),
+                                      colorScheme.surface,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // Glass effect overlay
+                              Positioned.fill(
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                                  child: Container(color: Colors.transparent),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         // Avatar and name
@@ -131,7 +138,6 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(

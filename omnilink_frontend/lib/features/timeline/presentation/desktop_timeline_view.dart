@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:omnilink_frontend/features/timeline/data/models/card_model.dart';
-import '../../../shared/widgets/omni_side_nav.dart';
 import '../../../shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_inspector_panel.dart';
 import '../../../shared/widgets/omni_loaders.dart';
@@ -100,7 +99,6 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
     return Scaffold(
       body: Row(
         children: [
-          OmniSideNav(currentIndex: widget.showFavorites ? 1 : 0),
           Expanded(
             flex: 2,
             child: Column(
