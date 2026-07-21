@@ -187,11 +187,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                               imageUrl: card.gcsSignedUrl,
                               isPinned: card.pinned,
                               onTogglePin: () {
-                                context.read<TimelineBloc>().add(TimelineLoadRequested(
-                                  tagId: _activeTagId,
-                                  searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-                                  pinned: widget.showFavorites ? true : null,
-                                ));
+                                context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
                               },
                               onTap: () {
                                 showDialog(

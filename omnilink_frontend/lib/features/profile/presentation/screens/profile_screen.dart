@@ -47,8 +47,18 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
-                    background: Stack(
-                      fit: StackFit.expand,
+                    background: ShaderMask(
+                      shaderCallback: (rect) {
+                        return const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.black, Colors.black, Colors.transparent],
+                          stops: [0.0, 0.9, 1.0],
+                        ).createShader(rect);
+                      },
+                      blendMode: BlendMode.dstIn,
+                      child: Stack(
+                        fit: StackFit.expand,
                       children: [
                         // Background Gradient
                         Container(
@@ -121,6 +131,7 @@ class ProfileScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(

@@ -2,12 +2,25 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
+import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../features/timeline/data/models/isar_models.dart';
 
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/envelope_interceptor.dart';
 
 @module
 abstract class NetworkModule {
+  @preResolve
+  @singleton
+  Future<Isar> get isar async {
+    final dir = await getApplicationDocumentsDirectory();
+    return await Isar.open(
+      [IsarCardSchema],
+      directory: dir.path,
+    );
+  }
+
   @lazySingleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
 
@@ -40,7 +53,7 @@ class OmniLogInterceptor extends Interceptor {
     debugPrint('=== Request ===');
     debugPrint('url: ${options.uri}');
     if (options.data != null) {
-      print('request data: ${options.data}');
+      debugPrint('request data: ${options.data}');
     }
     super.onRequest(options, handler);
   }

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_bloc.dart';
 import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_event.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../features/timeline/data/models/card_model.dart';
 import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
@@ -378,10 +379,15 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
         ),
         clipBehavior: Clip.antiAlias,
         child: widget.card.gcsSignedUrl != null 
-          ? Image.network(
-              widget.card.gcsSignedUrl!, 
+          ? CachedNetworkImage(
+              imageUrl: widget.card.gcsSignedUrl!, 
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(
+              placeholder: (context, url) => Center(
+                child: CircularProgressIndicator(
+                  color: colorScheme.onSurfaceVariant.withAlpha(51),
+                ),
+              ),
+              errorWidget: (context, url, error) => Icon(
                 Icons.broken_image,
                 size: 64,
                 color: colorScheme.onSurfaceVariant.withAlpha(100),

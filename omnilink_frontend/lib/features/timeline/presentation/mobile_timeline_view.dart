@@ -6,7 +6,6 @@ import 'package:omnilink_frontend/features/timeline/data/models/card_model.dart'
 import 'package:omnilink_frontend/shared/widgets/omni_timeline_card.dart';
 import '../../../shared/widgets/omni_top_bar.dart';
 import '../../../shared/widgets/omni_bottom_nav.dart';
-import '../../../shared/widgets/omni_filter_chip.dart';
 import '../../../shared/widgets/omni_drop_zone.dart';
 import '../../../shared/widgets/omni_loaders.dart';
 import '../../../shared/widgets/omni_tag_filter_row.dart';
@@ -16,7 +15,6 @@ import 'bloc/timeline_bloc.dart';
 import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
 import 'bloc/tags_bloc.dart';
-import 'bloc/tags_state.dart';
 import 'bloc/tags_event.dart';
 
 class MobileTimelineView extends StatefulWidget {
@@ -158,11 +156,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                             imageUrl: card.gcsSignedUrl,
                             isPinned: card.pinned,
                             onTogglePin: () {
-                              context.read<TimelineBloc>().add(TimelineLoadRequested(
-                                tagId: _activeTagId,
-                                searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-                                pinned: widget.showFavorites ? true : null,
-                              ));
+                              context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
                             },
                             onTap: () {
                               showDialog(

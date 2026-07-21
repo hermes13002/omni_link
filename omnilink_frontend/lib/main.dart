@@ -8,9 +8,11 @@ import 'features/auth/presentation/bloc/auth_event.dart';
 
 import 'core/globals.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  configureDependencies();
+  
+  await configureDependencies();
+  
   runApp(const OmniLinkApp());
 }
 

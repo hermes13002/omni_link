@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 enum TimelineCardType { image, code, file, pdf }
 
@@ -61,13 +62,29 @@ class OmniTimelineCard extends StatelessWidget {
                 children: [
                   if (imageUrl != null)
                     Positioned.fill(
-                      child: Image.network(
-                        imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.broken_image,
-                          size: 48,
-                          color: colorScheme.onSurfaceVariant.withAlpha(51),
+                      child: ShaderMask(
+                        shaderCallback: (rect) {
+                          return const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.black, Colors.black, Colors.transparent],
+                            stops: [0.0, 0.6, 1.0],
+                          ).createShader(rect);
+                        },
+                        blendMode: BlendMode.dstIn,
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl!,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                              color: colorScheme.onSurfaceVariant.withAlpha(51),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: colorScheme.onSurfaceVariant.withAlpha(51),
+                          ),
                         ),
                       ),
                     )

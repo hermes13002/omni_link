@@ -160,29 +160,8 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                     ? state.tags 
                     : state.tags.where((t) => _selectedTagIds.contains(t.id)).toList();
                 
-                if (!_showTags && visibleTags.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, left: 8.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerLowest,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.local_offer, 
-                            color: colorScheme.onSurfaceVariant,
-                            size: 18,
-                          ),
-                          onPressed: () => setState(() => _showTags = true),
-                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
-                  );
+                if (visibleTags.isEmpty) {
+                  return const SizedBox();
                 }
 
                 return Padding(
@@ -190,52 +169,31 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: [
-                        Padding(
+                      children: visibleTags.map((tag) {
+                        final isSelected = _selectedTagIds.contains(tag.id);
+                        return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _showTags ? colorScheme.primaryContainer : colorScheme.surfaceContainerLowest,
-                              shape: BoxShape.circle,
+                          child: FilterChip(
+                            label: Text('#${tag.name}'),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedTagIds.add(tag.id);
+                                } else {
+                                  _selectedTagIds.remove(tag.id);
+                                }
+                              });
+                            },
+                            selectedColor: colorScheme.secondaryContainer,
+                            checkmarkColor: colorScheme.onSecondaryContainer,
+                            labelStyle: TextStyle(
+                              color: isSelected ? colorScheme.onSecondaryContainer : colorScheme.onSurfaceVariant,
                             ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.local_offer, 
-                                color: _showTags ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
-                                size: 18,
-                              ),
-                              onPressed: () => setState(() => _showTags = !_showTags),
-                              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                              padding: EdgeInsets.zero,
-                            ),
+                            visualDensity: VisualDensity.compact,
                           ),
-                        ),
-                        ...visibleTags.map((tag) {
-                          final isSelected = _selectedTagIds.contains(tag.id);
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: FilterChip(
-                              label: Text('#${tag.name}'),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedTagIds.add(tag.id);
-                                  } else {
-                                    _selectedTagIds.remove(tag.id);
-                                  }
-                                });
-                              },
-                              selectedColor: colorScheme.secondaryContainer,
-                              checkmarkColor: colorScheme.onSecondaryContainer,
-                              labelStyle: TextStyle(
-                                color: isSelected ? colorScheme.onSecondaryContainer : colorScheme.onSurfaceVariant,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          );
-                        }).toList(),
-                      ],
+                        );
+                      }).toList(),
                     ),
                   ),
                 );
@@ -296,7 +254,25 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 4),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _showTags ? colorScheme.primaryContainer : colorScheme.surfaceContainerLowest,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.local_offer, 
+                    color: _showTags ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() => _showTags = !_showTags),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: _textController,
