@@ -121,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  OmniButton.outlined(
+                  OmniButton.text(
                     text: "Don't have an account? Sign up",
                     onPressed: () => context.go('/register'),
                     isFullWidth: true,

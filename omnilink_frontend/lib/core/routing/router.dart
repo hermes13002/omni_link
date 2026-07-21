@@ -9,6 +9,7 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/timeline/presentation/timeline_screen.dart';
 import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
+import '../../features/timeline/presentation/bloc/timeline_event.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/device/presentation/bloc/device_bloc.dart';
 import '../../features/device/presentation/bloc/device_event.dart';
@@ -121,8 +122,12 @@ GoRouter createRouter(AuthBloc authBloc) {
         path: '/profile',
         builder: (context, state) => MultiBlocProvider(
           providers: [
-            BlocProvider.value(value: getIt<DeviceBloc>()),
-            BlocProvider(create: (_) => getIt<TimelineBloc>()),
+            BlocProvider.value(
+              value: getIt<DeviceBloc>()..add(DevicesLoadRequested()),
+            ),
+            BlocProvider(
+              create: (_) => getIt<TimelineBloc>()..add(const TimelineLoadRequested()),
+            ),
           ],
           child: const ProfileScreen(),
         ),

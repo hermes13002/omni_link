@@ -5,6 +5,7 @@ enum OmniButtonVariant {
   secondary,
   inverted,
   outlined,
+  text,
 }
 
 class OmniButton extends StatelessWidget {
@@ -61,6 +62,15 @@ class OmniButton extends StatelessWidget {
     this.isFullWidth = false,
   }) : variant = OmniButtonVariant.outlined;
 
+  const OmniButton.text({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.isLoading = false,
+    this.icon,
+    this.isFullWidth = false,
+  }) : variant = OmniButtonVariant.text;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -87,6 +97,10 @@ class OmniButton extends StatelessWidget {
         backgroundColor = Colors.transparent;
         foregroundColor = colorScheme.onSurface;
         borderSide = BorderSide(color: colorScheme.outlineVariant);
+        break;
+      case OmniButtonVariant.text:
+        backgroundColor = Colors.transparent;
+        foregroundColor = colorScheme.primary;
         break;
     }
 

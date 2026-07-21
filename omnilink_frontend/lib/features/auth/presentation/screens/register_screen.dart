@@ -145,7 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  OmniButton.outlined(
+                  OmniButton.text(
                     text: 'Already have an account? Login',
                     onPressed: () => context.go('/login'),
                     isFullWidth: true,
