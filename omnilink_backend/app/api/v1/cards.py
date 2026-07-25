@@ -61,6 +61,7 @@ async def create_metadata_card(
 async def create_file_card(
     file: UploadFile,
     tag_ids: str | None = Query(None, description="comma-separated prefixed tag IDs"),
+    title: str | None = Query(None),
     source_device_id: PrefixedDeviceId | None = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -71,7 +72,7 @@ async def create_file_card(
         else []
     )
     return ApiResponse(data=await card_service.create_file_card(
-        file, parsed_tag_ids, source_device_id, current_user.id, db
+        file, parsed_tag_ids, title, source_device_id, current_user.id, db
     ))
 
 

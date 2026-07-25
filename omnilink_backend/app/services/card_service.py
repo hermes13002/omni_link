@@ -193,6 +193,7 @@ async def create_metadata_card(
 async def create_file_card(
     file: UploadFile,
     tag_ids: list[int],
+    title: str | None,
     source_device_id: uuid.UUID | None,
     user_id: uuid.UUID,
     db: AsyncSession,
@@ -210,7 +211,7 @@ async def create_file_card(
         user_id=user_id,
         source_device_id=source_device_id,
         card_type=CardType.file,
-        title=file.filename,
+        title=title or file.filename,
         gcs_object_key=object_key,
         mime_type=content_type,
         file_size_bytes=file.size or 0,
