@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
@@ -92,19 +91,19 @@ class DeviceRepository {
       if (kIsWeb) {
         final webBrowserInfo = await deviceInfo.webBrowserInfo;
         return 'Web Browser (${webBrowserInfo.browserName.name})';
-      } else if (Platform.isAndroid) {
+      } else if (defaultTargetPlatform == TargetPlatform.android) {
         final androidInfo = await deviceInfo.androidInfo;
         return androidInfo.model;
-      } else if (Platform.isIOS) {
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
         final iosInfo = await deviceInfo.iosInfo;
         return iosInfo.name;
-      } else if (Platform.isMacOS) {
-        final macOsInfo = await deviceInfo.macOsInfo;
-        return macOsInfo.computerName;
-      } else if (Platform.isWindows) {
+      } else if (defaultTargetPlatform == TargetPlatform.macOS) {
+        final macInfo = await deviceInfo.macOsInfo;
+        return macInfo.computerName;
+      } else if (defaultTargetPlatform == TargetPlatform.windows) {
         final windowsInfo = await deviceInfo.windowsInfo;
         return windowsInfo.computerName;
-      } else if (Platform.isLinux) {
+      } else if (defaultTargetPlatform == TargetPlatform.linux) {
         final linuxInfo = await deviceInfo.linuxInfo;
         return linuxInfo.prettyName;
       }

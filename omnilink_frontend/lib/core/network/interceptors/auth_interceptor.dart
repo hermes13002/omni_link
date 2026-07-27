@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:omnilink_frontend/core/di/injection.dart';
 
+import '../../globals.dart';
+import '../../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../../features/auth/presentation/bloc/auth_event.dart';
 class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
@@ -38,12 +43,44 @@ class AuthInterceptor extends Interceptor {
             final retryResponse = await _dio.fetch(err.requestOptions);
             return handler.resolve(retryResponse);
           }
+        } on DioException catch (e) {
+          if (e.response != null && 
+              (e.response!.statusCode == 401 || 
+               e.response!.statusCode == 403 || 
+               e.response!.statusCode == 400)) {
+            await _storage.delete(key: 'access_token');
+            await _storage.delete(key: 'refresh_token');
+            _handleSessionExpired();
+          }
         } catch (e) {
-          await _storage.delete(key: 'access_token');
-          await _storage.delete(key: 'refresh_token');
+          // Ignore other exceptions and just let the original request fail
         }
       }
     }
     handler.next(err);
+  }
+
+  void _handleSessionExpired() {
+    getIt<AuthBloc>().add(AuthLogoutRequested());
+    
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Session Expired'),
+          content: const Text('Your session has expired. Please log in again.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

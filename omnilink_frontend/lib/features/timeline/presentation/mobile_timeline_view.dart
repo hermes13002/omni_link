@@ -146,6 +146,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                           final card = state.cards[index];
                           return OmniTimelineCard(
                             type: _mapCardType(card),
+                            cardId: card.id,
                             title: card.title ?? card.body ?? 'Untitled',
                             subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
                             timeAgo: _timeAgo(card.createdAt),
@@ -170,12 +171,13 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                     return const SizedBox.shrink();
                   },
                 ),
-                const Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  child: OmniDropZone(),
-                ),
+                if (!widget.showFavorites)
+                  const Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: OmniDropZone(),
+                  ),
               ],
             ),
           ),

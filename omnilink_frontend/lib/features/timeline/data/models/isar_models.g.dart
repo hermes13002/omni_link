@@ -15,7 +15,7 @@ extension GetIsarCardCollection on Isar {
 
 const IsarCardSchema = CollectionSchema(
   name: r'IsarCard',
-  id: -3825881584532869891,
+  id: (-382588158 * 10000000000) - 4532869891,
   properties: {
     r'body': PropertySchema(
       id: 0,
@@ -96,7 +96,7 @@ const IsarCardSchema = CollectionSchema(
   idName: r'isarId',
   indexes: {
     r'id': IndexSchema(
-      id: -3268401673993471357,
+      id: (-326840167 * 10000000000) - 3993471357,
       name: r'id',
       unique: true,
       replace: true,
@@ -109,7 +109,7 @@ const IsarCardSchema = CollectionSchema(
       ],
     ),
     r'createdAt': IndexSchema(
-      id: -3433535483987302584,
+      id: (-343353548 * 10000000000) - 3987302584,
       name: r'createdAt',
       unique: false,
       replace: false,
@@ -2733,7 +2733,7 @@ extension IsarCardQueryProperty
 
 const IsarTagSchema = Schema(
   name: r'IsarTag',
-  id: 423648011704732594,
+  id: (42364801 * 10000000000) + 1704732594,
   properties: {
     r'colorHex': PropertySchema(
       id: 0,

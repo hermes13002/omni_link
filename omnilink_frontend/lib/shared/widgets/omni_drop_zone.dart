@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +9,7 @@ import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_state.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
+import 'package:omnilink_frontend/shared/utils/omni_prompts.dart';
 
 class OmniDropZone extends StatefulWidget {
   const OmniDropZone({super.key});
@@ -26,6 +28,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
   late Animation<double> _expandAnimation;
   late Animation<double> _rotateAnimation;
   final TextEditingController _textController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
 
   @override
   void initState() {
@@ -50,6 +53,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
   void dispose() {
     _controller.dispose();
     _textController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -66,6 +70,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
 
   void _clearSelection() {
     _textController.clear();
+    _titleController.clear();
     setState(() {
       _selectedTagIds.clear();
       _showTags = false;
@@ -74,16 +79,17 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
 
   Future<void> _handleSend() async {
     final text = _textController.text.trim();
-    if (text.isEmpty) return;
+    final title = _titleController.text.trim();
+    if (text.isEmpty && title.isEmpty) return;
 
     setState(() => _isSending = true);
     
     try {
       final isUrl = Uri.tryParse(text)?.hasAbsolutePath ?? false;
       if (isUrl) {
-        await getIt<CardsApi>().createMetadataCard(text, body: text, tagIds: _selectedTagIds.toList());
+        await getIt<CardsApi>().createMetadataCard(title.isNotEmpty ? title : text, body: text, tagIds: _selectedTagIds.toList());
       } else {
-        await getIt<CardsApi>().createTextCard(text, tagIds: _selectedTagIds.toList());
+        await getIt<CardsApi>().createTextCard(text, title: title.isNotEmpty ? title : null, tagIds: _selectedTagIds.toList());
       }
       
       if (mounted) {
@@ -106,7 +112,28 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
       final XFile? image = await picker.pickImage(source: source);
       if (image != null) {
         setState(() => _isSending = true);
-        await getIt<CardsApi>().createFileCard(image.path, tagIds: _selectedTagIds.toList());
+        final initialTitle = _titleController.text.trim();
+        final defaultTitle = initialTitle.isNotEmpty ? initialTitle : image.name;
+        final result = await OmniPrompts.promptForFileDetails(context, defaultTitle: defaultTitle, initialTagIds: _selectedTagIds.toList());
+        final finalTitle = result.$1;
+        final finalTagIds = result.$2;
+        if (finalTitle == null) {
+          setState(() => _isSending = false);
+          return;
+        }
+
+        List<int>? bytes;
+        if (kIsWeb) {
+          bytes = await image.readAsBytes();
+        }
+
+        await getIt<CardsApi>().createFileCard(
+          filePath: kIsWeb ? null : image.path,
+          bytes: bytes,
+          fileName: image.name,
+          title: finalTitle.isNotEmpty ? finalTitle : null,
+          tagIds: finalTagIds,
+        );
         if (mounted) _clearSelection();
         if (_isExpanded) _toggleMenu();
       }
@@ -126,7 +153,24 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
       FilePickerResult? result = await FilePicker.pickFiles();
       if (result != null && result.files.single.path != null) {
         setState(() => _isSending = true);
-        await getIt<CardsApi>().createFileCard(result.files.single.path!, tagIds: _selectedTagIds.toList());
+        final initialTitle = _titleController.text.trim();
+        final defaultTitle = initialTitle.isNotEmpty ? initialTitle : result.files.single.name;
+        final promptResult = await OmniPrompts.promptForFileDetails(context, defaultTitle: defaultTitle, initialTagIds: _selectedTagIds.toList());
+        final finalTitle = promptResult.$1;
+        final finalTagIds = promptResult.$2;
+        if (finalTitle == null) {
+          setState(() => _isSending = false);
+          return;
+        }
+        
+        final file = result.files.single;
+        await getIt<CardsApi>().createFileCard(
+          filePath: kIsWeb ? null : file.path,
+          bytes: file.bytes,
+          fileName: file.name,
+          title: finalTitle.isNotEmpty ? finalTitle : null, 
+          tagIds: finalTagIds,
+        );
         if (mounted) _clearSelection();
         if (_isExpanded) _toggleMenu();
       }
@@ -145,7 +189,11 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     
-    return OmniGlassContainer(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OmniGlassContainer(
       borderRadius: 24.0,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(178),
@@ -353,6 +401,46 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
           ),
         ],
       ),
+        ),
+        AnimatedBuilder(
+          animation: Listenable.merge([_textController, _titleController]),
+          builder: (context, child) {
+            final showTitle = _textController.text.isNotEmpty || _titleController.text.isNotEmpty;
+            return AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: showTitle
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: OmniGlassContainer(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        borderRadius: 16.0,
+                        backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(128),
+                        child: TextField(
+                          controller: _titleController,
+                          decoration: InputDecoration(
+                            hintText: 'Title (optional)',
+                            hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant.withAlpha(150),
+                              fontWeight: FontWeight.bold,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: double.infinity, height: 0),
+            );
+          },
+        ),
+      ],
     );
   }
 }

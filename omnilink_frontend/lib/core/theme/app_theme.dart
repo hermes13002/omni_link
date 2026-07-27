@@ -75,6 +75,8 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0.0,
+        surfaceTintColor: Colors.transparent,
         titleTextStyle: textTheme.headlineMedium?.copyWith(
           color: colorScheme.onSurface,
         ),

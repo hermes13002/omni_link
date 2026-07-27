@@ -58,12 +58,10 @@ class _OmniSideNavState extends State<OmniSideNav> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
-                                child: Text(
-                                  'OL',
-                                  style: textTheme.labelMedium?.copyWith(
-                                    color: colorScheme.onPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: Icon(
+                                  Icons.all_inclusive_rounded,
+                                  size: 20,
+                                  color: colorScheme.onPrimary,
                                 ),
                               ),
                             ),
@@ -75,10 +73,11 @@ class _OmniSideNavState extends State<OmniSideNav> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Omnilink',
-                                    style: textTheme.bodyLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onSurface,
+                                    'OmniLink',
+                                    style: textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.5,
+                                      color: colorScheme.primary,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.clip,
@@ -166,12 +165,12 @@ class _OmniSideNavState extends State<OmniSideNav> {
                         ),
                       ),
                     ),
-                    _SideNavItem(
-                      icon: Icons.refresh,
-                      label: 'Sync',
-                      isExpanded: _isExpanded,
-                      onTap: () {},
-                    ),
+                    // _SideNavItem(
+                    //   icon: Icons.refresh,
+                    //   label: 'Sync',
+                    //   isExpanded: _isExpanded,
+                    //   onTap: () {},
+                    // ),
                     _SideNavItem(
                       icon: Icons.person,
                       label: 'Profile',

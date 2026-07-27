@@ -49,12 +49,31 @@ class CardsApi {
     return CardModel.fromJson(response.data);
   }
 
-  Future<CardModel> createFileCard(String filePath, {List<String>? tagIds}) async {
+  Future<CardModel> createFileCard({
+    String? filePath,
+    List<int>? bytes,
+    required String fileName,
+    String? title, 
+    List<String>? tagIds,
+  }) async {
+    MultipartFile? multipartFile;
+    
+    if (bytes != null) {
+      multipartFile = MultipartFile.fromBytes(bytes, filename: fileName);
+    } else if (filePath != null) {
+      multipartFile = await MultipartFile.fromFile(filePath, filename: fileName);
+    } else {
+      throw Exception('Either filePath or bytes must be provided');
+    }
+
     final formData = FormData.fromMap({
-      'file': await MultipartFile.fromFile(filePath),
+      'file': multipartFile,
     });
     
     final query = <String, dynamic>{};
+    if (title != null) {
+      query['title'] = title;
+    }
     if (tagIds != null && tagIds.isNotEmpty) {
       query['tag_ids'] = tagIds.join(',');
     }

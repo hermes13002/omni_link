@@ -22,13 +22,7 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        IconButton(
-          icon: Icon(Icons.refresh, color: colorScheme.onSurfaceVariant),
-          tooltip: 'Sync Timeline',
-          onPressed: () {
-            context.read<TimelineBloc>().add(const TimelineLoadRequested());
-          },
-        ),
+
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
           child: IconButton(

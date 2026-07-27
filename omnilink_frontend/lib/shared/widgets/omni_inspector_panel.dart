@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:cross_file/cross_file.dart';
 import 'omni_drop_zone.dart';
 import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
+import 'package:omnilink_frontend/shared/utils/omni_prompts.dart';
 
 // ... class definition
 
 class OmniInspectorPanel extends StatefulWidget {
-  const OmniInspectorPanel({super.key});
+  final bool showFavorites;
+  const OmniInspectorPanel({super.key, this.showFavorites = false});
 
   @override
   State<OmniInspectorPanel> createState() => _OmniInspectorPanelState();
@@ -26,7 +30,23 @@ class _OmniInspectorPanelState extends State<OmniInspectorPanel> {
 
     try {
       for (final file in files) {
-        await getIt<CardsApi>().createFileCard(file.path, tagIds: []);
+        final result = await OmniPrompts.promptForFileDetails(context, defaultTitle: file.name);
+        final finalTitle = result.$1;
+        final finalTagIds = result.$2;
+        if (finalTitle != null) {
+          List<int>? bytes;
+          if (kIsWeb) {
+            bytes = await file.readAsBytes();
+          }
+
+          await getIt<CardsApi>().createFileCard(
+            filePath: kIsWeb ? null : file.path,
+            bytes: bytes,
+            fileName: file.name,
+            title: finalTitle.isNotEmpty ? finalTitle : null, 
+            tagIds: finalTagIds,
+          );
+        }
       }
       if (mounted) {
         OmniToast.showSuccess(context, 'Uploaded ${files.length} file(s)');
@@ -160,10 +180,11 @@ class _OmniInspectorPanelState extends State<OmniInspectorPanel> {
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(24.0),
-            child: OmniDropZone(),
-          ),
+          if (!widget.showFavorites)
+            const Padding(
+              padding: EdgeInsets.all(24.0),
+              child: OmniDropZone(),
+            ),
         ],
       ),
     );

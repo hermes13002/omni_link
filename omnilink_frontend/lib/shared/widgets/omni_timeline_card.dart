@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:omnilink_frontend/shared/widgets/web_image/omni_web_image.dart';
 
 enum TimelineCardType { image, code, file, pdf }
 
@@ -14,6 +15,7 @@ class OmniTimelineCard extends StatelessWidget {
   final Color? tagColor;
   final String? body;
   final String? imageUrl;
+  final String? cardId;
   final bool isPinned;
   final VoidCallback? onTogglePin;
   final VoidCallback? onTap;
@@ -28,6 +30,7 @@ class OmniTimelineCard extends StatelessWidget {
     this.tagColor,
     this.body,
     this.imageUrl,
+    this.cardId,
     this.isPinned = false,
     this.onTogglePin,
     this.onTap,
@@ -48,43 +51,23 @@ class OmniTimelineCard extends StatelessWidget {
           if (type == TimelineCardType.image)
             Container(
               height: 200,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colorScheme.primaryContainer.withAlpha(150),
-                    colorScheme.primaryContainer.withAlpha(0),
-                  ],
-                ),
-              ),
               child: Stack(
                 children: [
                   if (imageUrl != null)
                     Positioned.fill(
-                      child: ShaderMask(
-                        shaderCallback: (rect) {
-                          return const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Colors.black, Colors.black, Colors.transparent],
-                            stops: [0.0, 0.6, 1.0],
-                          ).createShader(rect);
-                        },
-                        blendMode: BlendMode.dstIn,
-                        child: CachedNetworkImage(
-                          imageUrl: imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                              color: colorScheme.onSurfaceVariant.withAlpha(51),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Icon(
-                            Icons.broken_image,
-                            size: 48,
+                      child: OmniWebImage(
+                        imageUrl: imageUrl!,
+                        cacheKey: cardId,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
                             color: colorScheme.onSurfaceVariant.withAlpha(51),
                           ),
+                        ),
+                        errorWidget: (context, url, error) => Icon(
+                          Icons.broken_image,
+                          size: 48,
+                          color: colorScheme.onSurfaceVariant.withAlpha(51),
                         ),
                       ),
                     )
@@ -96,6 +79,23 @@ class OmniTimelineCard extends StatelessWidget {
                         color: colorScheme.onSurfaceVariant.withAlpha(51),
                       ),
                     ),
+                  // Gradient Overlay for the fade out effect
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.transparent,
+                            colorScheme.surfaceContainer,
+                          ],
+                          stops: const [0.0, 0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

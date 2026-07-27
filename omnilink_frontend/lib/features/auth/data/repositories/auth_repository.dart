@@ -40,8 +40,27 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
+    try {
+      final refreshToken = await _storage.read(key: 'refresh_token');
+      if (refreshToken != null) {
+        await _api.logout(refreshToken);
+      } else {
+        await _api.logout("");
+      }
+    } catch (_) {
+      // Ignore errors if token is already invalid or network is down
+    }
     await _storage.delete(key: 'access_token');
     await _storage.delete(key: 'refresh_token');
     await _storage.delete(key: 'device_secret');
+  }
+
+  Future<bool> hasSeenOnboarding() async {
+    final value = await _storage.read(key: 'has_seen_onboarding');
+    return value == 'true';
+  }
+
+  Future<void> completeOnboarding() async {
+    await _storage.write(key: 'has_seen_onboarding', value: 'true');
   }
 }

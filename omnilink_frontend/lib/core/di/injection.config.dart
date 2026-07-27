@@ -50,8 +50,8 @@ extension GetItInjectableX on _i1.GetIt {
     gh.lazySingleton<_i3.FlutterSecureStorage>(
         () => networkModule.secureStorage);
     gh.singleton<_i4.GlobalEventBus>(_i4.GlobalEventBus());
-    await gh.singletonAsync<_i5.Isar>(
-      () => networkModule.isar,
+    await gh.singletonAsync<_i18.LocalDatabase>(
+      () => networkModule.database,
       preResolve: true,
     );
     gh.lazySingleton<_i6.Dio>(
@@ -67,7 +67,7 @@ extension GetItInjectableX on _i1.GetIt {
     gh.lazySingleton<_i12.DevicesApi>(() => _i12.DevicesApi(gh<_i6.Dio>()));
     gh.factory<_i13.TimelineBloc>(() => _i13.TimelineBloc(
           gh<_i11.CardsApi>(),
-          gh<_i5.Isar>(),
+          gh<_i18.LocalDatabase>(),
           gh<_i4.GlobalEventBus>(),
         ));
     gh.factory<_i14.AuthBloc>(() => _i14.AuthBloc(gh<_i10.AuthRepository>()));

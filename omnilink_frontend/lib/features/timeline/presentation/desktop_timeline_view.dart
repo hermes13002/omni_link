@@ -12,6 +12,8 @@ import '../../../shared/widgets/omni_text_field.dart';
 import 'bloc/timeline_bloc.dart';
 import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
+import 'bloc/tags_bloc.dart';
+import 'bloc/tags_event.dart';
 
 class DesktopTimelineView extends StatefulWidget {
   final bool showFavorites;
@@ -31,6 +33,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
   void initState() {
     super.initState();
     context.read<TimelineBloc>().add(TimelineLoadRequested(pinned: widget.showFavorites ? true : null));
+    context.read<TagsBloc>().add(TagsLoadRequested());
   }
 
   @override
@@ -124,20 +127,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                           onChanged: _onSearchChanged,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      IconButton(
-                        icon: Icon(
-                          Icons.refresh,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () {
-                          context.read<TimelineBloc>().add(TimelineLoadRequested(
-                            tagId: _activeTagId,
-                            searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-                            pinned: widget.showFavorites ? true : null,
-                          ));
-                        },
-                      ),
+
                     ],
                   ),
                 ),
@@ -163,38 +153,46 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                         if (state.cards.isEmpty) {
                           return const Center(child: Text("No cards found"));
                         }
-                        return MasonryGridView.count(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 20,
-                          crossAxisSpacing: 20,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0,
-                            vertical: 8.0,
-                          ),
-                          itemCount: state.cards.length,
-                          itemBuilder: (context, index) {
-                            final card = state.cards[index];
-                            return OmniTimelineCard(
-                              type: _mapCardType(card),
-                              title: card.title ?? card.body ?? 'Untitled',
-                              subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
-                              timeAgo: _timeAgo(card.createdAt),
-                              tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
-                              tagColor: colorScheme.secondary,
-                              body: card.body,
-                              imageUrl: card.gcsSignedUrl,
-                              isPinned: card.pinned,
-                              onTogglePin: () {
-                                context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
-                              },
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => OmniCardDetailsDialog(card: card),
-                                );
-                              },
-                            );
+                        return RefreshIndicator(
+                          onRefresh: () async {
+                            context.read<TimelineBloc>().add(TimelineLoadRequested(
+                              tagId: _activeTagId,
+                              searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                              pinned: widget.showFavorites ? true : null,
+                            ));
+                            await Future.delayed(const Duration(milliseconds: 800));
                           },
+                          child: MasonryGridView.count(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            padding: const EdgeInsets.all(24.0),
+                            itemCount: state.cards.length,
+                            itemBuilder: (context, index) {
+                              final card = state.cards[index];
+                              return OmniTimelineCard(
+                                type: _mapCardType(card),
+                                cardId: card.id,
+                                title: card.title ?? card.body ?? 'Untitled',
+                                subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
+                                timeAgo: _timeAgo(card.createdAt),
+                                tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
+                                tagColor: colorScheme.secondary,
+                                body: card.body,
+                                imageUrl: card.gcsSignedUrl,
+                                isPinned: card.pinned,
+                                onTogglePin: () {
+                                  context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
+                                },
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => OmniCardDetailsDialog(card: card),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         );
                       }
                       return const SizedBox.shrink();
@@ -204,7 +202,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
               ],
             ),
           ),
-          const Flexible(flex: 1, child: OmniInspectorPanel()),
+          Flexible(flex: 1, child: OmniInspectorPanel(showFavorites: widget.showFavorites)),
         ],
       ),
     );

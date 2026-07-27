@@ -188,6 +188,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return 'Unknown';
+    try {
+      final localDt = dt.toLocal();
+      return '${localDt.year}-${localDt.month.toString().padLeft(2, '0')}-${localDt.day.toString().padLeft(2, '0')} ${localDt.hour.toString().padLeft(2, '0')}:${localDt.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dt.toString();
+    }
+  }
+
   Widget _buildDevicesCard(BuildContext context, ColorScheme colorScheme, TextTheme textTheme) {
     return OmniGlassContainer(
       padding: const EdgeInsets.all(16.0),
@@ -221,7 +231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final isCurrent = state.currentDevice?.id == device.id;
                 
                 return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
                   leading: CircleAvatar(
                     backgroundColor: colorScheme.primaryContainer,
                     child: Icon(_getDeviceIcon(device.friendlyName), color: colorScheme.onPrimaryContainer),
@@ -257,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   subtitle: Text(
-                    'Last seen: ${device.lastSeen ?? 'Unknown'}',
+                    'Last seen: ${_formatDate(device.lastSeen)}',
                     style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                   trailing: Row(

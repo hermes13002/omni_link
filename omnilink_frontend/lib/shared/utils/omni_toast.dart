@@ -1,6 +1,5 @@
-import 'dart:io' show Platform;
 import 'dart:ui';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../core/globals.dart';
@@ -9,7 +8,9 @@ class OmniToast {
   static bool get _isDesktop {
     if (kIsWeb) return false;
     try {
-      return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+      return defaultTargetPlatform == TargetPlatform.windows || 
+             defaultTargetPlatform == TargetPlatform.macOS || 
+             defaultTargetPlatform == TargetPlatform.linux;
     } catch (e) {
       return false;
     }

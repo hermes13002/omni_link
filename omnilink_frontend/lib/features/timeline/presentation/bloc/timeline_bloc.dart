@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:isar/isar.dart';
 import 'package:omnilink_frontend/core/events/event_bus.dart';
 
+import '../../../../core/network/dio_client.dart';
 import '../../data/cards_api.dart';
 import '../../data/models/isar_models.dart';
 import 'timeline_event.dart';
@@ -12,11 +13,12 @@ import 'timeline_state.dart';
 @injectable
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
   final CardsApi _cardsApi;
-  final Isar _isar;
+  final LocalDatabase _localDb;
+  late final Isar? _isar = _localDb.isar;
   final GlobalEventBus _eventBus;
   StreamSubscription? _eventSubscription;
 
-  TimelineBloc(this._cardsApi, this._isar, this._eventBus) : super(TimelineInitial()) {
+  TimelineBloc(this._cardsApi, this._localDb, this._eventBus) : super(TimelineInitial()) {
     on<TimelineLoadRequested>(_onLoadRequested);
     on<TimelineCardCreated>(_onCardCreated);
     on<TimelineCardDeleted>(_onCardDeleted);
@@ -45,9 +47,10 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     Emitter<TimelineState> emit,
   ) async {
     // load from local Isar cache
-    try {
-      final isarCards = await _isar.isarCards.where().sortByCreatedAtDesc().findAll();
-      var localCards = isarCards.map((c) => c.toModel()).toList();
+    if (_isar != null) {
+      try {
+        final isarCards = await _isar.isarCards.where().sortByCreatedAtDesc().findAll();
+        var localCards = isarCards.map((c) => c.toModel()).toList();
       
       if (event.cardType != null) localCards = localCards.where((c) => c.cardType == event.cardType).toList();
       if (event.pinned != null) localCards = localCards.where((c) => c.pinned == event.pinned).toList();
@@ -62,7 +65,10 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       } else if (state is! TimelineLoaded) {
         emit(TimelineLoading());
       }
-    } catch (e) {
+      } catch (e) {
+        if (state is! TimelineLoaded) emit(TimelineLoading());
+      }
+    } else {
       if (state is! TimelineLoaded) emit(TimelineLoading());
     }
 
@@ -76,12 +82,14 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       );
       
       // update Isar cache
-      await _isar.writeTxn(() async {
-        if (event.cardType == null && event.tagId == null && event.pinned == null && (event.searchQuery == null || event.searchQuery!.isEmpty)) {
-          await _isar.isarCards.clear();
-        }
-        await _isar.isarCards.putAll(cards.map((c) => IsarCard.fromModel(c)).toList());
-      });
+      if (_isar != null) {
+        await _isar!.writeTxn(() async {
+          if (event.cardType == null && event.tagId == null && event.pinned == null && (event.searchQuery == null || event.searchQuery!.isEmpty)) {
+            await _isar!.isarCards.clear();
+          }
+          await _isar!.isarCards.putAll(cards.map((c) => IsarCard.fromModel(c)).toList());
+        });
+      }
 
       emit(TimelineLoaded(cards));
     } catch (e) {

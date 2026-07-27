@@ -1,10 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_bloc.dart';
 import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_event.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:omnilink_frontend/shared/widgets/web_image/omni_web_image.dart';
 import '../../features/timeline/data/models/card_model.dart';
 import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
@@ -64,6 +65,19 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
+  Future<void> _handleDownload() async {
+    if (widget.card.gcsSignedUrl == null) return;
+    final url = widget.card.gcsSignedUrl!;
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        OmniToast.showError(context, 'Could not open file URL');
+      }
+    }
+  }
+
   Future<void> _handleDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -90,6 +104,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
     if (confirmed == true && mounted) {
       try {
         await getIt<CardsApi>().deleteCard(widget.card.id);
+        getIt<TimelineBloc>().add(TimelineCardDeleted(widget.card.id));
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {
@@ -138,21 +153,25 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
     else if (widget.card.cardType == 'file' && isPdf) headerIcon = Icons.picture_as_pdf;
     else headerIcon = Icons.file_present;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.all(24),
       child: OmniGlassContainer(
         padding: const EdgeInsets.all(24.0),
         borderRadius: 24.0,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Header
             Row(
               children: [
-                Icon(headerIcon, color: isPdf ? colorScheme.error : colorScheme.primary),
+                Icon(headerIcon, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _isEditing
@@ -179,26 +198,70 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                           overflow: TextOverflow.ellipsis,
                         ),
                 ),
-                if (!_isEditing) ...[
-                  IconButton(
-                    icon: Icon(_isPinned ? Icons.star : Icons.star_outline),
-                    onPressed: _togglePin,
-                    color: _isPinned ? Colors.amber : colorScheme.onSurfaceVariant,
-                    tooltip: _isPinned ? 'Unpin' : 'Pin',
+                if (!_isEditing)
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: colorScheme.onSurfaceVariant),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'pin':
+                          _togglePin();
+                          break;
+                        case 'edit':
+                          setState(() => _isEditing = true);
+                          break;
+                        case 'download':
+                          _handleDownload();
+                          break;
+                        case 'delete':
+                          _handleDelete();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'pin',
+                        child: Row(
+                          children: [
+                            Icon(_isPinned ? Icons.star : Icons.star_outline, color: _isPinned ? Colors.amber : colorScheme.onSurfaceVariant, size: 20),
+                            const SizedBox(width: 12),
+                            Text(_isPinned ? 'Unpin' : 'Pin'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, color: colorScheme.onSurfaceVariant, size: 20),
+                            const SizedBox(width: 12),
+                            const Text('Edit'),
+                          ],
+                        ),
+                      ),
+                      if (widget.card.gcsSignedUrl != null)
+                        PopupMenuItem(
+                          value: 'download',
+                          child: Row(
+                            children: [
+                              Icon(Icons.download, color: colorScheme.onSurfaceVariant, size: 20),
+                              const SizedBox(width: 12),
+                              const Text('Download'),
+                            ],
+                          ),
+                        ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: colorScheme.error, size: 20),
+                            const SizedBox(width: 12),
+                            Text('Delete', style: TextStyle(color: colorScheme.error)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => setState(() => _isEditing = true),
-                    color: colorScheme.onSurfaceVariant,
-                    tooltip: 'Edit',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: _handleDelete,
-                    color: colorScheme.error,
-                    tooltip: 'Delete',
-                  ),
-                ],
                 if (_isEditing)
                   _isSaving
                       ? const Padding(
@@ -211,23 +274,6 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                           color: colorScheme.primary,
                           tooltip: 'Save',
                         ),
-                if (widget.card.gcsSignedUrl != null)
-                  IconButton(
-                    icon: const Icon(Icons.download),
-                    onPressed: () async {
-                      final url = widget.card.gcsSignedUrl!;
-                      final uri = Uri.parse(url);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri);
-                      } else {
-                        if (mounted) {
-                          OmniToast.showError(context, 'Could not open file URL');
-                        }
-                      }
-                    },
-                    color: colorScheme.onSurfaceVariant,
-                    tooltip: 'Download',
-                  ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
@@ -276,6 +322,8 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
               ),
           ],
         ),
+        ),
+      ),
       ),
     );
   }
@@ -379,7 +427,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
         ),
         clipBehavior: Clip.antiAlias,
         child: widget.card.gcsSignedUrl != null 
-          ? CachedNetworkImage(
+          ? OmniWebImage(
               imageUrl: widget.card.gcsSignedUrl!, 
               fit: BoxFit.cover,
               placeholder: (context, url) => Center(
@@ -405,23 +453,30 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
       return Container(
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: colorScheme.errorContainer.withAlpha(128),
+          color: colorScheme.surfaceContainerHighest.withAlpha(128),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.picture_as_pdf,
-                size: 64,
-                color: colorScheme.error,
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: colorScheme.tertiaryContainer.withAlpha(51),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.picture_as_pdf,
+                  size: 48,
+                  color: colorScheme.tertiary,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
                 'PDF Document',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.error,
+                  color: colorScheme.tertiary,
                   fontWeight: FontWeight.bold,
                 ),
               ),

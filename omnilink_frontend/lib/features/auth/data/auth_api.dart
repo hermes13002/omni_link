@@ -31,4 +31,10 @@ class AuthApi {
     final response = await _dio.get('/api/v1/auth/me');
     return UserModel.fromJson(response.data);
   }
+
+  Future<void> logout(String refreshToken) async {
+    await _dio.post('/api/v1/auth/logout', data: {
+      'refresh_token': refreshToken,
+    });
+  }
 }

@@ -29,10 +29,6 @@ class OmniBottomNav extends StatelessWidget {
               initialLocation: index == navigationShell.currentIndex,
             );
           } else if (index == 2) {
-            // Sync is currently just an icon or could trigger load, 
-            // but we might want it to remain on current screen and dispatch event.
-            // For now, let's keep it as is.
-          } else if (index == 3) {
             context.push('/profile');
           }
         },
@@ -44,10 +40,6 @@ class OmniBottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.star),
             label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'Sync',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

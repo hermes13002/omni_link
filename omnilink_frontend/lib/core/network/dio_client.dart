@@ -7,18 +7,27 @@ import 'package:path_provider/path_provider.dart';
 import '../../features/timeline/data/models/isar_models.dart';
 
 import 'interceptors/auth_interceptor.dart';
+import 'package:flutter/foundation.dart';
 import 'interceptors/envelope_interceptor.dart';
+
+class LocalDatabase {
+  final Isar? isar;
+  LocalDatabase(this.isar);
+}
 
 @module
 abstract class NetworkModule {
   @preResolve
   @singleton
-  Future<Isar> get isar async {
+  Future<LocalDatabase> get database async {
+    if (kIsWeb) return LocalDatabase(null);
+
     final dir = await getApplicationDocumentsDirectory();
-    return await Isar.open(
+    final isar = await Isar.open(
       [IsarCardSchema],
       directory: dir.path,
     );
+    return LocalDatabase(isar);
   }
 
   @lazySingleton

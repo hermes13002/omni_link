@@ -6,6 +6,7 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/timeline/presentation/timeline_screen.dart';
 import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
@@ -19,8 +20,11 @@ import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
 import '../../shared/widgets/app_shell.dart';
 
+import '../globals.dart';
+
 GoRouter createRouter(AuthBloc authBloc) {
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(authBloc.stream),
     redirect: (context, state) {
@@ -34,6 +38,11 @@ GoRouter createRouter(AuthBloc authBloc) {
 
       if (authState is AuthLoading) {
         // do not redirect on loading so inline loaders (like OmniButton's) can be seen.
+        return null;
+      }
+
+      if (authState is AuthOnboardingRequired) {
+        if (state.matchedLocation != '/onboarding') return '/onboarding';
         return null;
       }
 
@@ -57,6 +66,10 @@ GoRouter createRouter(AuthBloc authBloc) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/register',
