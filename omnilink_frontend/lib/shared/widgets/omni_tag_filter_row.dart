@@ -82,7 +82,7 @@ class _OmniTagFilterRowState extends State<OmniTagFilterRow> {
                       OmniTextField(
                         controller: tagController,
                         hintText: 'e.g. workspace, ideas',
-                        prefixIcon: Icons.tag,
+                        prefixIcon: Icons.local_offer_rounded,
                         autofocus: true,
                         maxLength: 10,
                       ),
@@ -195,7 +195,7 @@ class _OmniTagFilterRowState extends State<OmniTagFilterRow> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add, size: 20, color: colorScheme.onPrimaryContainer),
+                        Icon(Icons.add_rounded, size: 20, color: colorScheme.onPrimaryContainer),
                         if (tags.isEmpty) ...[
                           const SizedBox(width: 4),
                           Text(

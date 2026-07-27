@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           OmniTextField(
                             controller: _emailController,
                             labelText: 'Email',
-                            prefixIcon: Icons.email,
+                            prefixIcon: Icons.email_rounded,
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -186,7 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           OmniTextField(
                             controller: _passwordController,
                             labelText: 'Password',
-                            prefixIcon: Icons.lock,
+                            prefixIcon: Icons.lock_rounded,
                             isPassword: true,
                             validator: (value) {
                               if (value == null || value.isEmpty) {

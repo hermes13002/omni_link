@@ -136,36 +136,46 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                       if (state.cards.isEmpty) {
                         return const Center(child: Text("No cards found"));
                       }
-                      return MasonryGridView.count(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        padding: const EdgeInsets.all(16.0).copyWith(bottom: 100),
-                        itemCount: state.cards.length,
-                        itemBuilder: (context, index) {
-                          final card = state.cards[index];
-                          return OmniTimelineCard(
-                            type: _mapCardType(card),
-                            cardId: card.id,
-                            title: card.title ?? card.body ?? 'Untitled',
-                            subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
-                            timeAgo: _timeAgo(card.createdAt),
-                            tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
-                            tagColor: colorScheme.secondary,
-                            body: card.body,
-                            imageUrl: card.gcsSignedUrl,
-                            isPinned: card.pinned,
-                            onTogglePin: () {
-                              context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
-                            },
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => OmniCardDetailsDialog(card: card),
-                              );
-                            },
-                          );
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<TimelineBloc>().add(TimelineLoadRequested(
+                            tagId: _activeTagId,
+                            searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                            pinned: widget.showFavorites ? true : null,
+                          ));
+                          await Future.delayed(const Duration(milliseconds: 800));
                         },
+                        child: MasonryGridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          padding: const EdgeInsets.all(16.0).copyWith(bottom: 100),
+                          itemCount: state.cards.length,
+                          itemBuilder: (context, index) {
+                            final card = state.cards[index];
+                            return OmniTimelineCard(
+                              type: _mapCardType(card),
+                              cardId: card.id,
+                              title: card.title ?? card.body ?? 'Untitled',
+                              subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
+                              timeAgo: _timeAgo(card.createdAt),
+                              tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
+                              tagColor: colorScheme.secondary,
+                              body: card.body,
+                              imageUrl: card.gcsSignedUrl,
+                              isPinned: card.pinned,
+                              onTogglePin: () {
+                                context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
+                              },
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => OmniCardDetailsDialog(card: card),
+                                );
+                              },
+                            );
+                          },
+                        ),
                       );
                     }
                     return const SizedBox.shrink();

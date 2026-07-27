@@ -176,7 +176,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           OmniTextField(
                             controller: _displayNameController,
                             labelText: 'Display Name',
-                            prefixIcon: Icons.person,
+                            prefixIcon: Icons.person_rounded,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your display name';
@@ -191,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           OmniTextField(
                             controller: _emailController,
                             labelText: 'Email',
-                            prefixIcon: Icons.email,
+                            prefixIcon: Icons.email_rounded,
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -204,7 +204,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           OmniTextField(
                             controller: _passwordController,
                             labelText: 'Password',
-                            prefixIcon: Icons.lock,
+                            prefixIcon: Icons.lock_rounded,
                             isPassword: true,
                             validator: (value) {
                               if (value == null || value.isEmpty) {

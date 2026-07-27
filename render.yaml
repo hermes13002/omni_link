@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: omnilink-frontend
+    env: static
+    buildCommand: ./render-build.sh
+    staticPublishPath: omnilink_frontend/build/web

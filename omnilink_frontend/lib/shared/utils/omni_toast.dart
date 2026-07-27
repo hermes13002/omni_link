@@ -92,7 +92,7 @@ class OmniToast {
   }
 
   static void showError(BuildContext? context, String message) {
-    _showCustomToast(context, message, Icons.error_rounded, Colors.redAccent);
+    _showCustomToast(context, message, Icons.cancel_rounded, Colors.redAccent);
   }
 
   static void showInfo(BuildContext? context, String message) {

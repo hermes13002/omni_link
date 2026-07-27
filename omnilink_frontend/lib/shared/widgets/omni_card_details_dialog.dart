@@ -142,16 +142,16 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
-    IconData headerIcon = Icons.article;
+    IconData headerIcon = Icons.article_rounded;
     final titleLower = widget.card.title?.toLowerCase() ?? '';
     final isImage = widget.card.mimeType?.startsWith('image/') == true || 
           titleLower.endsWith('.jpg') || titleLower.endsWith('.png') || titleLower.endsWith('.jpeg') || titleLower.endsWith('.webp');
     final isPdf = widget.card.mimeType == 'application/pdf' || titleLower.endsWith('.pdf');
 
-    if (widget.card.cardType == 'text') headerIcon = Icons.code;
-    else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) headerIcon = Icons.image;
-    else if (widget.card.cardType == 'file' && isPdf) headerIcon = Icons.picture_as_pdf;
-    else headerIcon = Icons.file_present;
+    if (widget.card.cardType == 'text') headerIcon = Icons.code_rounded;
+    else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) headerIcon = Icons.image_rounded;
+    else if (widget.card.cardType == 'file' && isPdf) headerIcon = Icons.picture_as_pdf_rounded;
+    else headerIcon = Icons.file_present_rounded;
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
@@ -163,7 +163,10 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
         padding: const EdgeInsets.all(24.0),
         borderRadius: 24.0,
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.5),
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height * 0.5,
+            maxWidth: 600,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -200,7 +203,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                 ),
                 if (!_isEditing)
                   PopupMenuButton<String>(
-                    icon: Icon(Icons.more_vert, color: colorScheme.onSurfaceVariant),
+                    icon: Icon(Icons.more_vert_rounded, color: colorScheme.onSurfaceVariant),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     onSelected: (value) {
                       switch (value) {
@@ -223,7 +226,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                         value: 'pin',
                         child: Row(
                           children: [
-                            Icon(_isPinned ? Icons.star : Icons.star_outline, color: _isPinned ? Colors.amber : colorScheme.onSurfaceVariant, size: 20),
+                            Icon(_isPinned ? Icons.star_rounded : Icons.star_border_rounded, color: _isPinned ? Colors.amber : colorScheme.onSurfaceVariant, size: 20),
                             const SizedBox(width: 12),
                             Text(_isPinned ? 'Unpin' : 'Pin'),
                           ],
@@ -233,7 +236,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, color: colorScheme.onSurfaceVariant, size: 20),
+                            Icon(Icons.edit_rounded, color: colorScheme.onSurfaceVariant, size: 20),
                             const SizedBox(width: 12),
                             const Text('Edit'),
                           ],
@@ -244,7 +247,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                           value: 'download',
                           child: Row(
                             children: [
-                              Icon(Icons.download, color: colorScheme.onSurfaceVariant, size: 20),
+                              Icon(Icons.download_rounded, color: colorScheme.onSurfaceVariant, size: 20),
                               const SizedBox(width: 12),
                               const Text('Download'),
                             ],
@@ -254,7 +257,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, color: colorScheme.error, size: 20),
+                            Icon(Icons.delete_rounded, color: colorScheme.error, size: 20),
                             const SizedBox(width: 12),
                             Text('Delete', style: TextStyle(color: colorScheme.error)),
                           ],
@@ -269,13 +272,13 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                           child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
                         )
                       : IconButton(
-                          icon: const Icon(Icons.check),
+                          icon: const Icon(Icons.check_rounded),
                           onPressed: _handleSave,
                           color: colorScheme.primary,
                           tooltip: 'Save',
                         ),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                   onPressed: () => Navigator.pop(context),
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -302,18 +305,18 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                 children: [
                   _buildChip(
                     context, 
-                    Icons.access_time, 
+                    Icons.timer_rounded, 
                     '${widget.card.createdAt.toLocal().toString().split('.')[0]}'
                   ),
                   if (widget.card.fileSizeBytes != null)
                     _buildChip(
                       context, 
-                      Icons.sd_storage, 
+                      Icons.storage_rounded, 
                       _formatFileSize(widget.card.fileSizeBytes)
                     ),
                   ...widget.card.tags.map((tag) => _buildChip(
                     context, 
-                    Icons.tag, 
+                    Icons.local_offer_rounded, 
                     '#${tag.name}',
                     backgroundColor: colorScheme.secondaryContainer,
                     textColor: colorScheme.onSecondaryContainer,
@@ -404,7 +407,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                     top: -12,
                     right: -12,
                     child: IconButton(
-                      icon: Icon(Icons.copy, size: 16, color: colorScheme.onSurfaceVariant),
+                      icon: Icon(Icons.copy_rounded, size: 16, color: colorScheme.onSurfaceVariant),
                       tooltip: 'Copy text',
                       onPressed: () {
                         final textToCopy = widget.card.body ?? '';
@@ -436,14 +439,14 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                 ),
               ),
               errorWidget: (context, url, error) => Icon(
-                Icons.broken_image,
+                Icons.broken_image_rounded,
                 size: 64,
                 color: colorScheme.onSurfaceVariant.withAlpha(100),
               ),
             )
           : Center(
               child: Icon(
-                Icons.image,
+                Icons.image_rounded,
                 size: 64,
                 color: colorScheme.onSurfaceVariant.withAlpha(100),
               ),
@@ -467,7 +470,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.picture_as_pdf,
+                  Icons.picture_as_pdf_rounded,
                   size: 48,
                   color: colorScheme.tertiary,
                 ),
@@ -500,7 +503,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.archive,
+                Icons.archive_rounded,
                 color: colorScheme.tertiary,
                 size: 48,
               ),
@@ -520,7 +523,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                   }
                 }
               },
-              icon: const Icon(Icons.download),
+              icon: const Icon(Icons.download_rounded),
               label: const Text('Download File'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colorScheme.primary,

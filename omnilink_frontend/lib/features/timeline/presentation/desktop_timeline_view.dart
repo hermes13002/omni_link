@@ -103,7 +103,6 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
       body: Row(
         children: [
           Expanded(
-            flex: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -202,7 +201,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
               ],
             ),
           ),
-          Flexible(flex: 1, child: OmniInspectorPanel(showFavorites: widget.showFavorites)),
+          OmniInspectorPanel(showFavorites: widget.showFavorites),
         ],
       ),
     );

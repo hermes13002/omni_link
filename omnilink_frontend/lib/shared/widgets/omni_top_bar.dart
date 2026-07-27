@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
-import '../../features/timeline/presentation/bloc/timeline_event.dart';
 
 class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
   const OmniTopBar({super.key});
@@ -13,8 +10,9 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AppBar(
+      centerTitle: false,
       title: Text(
-        'Welcome',
+        'OmniLink',
         style: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
           color: colorScheme.onSurface,
@@ -26,7 +24,7 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
         Padding(
           padding: const EdgeInsets.only(right: 8.0),
           child: IconButton(
-            icon: Icon(Icons.settings, color: colorScheme.onSurfaceVariant),
+            icon: Icon(Icons.settings_rounded, color: colorScheme.onSurfaceVariant),
             tooltip: 'Settings',
             onPressed: () {
               context.go('/settings');

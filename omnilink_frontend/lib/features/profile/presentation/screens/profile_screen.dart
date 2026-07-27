@@ -41,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
                     child: CircleAvatar(
                       backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(150),
                       child: IconButton(
-                        icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+                        icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
                         onPressed: () => context.go('/'),
                       ),
                     ),
@@ -157,21 +157,21 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildDetailItem(
                           context,
-                          icon: Icons.calendar_today,
+                          icon: Icons.calendar_today_rounded,
                           label: 'Member Since',
                           value: '${user.createdAt.year}-${user.createdAt.month.toString().padLeft(2, '0')}-${user.createdAt.day.toString().padLeft(2, '0')}',
                         ),
                         const SizedBox(height: 16),
                         _buildDetailItem(
                           context,
-                          icon: Icons.security,
+                          icon: Icons.person_rounded,
                           label: 'Account ID',
                           value: user.id.length > 10 ? '${user.id.substring(0, 10)}...' : user.id,
                         ),
                         const SizedBox(height: 48),
                         OmniButton.outlined(
                           text: 'Logout',
-                          icon: Icons.logout,
+                          icon: Icons.logout_rounded,
                           isFullWidth: true,
                           onPressed: () {
                             context.read<AuthBloc>().add(AuthLogoutRequested());
@@ -200,7 +200,7 @@ class ProfileScreen extends StatelessWidget {
         children: [
           _buildStatColumn(
             context,
-            icon: Icons.devices,
+            icon: Icons.devices_rounded,
             label: 'Devices',
             blocBuilder: BlocBuilder<DeviceBloc, DeviceState>(
               builder: (context, state) {
@@ -217,7 +217,7 @@ class ProfileScreen extends StatelessWidget {
           Container(width: 1, height: 40, color: Theme.of(context).colorScheme.outlineVariant),
           _buildStatColumn(
             context,
-            icon: Icons.content_paste,
+            icon: Icons.content_paste_rounded,
             label: 'Clips',
             blocBuilder: BlocBuilder<TimelineBloc, TimelineState>(
               builder: (context, state) {
@@ -234,7 +234,7 @@ class ProfileScreen extends StatelessWidget {
           Container(width: 1, height: 40, color: Theme.of(context).colorScheme.outlineVariant),
           _buildStatColumn(
             context,
-            icon: Icons.storage,
+            icon: Icons.cloud_rounded,
             label: 'Storage',
             blocBuilder: BlocBuilder<TimelineBloc, TimelineState>(
               builder: (context, state) {

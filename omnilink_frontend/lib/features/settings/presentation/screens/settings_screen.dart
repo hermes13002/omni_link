@@ -64,7 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             backgroundColor: colorScheme.surface,
             elevation: 0,
             leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
+              icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
               onPressed: () => context.go('/'),
             ),
             title: Text(
@@ -130,7 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: colorScheme.primary.withAlpha(50),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.person, color: colorScheme.primary),
+          child: Icon(Icons.person_rounded, color: colorScheme.primary),
         ),
         title: Text(
           'Profile',
@@ -140,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Manage your account details and logout',
           style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
-        trailing: Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+        trailing: Icon(Icons.chevron_right_rounded, color: colorScheme.onSurfaceVariant),
         onTap: () => context.push('/profile'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -150,15 +150,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   IconData _getDeviceIcon(String name) {
     final lower = name.toLowerCase();
     if (lower.contains('mac') || lower.contains('pc') || lower.contains('windows') || lower.contains('linux')) {
-      return Icons.laptop_mac;
+      return Icons.monitor_rounded;
     } else if (lower.contains('iphone') || lower.contains('android') || lower.contains('phone')) {
-      return Icons.phone_iphone;
+      return Icons.smartphone_rounded;
     } else if (lower.contains('ipad') || lower.contains('tablet')) {
-      return Icons.tablet_mac;
+      return Icons.tablet_mac_rounded;
     } else if (lower.contains('web') || lower.contains('browser') || lower.contains('chrome') || lower.contains('safari')) {
-      return Icons.language;
+      return Icons.language_rounded;
     }
-    return Icons.devices;
+    return Icons.devices_rounded;
   }
 
   void _showRenameDeviceDialog(BuildContext context, String deviceId, String currentName) {
@@ -275,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       if (!isCurrent)
                         IconButton(
-                          icon: const Icon(Icons.sensors),
+                          icon: const Icon(Icons.rss_feed_rounded),
                           tooltip: 'Ping Device',
                           color: colorScheme.primary,
                           iconSize: 20,
@@ -284,14 +284,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                         ),
                       IconButton(
-                        icon: const Icon(Icons.edit),
+                        icon: const Icon(Icons.edit_rounded),
                         tooltip: 'Rename Device',
                         color: colorScheme.onSurfaceVariant,
                         iconSize: 20,
                         onPressed: () => _showRenameDeviceDialog(context, device.id, device.friendlyName),
                       ),
                       OmniActionButton(
-                        icon: Icons.delete_outline,
+                        icon: Icons.delete_rounded,
                         variant: OmniActionButtonVariant.error,
                         onPressed: () {
                           context.read<DeviceBloc>().add(DeviceDeleteRequested(device.id));
@@ -342,7 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     )),
                     if (!_isAddingTag)
                       ActionChip(
-                        avatar: Icon(Icons.add, size: 16, color: colorScheme.primary),
+                        avatar: Icon(Icons.add_rounded, size: 16, color: colorScheme.primary),
                         label: Text('Add Tag', style: textTheme.labelMedium?.copyWith(color: colorScheme.primary)),
                         backgroundColor: Colors.transparent,
                         side: BorderSide(color: colorScheme.outlineVariant),
@@ -384,11 +384,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.check_circle, color: colorScheme.primary, size: 28),
+                  icon: Icon(Icons.check_circle_rounded, color: colorScheme.primary, size: 28),
                   onPressed: _submitTag,
                 ),
                 IconButton(
-                  icon: Icon(Icons.cancel, color: colorScheme.onSurfaceVariant, size: 28),
+                  icon: Icon(Icons.close_rounded, color: colorScheme.onSurfaceVariant, size: 28),
                   onPressed: () {
                     setState(() {
                       _isAddingTag = false;

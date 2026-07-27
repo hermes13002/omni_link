@@ -105,7 +105,7 @@ class _OmniTextFieldState extends State<OmniTextField> {
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      _obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                       color: colorScheme.onSurfaceVariant,
                     ),
                     onPressed: () {

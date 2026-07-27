@@ -269,7 +269,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
-                          icon: Icon(Icons.add, color: colorScheme.onSurface),
+                          icon: Icon(Icons.add_rounded, color: colorScheme.onSurface),
                           onPressed: _toggleMenu,
                           iconSize: 20,
                           padding: EdgeInsets.zero,
@@ -287,7 +287,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                             width: 40,
                             height: 40,
                             child: IconButton(
-                              icon: Icon(Icons.camera_alt, color: colorScheme.onSurface),
+                              icon: Icon(Icons.camera_alt_rounded, color: colorScheme.onSurface),
                               onPressed: () => _pickImage(ImageSource.camera),
                               iconSize: 20,
                               padding: EdgeInsets.zero,
@@ -298,7 +298,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                             width: 40,
                             height: 40,
                             child: IconButton(
-                              icon: Icon(Icons.image, color: colorScheme.onSurface),
+                              icon: Icon(Icons.image_rounded, color: colorScheme.onSurface),
                               onPressed: () => _pickImage(ImageSource.gallery),
                               iconSize: 20,
                               padding: EdgeInsets.zero,
@@ -309,7 +309,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                             width: 40,
                             height: 40,
                             child: IconButton(
-                              icon: Icon(Icons.attach_file, color: colorScheme.onSurface),
+                              icon: Icon(Icons.attach_file_rounded, color: colorScheme.onSurface),
                               onPressed: _pickFile,
                               iconSize: 20,
                               padding: EdgeInsets.zero,
@@ -333,7 +333,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                 ),
                 child: IconButton(
                   icon: Icon(
-                    Icons.local_offer, 
+                    Icons.local_offer_rounded, 
                     color: _showTags ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
                     size: 18,
                   ),
@@ -364,7 +364,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.mic, color: colorScheme.onSurfaceVariant),
+                icon: Icon(Icons.mic_rounded, color: colorScheme.onSurfaceVariant),
                 onPressed: () {},
                 iconSize: 20,
               ),
@@ -392,7 +392,7 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                         )
                       )
                     : IconButton(
-                        icon: Icon(Icons.send, color: colorScheme.onPrimaryContainer),
+                        icon: Icon(Icons.send_rounded, color: colorScheme.onPrimaryContainer),
                         onPressed: _handleSend,
                         iconSize: 18,
                       ),

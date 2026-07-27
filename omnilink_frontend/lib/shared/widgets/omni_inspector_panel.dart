@@ -141,7 +141,7 @@ class _OmniInspectorPanelState extends State<OmniInspectorPanel> {
                                             shape: BoxShape.circle,
                                           ),
                                           child: Icon(
-                                            Icons.cloud,
+                                            Icons.cloud_rounded,
                                             size: 32,
                                             color: _isDragging 
                                                 ? colorScheme.onPrimary 

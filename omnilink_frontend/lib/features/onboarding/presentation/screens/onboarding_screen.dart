@@ -24,12 +24,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingPageData(
       title: 'Organize with Tags',
       description: 'Smart organization for your text, files, and code snippets.',
-      icon: Icons.label_important_outline_rounded,
+      icon: Icons.local_offer_rounded,
     ),
     OnboardingPageData(
       title: 'Seamless Sharing',
       description: 'Drop a file on your PC, access it instantly on your phone.',
-      icon: Icons.cloud_upload_rounded,
+      icon: Icons.share_rounded,
     ),
   ];
 
@@ -123,7 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   text: _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
                   onPressed: _onNext,
                   variant: OmniButtonVariant.primary,
-                  icon: _currentPage == _pages.length - 1 ? Icons.check_circle_outline : Icons.arrow_forward_rounded,
+                  icon: _currentPage == _pages.length - 1 ? Icons.check_circle_rounded : Icons.arrow_circle_right_rounded,
                 ),
               ],
             ),
