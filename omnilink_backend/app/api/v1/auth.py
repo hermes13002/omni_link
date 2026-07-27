@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_current_user, get_db, _bearer_scheme
 from app.db.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse
+from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest
 from app.schemas.response import ApiResponse
 from app.schemas.user import UserResponse
+from fastapi.security import HTTPAuthorizationCredentials
 from app.services import auth_service
 from app.core.rate_limit import limiter
 
@@ -41,6 +42,17 @@ async def refresh(
 ) -> ApiResponse[TokenResponse]:
     return ApiResponse(data=await auth_service.refresh_tokens(payload.refresh_token, db))
 
+
+@router.post("/logout", response_model=ApiResponse[None])
+async def logout(
+    payload: LogoutRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
+) -> ApiResponse[None]:
+    await auth_service.logout_user(
+        access_token=credentials.credentials,
+        refresh_token=payload.refresh_token,
+    )
+    return ApiResponse(data=None)
 
 @router.get("/me", response_model=ApiResponse[UserResponse])
 async def get_me(

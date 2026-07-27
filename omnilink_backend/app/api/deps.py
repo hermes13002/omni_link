@@ -9,6 +9,8 @@ from app.core.exceptions import credentials_exception
 from app.core.security import decode_token
 from app.db.base import get_async_session
 from app.db.models.user import User
+from app.cache.redis_client import get_redis_pool
+import hashlib
 
 _bearer_scheme = HTTPBearer()
 
@@ -22,6 +24,13 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    # Check if access token is blocklisted
+    redis_client = get_redis_pool()
+    hashed_at = hashlib.sha256(credentials.credentials.encode()).hexdigest()
+    is_blacklisted = await redis_client.get(f"bl_{hashed_at}")
+    if is_blacklisted:
+        raise credentials_exception
+
     token_data = decode_token(credentials.credentials)
     if not token_data or token_data.get("type") != "access":
         raise credentials_exception
