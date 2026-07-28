@@ -89,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.all_inclusive_rounded, size: 80, color: colorScheme.primary),
+        Image.asset('assets/images/logo/infinity.png', width: 80, height: 80),
         const SizedBox(height: 16),
         Text(
           'OmniLink',
@@ -143,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (!isDesktop) ...[
-                Icon(Icons.all_inclusive_rounded, size: 64, color: colorScheme.primary),
+                Image.asset('assets/images/logo/infinity.png', width: 64, height: 64),
                 const SizedBox(height: 24),
                 Text(
                   'OmniLink',

@@ -69,10 +69,10 @@ class _OmniSideNavState extends State<OmniSideNav> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(
-                                child: Icon(
-                                  Icons.all_inclusive_rounded,
-                                  size: 20,
-                                  color: colorScheme.onPrimary,
+                                child: Image.asset(
+                                  'assets/images/logo/infinity.png',
+                                  width: 20,
+                                  height: 20,
                                 ),
                               ),
                             ),
