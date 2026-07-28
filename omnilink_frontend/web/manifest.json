@@ -1,6 +1,6 @@
 {
-    "name": "omnilink_frontend",
-    "short_name": "omnilink_frontend",
+    "name": "OmniLink",
+    "short_name": "OmniLink",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
