@@ -30,7 +30,7 @@ class OmniToast {
 
     toastification.showCustom(
       context: ctx,
-      autoCloseDuration: const Duration(seconds: 3),
+      autoCloseDuration: const Duration(seconds: 5),
       alignment: _toastAlignment,
       builder: (BuildContext context, ToastificationItem holder) {
         return Align(

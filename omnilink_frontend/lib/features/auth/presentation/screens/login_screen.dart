@@ -90,8 +90,8 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         Text(
           'OmniLink',
-          style: textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+          style: textTheme.displayMedium?.copyWith(
+            fontWeight: FontWeight.w900,
             letterSpacing: -1.2,
             color: colorScheme.primary,
           ),
@@ -143,13 +143,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 Image.asset('assets/images/logo/infinity.png', width: 64, height: 64),
                 const SizedBox(height: 24),
                 Text(
-                  'OMNILINK',
-                  style: textTheme.labelLarge?.copyWith(
+                  'OmniLink',
+                  style: textTheme.displayMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1.2,
                     color: colorScheme.primary,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -163,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
                           Text(
                             'LOG IN TO YOUR ACCOUNT',
-                            style: textTheme.labelMedium?.copyWith(
+                            style: textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               letterSpacing: isDesktop ? 1.2 : 0,
                             ),
