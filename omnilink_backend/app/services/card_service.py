@@ -331,3 +331,21 @@ async def delete_card(
     await db.delete(card)
     await db.commit()
     await publish_to_user_channel(user_id, {"event": "card_deleted", "card_id": str(card_id)})
+
+async def get_card_download_url(
+    card_id: uuid.UUID,
+    user_id: uuid.UUID,
+    db: AsyncSession,
+) -> str:
+    card = await db.scalar(
+        select(Card)
+        .where(Card.id == card_id)
+    )
+    if card is None:
+        raise not_found_exception
+    if card.user_id != user_id:
+        raise forbidden_exception
+    if card.card_type != CardType.file or not card.gcs_object_key:
+        raise Exception("Card is not a file or has no file attached")
+
+    return await generate_signed_url(card.gcs_object_key, download_filename=card.title)

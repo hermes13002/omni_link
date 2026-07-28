@@ -52,19 +52,26 @@ async def upload_file_stream(object_key: str, file_obj, content_type: str) -> No
     )
 
 
-async def generate_signed_url(object_key: str) -> str:
+async def generate_signed_url(object_key: str, download_filename: str | None = None) -> str:
     loop = asyncio.get_event_loop()
     client = get_gcs_client()
     bucket = client.bucket(settings.gcs_bucket_name)
     blob = bucket.blob(object_key)
     expiration = timedelta(minutes=settings.gcs_signed_url_expire_minutes)
+    
+    kwargs = {
+        "expiration": expiration,
+        "method": "GET",
+        "version": "v4",
+    }
+    if download_filename:
+        kwargs["response_disposition"] = f'attachment; filename="{download_filename}"'
+
     signed_url: str = await loop.run_in_executor(
         None,
         partial(
             blob.generate_signed_url,
-            expiration=expiration,
-            method="GET",
-            version="v4",
+            **kwargs
         ),
     )
     return signed_url
