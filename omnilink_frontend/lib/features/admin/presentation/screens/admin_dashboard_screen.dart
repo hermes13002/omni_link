@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/widgets/omni_glass_container.dart';
-import 'technical_health_view.dart';
-import 'product_health_view.dart';
-import 'growth_health_view.dart';
-import 'users_management_view.dart';
-import 'content_moderation_view.dart';
+import 'package:omnilink_frontend/features/admin/presentation/views/growth_health_view.dart';
+import 'package:omnilink_frontend/features/admin/presentation/views/product_health_view.dart';
+import 'package:omnilink_frontend/features/admin/presentation/views/technical_health_view.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
