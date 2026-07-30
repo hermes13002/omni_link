@@ -87,6 +87,11 @@ class CardsApi {
     return CardModel.fromJson(response.data);
   }
 
+  Future<String> getDownloadUrl(String cardId) async {
+    final response = await _dio.get('/api/v1/cards/$cardId/download-url');
+    return response.data['data'] as String;
+  }
+
   Future<CardModel> updateCard(String cardId, {String? title, String? body, bool? pinned, List<String>? tagIds}) async {
     final data = <String, dynamic>{};
     if (title != null) data['title'] = title;

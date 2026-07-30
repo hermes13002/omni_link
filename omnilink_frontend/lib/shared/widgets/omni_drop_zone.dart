@@ -9,7 +9,20 @@ import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_state.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
-import 'package:omnilink_frontend/shared/utils/omni_prompts.dart';
+
+class StagedFile {
+  final String name;
+  final String? path;
+  final List<int>? bytes;
+  final bool isImage;
+
+  StagedFile({
+    required this.name,
+    this.path,
+    this.bytes,
+    required this.isImage,
+  });
+}
 
 class OmniDropZone extends StatefulWidget {
   const OmniDropZone({super.key});
@@ -18,54 +31,20 @@ class OmniDropZone extends StatefulWidget {
   State<OmniDropZone> createState() => _OmniDropZoneState();
 }
 
-class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderStateMixin {
-  bool _isExpanded = false;
+class _OmniDropZoneState extends State<OmniDropZone> {
   bool _isSending = false;
   bool _showTags = false;
   final Set<String> _selectedTagIds = {};
+  StagedFile? _stagedFile;
   
-  late AnimationController _controller;
-  late Animation<double> _expandAnimation;
-  late Animation<double> _rotateAnimation;
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-    _expandAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-    _rotateAnimation = Tween<double>(begin: 0, end: 0.125).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOut,
-      ),
-    );
-  }
-
-  @override
   void dispose() {
-    _controller.dispose();
     _textController.dispose();
     _titleController.dispose();
     super.dispose();
-  }
-
-  void _toggleMenu() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
   }
 
   void _clearSelection() {
@@ -74,22 +53,36 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
     setState(() {
       _selectedTagIds.clear();
       _showTags = false;
+      _stagedFile = null;
     });
   }
 
   Future<void> _handleSend() async {
     final text = _textController.text.trim();
     final title = _titleController.text.trim();
-    if (text.isEmpty && title.isEmpty) return;
+    if (text.isEmpty && title.isEmpty && _stagedFile == null) return;
 
     setState(() => _isSending = true);
     
     try {
-      final isUrl = Uri.tryParse(text)?.hasAbsolutePath ?? false;
-      if (isUrl) {
-        await getIt<CardsApi>().createMetadataCard(title.isNotEmpty ? title : text, body: text, tagIds: _selectedTagIds.toList());
+      if (_stagedFile != null) {
+        String finalTitle = title.isNotEmpty ? title : text;
+        if (finalTitle.isEmpty) finalTitle = _stagedFile!.name;
+        
+        await getIt<CardsApi>().createFileCard(
+          filePath: _stagedFile!.path,
+          bytes: _stagedFile!.bytes,
+          fileName: _stagedFile!.name,
+          title: finalTitle.isNotEmpty ? finalTitle : null,
+          tagIds: _selectedTagIds.toList(),
+        );
       } else {
-        await getIt<CardsApi>().createTextCard(text, title: title.isNotEmpty ? title : null, tagIds: _selectedTagIds.toList());
+        final isUrl = Uri.tryParse(text)?.hasAbsolutePath ?? false;
+        if (isUrl) {
+          await getIt<CardsApi>().createMetadataCard(title.isNotEmpty ? title : text, body: text, tagIds: _selectedTagIds.toList());
+        } else {
+          await getIt<CardsApi>().createTextCard(text, title: title.isNotEmpty ? title : null, tagIds: _selectedTagIds.toList());
+        }
       }
       
       if (mounted) {
@@ -111,39 +104,25 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
       final picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: source);
       if (image != null) {
-        setState(() => _isSending = true);
-        final initialTitle = _titleController.text.trim();
-        final defaultTitle = initialTitle.isNotEmpty ? initialTitle : image.name;
-        final result = await OmniPrompts.promptForFileDetails(context, defaultTitle: defaultTitle, initialTagIds: _selectedTagIds.toList());
-        final finalTitle = result.$1;
-        final finalTagIds = result.$2;
-        if (finalTitle == null) {
-          setState(() => _isSending = false);
-          return;
-        }
-
         List<int>? bytes;
         if (kIsWeb) {
           bytes = await image.readAsBytes();
         }
-
-        await getIt<CardsApi>().createFileCard(
-          filePath: kIsWeb ? null : image.path,
-          bytes: bytes,
-          fileName: image.name,
-          title: finalTitle.isNotEmpty ? finalTitle : null,
-          tagIds: finalTagIds,
-        );
-        if (mounted) _clearSelection();
-        if (_isExpanded) _toggleMenu();
+        setState(() {
+          _stagedFile = StagedFile(
+            name: image.name,
+            path: kIsWeb ? null : image.path,
+            bytes: bytes,
+            isImage: true,
+          );
+          if (_titleController.text.isEmpty && _textController.text.isEmpty) {
+            _titleController.text = image.name;
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
         OmniToast.showError(context, 'Failed to upload image: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSending = false);
       }
     }
   }
@@ -151,36 +130,23 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
   Future<void> _pickFile() async {
     try {
       FilePickerResult? result = await FilePicker.pickFiles();
-      if (result != null && result.files.single.path != null) {
-        setState(() => _isSending = true);
-        final initialTitle = _titleController.text.trim();
-        final defaultTitle = initialTitle.isNotEmpty ? initialTitle : result.files.single.name;
-        final promptResult = await OmniPrompts.promptForFileDetails(context, defaultTitle: defaultTitle, initialTagIds: _selectedTagIds.toList());
-        final finalTitle = promptResult.$1;
-        final finalTagIds = promptResult.$2;
-        if (finalTitle == null) {
-          setState(() => _isSending = false);
-          return;
-        }
-        
+      if (result != null) {
         final file = result.files.single;
-        await getIt<CardsApi>().createFileCard(
-          filePath: kIsWeb ? null : file.path,
-          bytes: file.bytes,
-          fileName: file.name,
-          title: finalTitle.isNotEmpty ? finalTitle : null, 
-          tagIds: finalTagIds,
-        );
-        if (mounted) _clearSelection();
-        if (_isExpanded) _toggleMenu();
+        setState(() {
+          _stagedFile = StagedFile(
+            name: file.name,
+            path: kIsWeb ? null : file.path,
+            bytes: file.bytes,
+            isImage: false,
+          );
+          if (_titleController.text.isEmpty && _textController.text.isEmpty) {
+            _titleController.text = file.name;
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
         OmniToast.showError(context, 'Failed to upload file: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSending = false);
       }
     }
   }
@@ -257,66 +223,45 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
                   color: colorScheme.surfaceContainerLowest,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    RotationTransition(
-                      turns: _rotateAnimation,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(Icons.add_rounded, color: colorScheme.onSurface),
-                          onPressed: _toggleMenu,
-                          iconSize: 20,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
+                child: PopupMenuButton<String>(
+                  icon: Icon(Icons.add_rounded, color: colorScheme.onSurface),
+                  iconSize: 20,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  color: colorScheme.surfaceContainerHighest,
+                  offset: const Offset(0, -135),
+                  onSelected: (value) {
+                    if (value == 'camera') _pickImage(ImageSource.camera);
+                    if (value == 'gallery') _pickImage(ImageSource.gallery);
+                    if (value == 'file') _pickFile();
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'camera',
+                      child: Row(
+                        children: [
+                          Icon(Icons.camera_alt_rounded, color: colorScheme.onSurfaceVariant, size: 20),
+                          const SizedBox(width: 12),
+                          Text('Camera', style: TextStyle(color: colorScheme.onSurface)),
+                        ],
                       ),
                     ),
-                    SizeTransition(
-                      sizeFactor: _expandAnimation,
-                      axis: Axis.horizontal,
+                    PopupMenuItem(
+                      value: 'gallery',
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: IconButton(
-                              icon: Icon(Icons.camera_alt_rounded, color: colorScheme.onSurface),
-                              onPressed: () => _pickImage(ImageSource.camera),
-                              iconSize: 20,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: IconButton(
-                              icon: Icon(Icons.image_rounded, color: colorScheme.onSurface),
-                              onPressed: () => _pickImage(ImageSource.gallery),
-                              iconSize: 20,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: IconButton(
-                              icon: Icon(Icons.attach_file_rounded, color: colorScheme.onSurface),
-                              onPressed: _pickFile,
-                              iconSize: 20,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
+                          Icon(Icons.image_rounded, color: colorScheme.onSurfaceVariant, size: 20),
+                          const SizedBox(width: 12),
+                          Text('Gallery', style: TextStyle(color: colorScheme.onSurface)),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'file',
+                      child: Row(
+                        children: [
+                          Icon(Icons.attach_file_rounded, color: colorScheme.onSurfaceVariant, size: 20),
+                          const SizedBox(width: 12),
+                          Text('File', style: TextStyle(color: colorScheme.onSurface)),
                         ],
                       ),
                     ),
@@ -402,10 +347,57 @@ class _OmniDropZoneState extends State<OmniDropZone> with SingleTickerProviderSt
         ],
       ),
         ),
+        if (_stagedFile != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _stagedFile!.isImage ? Icons.image_rounded : Icons.insert_drive_file_rounded,
+                        size: 16,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          _stagedFile!.name,
+                          style: TextStyle(
+                            color: colorScheme.onPrimaryContainer,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => setState(() => _stagedFile = null),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         AnimatedBuilder(
           animation: Listenable.merge([_textController, _titleController]),
           builder: (context, child) {
-            final showTitle = _textController.text.isNotEmpty || _titleController.text.isNotEmpty;
+            final showTitle = _textController.text.isNotEmpty || _titleController.text.isNotEmpty || _stagedFile != null;
             return AnimatedSize(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,

@@ -66,15 +66,17 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
   }
 
   Future<void> _handleDownload() async {
-    if (widget.card.gcsSignedUrl == null) return;
-    final url = widget.card.gcsSignedUrl!;
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      if (mounted) {
-        OmniToast.showError(context, 'Could not open file URL');
+    try {
+      if (mounted) OmniToast.showInfo(context, 'Starting download...');
+      final downloadUrl = await getIt<CardsApi>().getDownloadUrl(widget.card.id);
+      final uri = Uri.parse(downloadUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) OmniToast.showError(context, 'Could not launch download');
       }
+    } catch (e) {
+      if (mounted) OmniToast.showError(context, 'Failed to download file');
     }
   }
 

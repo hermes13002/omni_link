@@ -149,6 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     letterSpacing: -1.2,
                     color: colorScheme.primary,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(

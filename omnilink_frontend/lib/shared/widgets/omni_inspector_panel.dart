@@ -7,7 +7,6 @@ import 'omni_drop_zone.dart';
 import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
-import 'package:omnilink_frontend/shared/utils/omni_prompts.dart';
 
 // ... class definition
 
@@ -30,23 +29,17 @@ class _OmniInspectorPanelState extends State<OmniInspectorPanel> {
 
     try {
       for (final file in files) {
-        final result = await OmniPrompts.promptForFileDetails(context, defaultTitle: file.name);
-        final finalTitle = result.$1;
-        final finalTagIds = result.$2;
-        if (finalTitle != null) {
-          List<int>? bytes;
-          if (kIsWeb) {
-            bytes = await file.readAsBytes();
-          }
-
-          await getIt<CardsApi>().createFileCard(
-            filePath: kIsWeb ? null : file.path,
-            bytes: bytes,
-            fileName: file.name,
-            title: finalTitle.isNotEmpty ? finalTitle : null, 
-            tagIds: finalTagIds,
-          );
+        List<int>? bytes;
+        if (kIsWeb) {
+          bytes = await file.readAsBytes();
         }
+
+        await getIt<CardsApi>().createFileCard(
+          filePath: kIsWeb ? null : file.path,
+          bytes: bytes,
+          fileName: file.name,
+          title: file.name, 
+        );
       }
       if (mounted) {
         OmniToast.showSuccess(context, 'Uploaded ${files.length} file(s)');
