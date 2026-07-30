@@ -1,12 +1,18 @@
 import uuid
 from datetime import datetime, timezone
+import enum
 
 from sqlalchemy import DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Enum
 
 from app.db.base import Base
 
+
+class UserRole(str, enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 class User(Base):
     __tablename__ = "users"
@@ -21,6 +27,10 @@ class User(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole), nullable=False, default=UserRole.USER
+    )
+    is_suspended: Mapped[bool] = mapped_column(default=False)
 
     devices: Mapped[list["Device"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
