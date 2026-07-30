@@ -6,9 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.db.base import get_db
+from app.api.deps import get_db, get_current_user
 from app.db.models.user import User, UserRole
-from app.api.deps import get_current_user
 from app.services import auth_service
 from app.config import settings
 from app.schemas.auth import TokenResponse
