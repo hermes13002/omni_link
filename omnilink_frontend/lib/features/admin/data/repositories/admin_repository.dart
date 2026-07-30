@@ -1,7 +1,7 @@
 import 'package:injectable/injectable.dart';
+import 'package:omnilink_frontend/features/admin/data/models/admin_overview_metrics.dart';
+import 'package:omnilink_frontend/features/admin/data/models/admin_user_item.dart';
 import '../admin_api.dart';
-import 'models/admin_overview_metrics.dart';
-import 'models/admin_user_item.dart';
 
 @injectable
 class AdminRepository {
