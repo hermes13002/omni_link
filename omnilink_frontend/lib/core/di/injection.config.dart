@@ -5,36 +5,36 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:dio/dio.dart' as _i9;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i5;
+import 'package:dio/dio.dart' as _i6;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as _i3;
 import 'package:get_it/get_it.dart' as _i1;
 import 'package:injectable/injectable.dart' as _i2;
-import 'package:omnilink_frontend/core/events/event_bus.dart' as _i6;
-import 'package:omnilink_frontend/core/network/dio_client.dart' as _i7;
+import 'package:omnilink_frontend/core/events/event_bus.dart' as _i4;
+import 'package:omnilink_frontend/core/network/dio_client.dart' as _i5;
 import 'package:omnilink_frontend/core/network/sse_client.dart' as _i19;
-import 'package:omnilink_frontend/features/admin/data/admin_api.dart' as _i3;
+import 'package:omnilink_frontend/features/admin/data/admin_api.dart' as _i9;
 import 'package:omnilink_frontend/features/admin/data/repositories/admin_repository.dart'
-    as _i4;
+    as _i10;
 import 'package:omnilink_frontend/features/admin/presentation/bloc/admin_bloc.dart'
-    as _i8;
-import 'package:omnilink_frontend/features/auth/data/auth_api.dart' as _i12;
+    as _i16;
+import 'package:omnilink_frontend/features/auth/data/auth_api.dart' as _i11;
 import 'package:omnilink_frontend/features/auth/data/repositories/auth_repository.dart'
-    as _i13;
+    as _i12;
 import 'package:omnilink_frontend/features/auth/presentation/bloc/auth_bloc.dart'
     as _i17;
 import 'package:omnilink_frontend/features/device/data/devices_api.dart'
-    as _i15;
+    as _i14;
 import 'package:omnilink_frontend/features/device/data/repositories/device_repository.dart'
     as _i18;
 import 'package:omnilink_frontend/features/device/presentation/bloc/device_bloc.dart'
     as _i20;
 import 'package:omnilink_frontend/features/timeline/data/cards_api.dart'
-    as _i14;
-import 'package:omnilink_frontend/features/timeline/data/tags_api.dart' as _i10;
+    as _i13;
+import 'package:omnilink_frontend/features/timeline/data/tags_api.dart' as _i7;
 import 'package:omnilink_frontend/features/timeline/presentation/bloc/tags_bloc.dart'
-    as _i11;
+    as _i8;
 import 'package:omnilink_frontend/features/timeline/presentation/bloc/timeline_bloc.dart'
-    as _i16;
+    as _i15;
 
 import '../network/dio_client.dart'
     as _i21; // ignore_for_file: unnecessary_lambdas
@@ -52,43 +52,43 @@ extension GetItInjectableX on _i1.GetIt {
       environmentFilter,
     );
     final networkModule = _$NetworkModule();
-    gh.factory<_i3.AdminApi>(() => _i3.AdminApi(apiClient: gh<InvalidType>()));
-    gh.factory<_i4.AdminRepository>(
-        () => _i4.AdminRepository(adminApi: gh<_i3.AdminApi>()));
-    gh.lazySingleton<_i5.FlutterSecureStorage>(
+    gh.lazySingleton<_i3.FlutterSecureStorage>(
         () => networkModule.secureStorage);
-    gh.singleton<_i6.GlobalEventBus>(_i6.GlobalEventBus());
-    await gh.singletonAsync<_i7.LocalDatabase>(
+    gh.singleton<_i4.GlobalEventBus>(_i4.GlobalEventBus());
+    await gh.singletonAsync<_i5.LocalDatabase>(
       () => networkModule.database,
       preResolve: true,
     );
-    gh.factory<_i8.AdminBloc>(
-        () => _i8.AdminBloc(adminRepository: gh<_i4.AdminRepository>()));
-    gh.lazySingleton<_i9.Dio>(
-        () => networkModule.dio(gh<_i5.FlutterSecureStorage>()));
-    gh.lazySingleton<_i10.TagsApi>(() => _i10.TagsApi(gh<_i9.Dio>()));
-    gh.lazySingleton<_i11.TagsBloc>(() => _i11.TagsBloc(gh<_i10.TagsApi>()));
-    gh.lazySingleton<_i12.AuthApi>(() => _i12.AuthApi(gh<_i9.Dio>()));
-    gh.lazySingleton<_i13.AuthRepository>(() => _i13.AuthRepository(
-          gh<_i12.AuthApi>(),
-          gh<_i5.FlutterSecureStorage>(),
+    gh.lazySingleton<_i6.Dio>(
+        () => networkModule.dio(gh<_i3.FlutterSecureStorage>()));
+    gh.lazySingleton<_i7.TagsApi>(() => _i7.TagsApi(gh<_i6.Dio>()));
+    gh.lazySingleton<_i8.TagsBloc>(() => _i8.TagsBloc(gh<_i7.TagsApi>()));
+    gh.factory<_i9.AdminApi>(() => _i9.AdminApi(gh<_i6.Dio>()));
+    gh.factory<_i10.AdminRepository>(
+        () => _i10.AdminRepository(adminApi: gh<_i9.AdminApi>()));
+    gh.lazySingleton<_i11.AuthApi>(() => _i11.AuthApi(gh<_i6.Dio>()));
+    gh.lazySingleton<_i12.AuthRepository>(() => _i12.AuthRepository(
+          gh<_i11.AuthApi>(),
+          gh<_i3.FlutterSecureStorage>(),
         ));
-    gh.lazySingleton<_i14.CardsApi>(() => _i14.CardsApi(gh<_i9.Dio>()));
-    gh.lazySingleton<_i15.DevicesApi>(() => _i15.DevicesApi(gh<_i9.Dio>()));
-    gh.factory<_i16.TimelineBloc>(() => _i16.TimelineBloc(
-          gh<_i14.CardsApi>(),
-          gh<_i7.LocalDatabase>(),
-          gh<_i6.GlobalEventBus>(),
+    gh.lazySingleton<_i13.CardsApi>(() => _i13.CardsApi(gh<_i6.Dio>()));
+    gh.lazySingleton<_i14.DevicesApi>(() => _i14.DevicesApi(gh<_i6.Dio>()));
+    gh.factory<_i15.TimelineBloc>(() => _i15.TimelineBloc(
+          gh<_i13.CardsApi>(),
+          gh<_i5.LocalDatabase>(),
+          gh<_i4.GlobalEventBus>(),
         ));
-    gh.factory<_i17.AuthBloc>(() => _i17.AuthBloc(gh<_i13.AuthRepository>()));
+    gh.factory<_i16.AdminBloc>(
+        () => _i16.AdminBloc(adminRepository: gh<_i10.AdminRepository>()));
+    gh.factory<_i17.AuthBloc>(() => _i17.AuthBloc(gh<_i12.AuthRepository>()));
     gh.lazySingleton<_i18.DeviceRepository>(() => _i18.DeviceRepository(
-          gh<_i15.DevicesApi>(),
-          gh<_i5.FlutterSecureStorage>(),
+          gh<_i14.DevicesApi>(),
+          gh<_i3.FlutterSecureStorage>(),
         ));
     gh.lazySingleton<_i19.SseClient>(() => _i19.SseClient(
-          gh<_i9.Dio>(),
+          gh<_i6.Dio>(),
           gh<_i18.DeviceRepository>(),
-          gh<_i6.GlobalEventBus>(),
+          gh<_i4.GlobalEventBus>(),
         ));
     gh.lazySingleton<_i20.DeviceBloc>(
         () => _i20.DeviceBloc(gh<_i18.DeviceRepository>()));
