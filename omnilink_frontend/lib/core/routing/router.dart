@@ -13,6 +13,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/timeline/presentation/timeline_screen.dart';
 import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
 import '../../features/timeline/presentation/bloc/timeline_event.dart';
+import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/device/presentation/bloc/device_bloc.dart';
 import '../../features/device/presentation/bloc/device_event.dart';
@@ -84,7 +85,10 @@ GoRouter createRouter(AuthBloc authBloc) {
       ),
       GoRoute(
         path: '/admin/dashboard',
-        builder: (context, state) => const AdminDashboardScreen(),
+        builder: (context, state) => BlocProvider(
+          create: (_) => getIt<AdminBloc>(),
+          child: const AdminDashboardScreen(),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

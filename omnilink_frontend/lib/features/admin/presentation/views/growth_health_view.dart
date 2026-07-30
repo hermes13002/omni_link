@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../../shared/widgets/omni_glass_container.dart';
+import '../bloc/admin_bloc.dart';
+import '../bloc/admin_state.dart';
 
 class GrowthHealthView extends StatelessWidget {
   const GrowthHealthView({super.key});
@@ -99,33 +102,55 @@ class GrowthHealthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Growth & Financial Health',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildKpiCard(context, 'Retention Rate (D30)', '73%', '↑ 2%', Icons.favorite),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'Web-to-Native Conv.', '41%', '↑ 5%', Icons.download),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'Viral Link Share Rate', '12%', 'Stable', Icons.share),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(child: _buildLineChart(context, 'Cohort Retention Curve')),
-            ],
-          ),
-        ],
-      ),
+    return BlocBuilder<AdminBloc, AdminState>(
+      builder: (context, state) {
+        if (state is AdminLoading || state is AdminInitial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is AdminError) {
+          return Center(child: Text("Error: ${state.message}"));
+        }
+        
+        if (state is AdminLoaded) {
+          final isMobile = MediaQuery.of(context).size.width < 600;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Growth & Financial Health',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                if (isMobile) ...[
+                  _buildKpiCard(context, 'New Users Today', state.metrics.newUsersToday.toString(), 'Today', Icons.person_add),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'Retention Rate (D30)', '73%', 'Simulated', Icons.favorite),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'Total Items Synced', state.metrics.totalItems.toString(), 'Overall', Icons.data_usage),
+                ] else
+                  Row(
+                    children: [
+                      _buildKpiCard(context, 'New Users Today', state.metrics.newUsersToday.toString(), 'Today', Icons.person_add),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'Retention Rate (D30)', '73%', 'Simulated', Icons.favorite),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'Total Items Synced', state.metrics.totalItems.toString(), 'Overall', Icons.data_usage),
+                    ],
+                  ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(child: _buildLineChart(context, 'Cohort Retention Curve')),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

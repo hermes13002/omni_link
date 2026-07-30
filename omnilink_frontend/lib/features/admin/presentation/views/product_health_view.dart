@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../../shared/widgets/omni_glass_container.dart';
+import '../bloc/admin_bloc.dart';
+import '../bloc/admin_state.dart';
 
 class ProductHealthView extends StatelessWidget {
   const ProductHealthView({super.key});
@@ -48,7 +51,7 @@ class ProductHealthView extends StatelessWidget {
     );
   }
 
-  Widget _buildPieChart(BuildContext context, String title) {
+  Widget _buildPieChart(BuildContext context, String title, Map<String, int> itemsByType) {
     return OmniGlassContainer(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -65,21 +68,21 @@ class ProductHealthView extends StatelessWidget {
                 sections: [
                   PieChartSectionData(
                     color: Colors.blue,
-                    value: 40,
+                    value: (itemsByType['text'] ?? 0).toDouble(),
                     title: 'Text',
                     radius: 30,
                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   PieChartSectionData(
                     color: Colors.red,
-                    value: 30,
-                    title: 'Links',
+                    value: (itemsByType['metadata'] ?? 0).toDouble(),
+                    title: 'Metadata',
                     radius: 30,
                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   PieChartSectionData(
                     color: Colors.green,
-                    value: 30,
+                    value: (itemsByType['file'] ?? 0).toDouble(),
                     title: 'Files',
                     radius: 30,
                     titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
@@ -137,35 +140,62 @@ class ProductHealthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Product Health & Engagement',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildKpiCard(context, 'Daily Active Users', '8,230', '↑ 15%', Icons.people_alt),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'Devices per User', '2.4', 'Healthy (> 2.0)', Icons.devices_other),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'Cross-Device Consumption', '76%', 'Very High', Icons.sync_alt),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(child: _buildPieChart(context, 'Items Transferred by Type')),
-              const SizedBox(width: 24),
-              Expanded(child: _buildBarChart(context, 'Action Rate per Card (Copy, Open, etc)')),
-            ],
-          ),
-        ],
-      ),
+    return BlocBuilder<AdminBloc, AdminState>(
+      builder: (context, state) {
+        if (state is AdminLoading || state is AdminInitial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is AdminError) {
+          return Center(child: Text("Error: ${state.message}"));
+        }
+        
+        if (state is AdminLoaded) {
+          final isMobile = MediaQuery.of(context).size.width < 600;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Product Health & Engagement',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                if (isMobile) ...[
+                  _buildKpiCard(context, 'Daily Active Users', state.metrics.dailyActiveUsers.toString(), 'Current', Icons.people_alt),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'Devices per User', state.metrics.devicesPerUser.toStringAsFixed(1), 'Healthy (> 2.0)', Icons.devices_other),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'Total Users', state.metrics.totalUsers.toString(), 'Registered', Icons.sync_alt),
+                ] else
+                  Row(
+                    children: [
+                      _buildKpiCard(context, 'Daily Active Users', state.metrics.dailyActiveUsers.toString(), 'Current', Icons.people_alt),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'Devices per User', state.metrics.devicesPerUser.toStringAsFixed(1), 'Healthy (> 2.0)', Icons.devices_other),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'Total Users', state.metrics.totalUsers.toString(), 'Registered', Icons.sync_alt),
+                    ],
+                  ),
+                const SizedBox(height: 32),
+                if (isMobile) ...[
+                  _buildPieChart(context, 'Items Transferred by Type', state.metrics.itemsByType),
+                  const SizedBox(height: 24),
+                  _buildBarChart(context, 'Action Rate per Card (Copy, Open, etc)'),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(child: _buildPieChart(context, 'Items Transferred by Type', state.metrics.itemsByType)),
+                      const SizedBox(width: 24),
+                      Expanded(child: _buildBarChart(context, 'Action Rate per Card (Copy, Open, etc)')),
+                    ],
+                  ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../../shared/widgets/omni_glass_container.dart';
+import '../bloc/admin_bloc.dart';
+import '../bloc/admin_state.dart';
 
 class TechnicalHealthView extends StatelessWidget {
   const TechnicalHealthView({super.key});
@@ -99,37 +102,66 @@ class TechnicalHealthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Technical Health',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildKpiCard(context, 'Sync Latency', '45 ms', '↓ 12% from last week', Icons.speed),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'Active SSE Connections', '1,402', '↑ 5% from last week', Icons.wifi_tethering),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'DB Pool Saturation', '24%', 'Stable', Icons.storage),
-              const SizedBox(width: 16),
-              _buildKpiCard(context, 'API Error Rate', '0.01%', 'Target: < 0.1%', Icons.error_outline),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(child: _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)')),
-              const SizedBox(width: 24),
-              Expanded(child: _buildLineChart(context, 'Metadata Processing Latency (ms)')),
-            ],
-          ),
-        ],
-      ),
+    return BlocBuilder<AdminBloc, AdminState>(
+      builder: (context, state) {
+        if (state is AdminLoading || state is AdminInitial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is AdminError) {
+          return Center(child: Text("Error: ${state.message}"));
+        }
+        
+        if (state is AdminLoaded) {
+          final isMobile = MediaQuery.of(context).size.width < 600;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Technical Health',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                if (isMobile) ...[
+                  _buildKpiCard(context, 'Sync Latency', '${state.metrics.syncLatencyMs} ms', 'Simulated', Icons.speed),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'Active SSE Connections', '${state.metrics.activeSseConnections}', 'Approximate', Icons.wifi_tethering),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'DB Pool Saturation', '${state.metrics.dbPoolSaturationPercent}%', 'Simulated', Icons.storage),
+                  const SizedBox(height: 16),
+                  _buildKpiCard(context, 'API Error Rate', '${state.metrics.apiErrorRatePercent}%', 'Simulated', Icons.error_outline),
+                ] else
+                  Row(
+                    children: [
+                      _buildKpiCard(context, 'Sync Latency', '${state.metrics.syncLatencyMs} ms', 'Simulated', Icons.speed),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'Active SSE Connections', '${state.metrics.activeSseConnections}', 'Approximate', Icons.wifi_tethering),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'DB Pool Saturation', '${state.metrics.dbPoolSaturationPercent}%', 'Simulated', Icons.storage),
+                      const SizedBox(width: 16),
+                      _buildKpiCard(context, 'API Error Rate', '${state.metrics.apiErrorRatePercent}%', 'Simulated', Icons.error_outline),
+                    ],
+                  ),
+                const SizedBox(height: 32),
+                if (isMobile) ...[
+                  _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)'),
+                  const SizedBox(height: 24),
+                  _buildLineChart(context, 'Metadata Processing Latency (ms)'),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(child: _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)')),
+                      const SizedBox(width: 24),
+                      Expanded(child: _buildLineChart(context, 'Metadata Processing Latency (ms)')),
+                    ],
+                  ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }
