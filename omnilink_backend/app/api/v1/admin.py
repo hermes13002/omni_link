@@ -8,7 +8,11 @@ from sqlalchemy import select
 
 from app.db.base import get_db
 from app.db.models.user import User, UserRole
-from app.api.dependencies.auth import get_current_user
+from app.api.deps import get_current_user
+from app.services import auth_service
+from app.config import settings
+from app.schemas.auth import TokenResponse
+from app.schemas.response import ApiResponse
 
 router = APIRouter()
 
@@ -25,15 +29,30 @@ async def get_current_admin(current_user: User = Depends(get_current_user)) -> U
         )
     return current_user
 
-@router.post("/login")
+@router.post("/login", response_model=ApiResponse[TokenResponse])
 async def admin_login(
     request: AdminLoginRequest,
     db: AsyncSession = Depends(get_db)
-) -> Any:
-    # Here we would validate the secret key and the password.
-    # For now, it's just a placeholder route that returns a token.
-    # In a real app we'd verify the secret key against an env var and password against db.
-    return {"access_token": "admin-token", "token_type": "bearer"}
+) -> ApiResponse[TokenResponse]:
+    # 1. Verify the secret key
+    if request.secret_key != settings.admin_secret_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid secret key",
+        )
+    
+    # 2. Authenticate the user (checks email and password)
+    user = await auth_service.authenticate_user(request.email, request.password, db)
+    
+    # 3. Ensure the user is an admin
+    if user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have administrative privileges",
+        )
+        
+    # 4. Generate token response
+    return ApiResponse(data=auth_service.build_token_response(user.id))
 
 @router.get("/users")
 async def get_all_users(

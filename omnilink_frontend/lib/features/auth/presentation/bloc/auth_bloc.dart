@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._repository) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
+    on<AuthAdminLoginRequested>(_onAuthAdminLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
@@ -51,6 +52,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repository.login(event.email, event.password);
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      if (e is DioException && e.error != null) {
+        emit(AuthError(e.error.toString()));
+      } else {
+        emit(AuthError(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _onAuthAdminLoginRequested(
+      AuthAdminLoginRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final user = await _repository.adminLogin(event.email, event.password, event.secretKey);
       emit(AuthAuthenticated(user));
     } catch (e) {
       if (e is DioException && e.error != null) {

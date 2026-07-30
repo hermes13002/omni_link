@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 import '../../../../shared/widgets/omni_text_field.dart';
 import '../../../../shared/widgets/omni_button.dart';
 import '../../../../shared/widgets/omni_glass_container.dart';
@@ -28,14 +32,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: Connect to AuthApi for admin login
-    await Future.delayed(const Duration(seconds: 1)); 
-
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      context.go('/admin/dashboard');
-    }
+    context.read<AuthBloc>().add(AuthAdminLoginRequested(
+      _emailController.text,
+      _passwordController.text,
+      _secretKeyController.text,
+    ));
+    
+    // UI state loading is handled by BlocConsumer below
   }
 
   @override
@@ -110,11 +113,28 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                         isPassword: true,
                       ),
                       const SizedBox(height: 40),
-                      OmniButton(
-                        text: 'Authenticate',
-                        onPressed: _handleAdminLogin,
-                        isLoading: _isLoading,
-                        icon: Icons.login_rounded,
+                      BlocConsumer<AuthBloc, AuthState>(
+                        listener: (context, state) {
+                          if (state is AuthAuthenticated) {
+                            context.go('/admin/dashboard');
+                          } else if (state is AuthError) {
+                            setState(() => _isLoading = false);
+                            OmniToast.showError(context, state.message);
+                          }
+                        },
+                        builder: (context, state) {
+                          if (state is AuthLoading) {
+                            _isLoading = true;
+                          } else {
+                            _isLoading = false;
+                          }
+                          return OmniButton(
+                            text: 'Authenticate',
+                            onPressed: _isLoading ? null : _handleAdminLogin,
+                            isLoading: _isLoading,
+                            icon: Icons.login_rounded,
+                          );
+                        },
                       ),
                     ],
                   ),

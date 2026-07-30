@@ -27,6 +27,15 @@ class AuthApi {
     return TokenResponse.fromJson(response.data);
   }
 
+  Future<TokenResponse> adminLogin(String email, String password, String secretKey) async {
+    final response = await _dio.post('/api/v1/admin/login', data: {
+      'email': email,
+      'password': password,
+      'secret_key': secretKey,
+    });
+    return TokenResponse.fromJson(response.data);
+  }
+
   Future<UserModel> getMe() async {
     final response = await _dio.get('/api/v1/auth/me');
     return UserModel.fromJson(response.data);

@@ -18,6 +18,13 @@ class AuthRepository {
     return await _api.getMe();
   }
 
+  Future<UserModel> adminLogin(String email, String password, String secretKey) async {
+    final tokenResponse = await _api.adminLogin(email, password, secretKey);
+    await _storage.write(key: 'access_token', value: tokenResponse.accessToken);
+    await _storage.write(key: 'refresh_token', value: tokenResponse.refreshToken);
+    return await _api.getMe();
+  }
+
   Future<UserModel> register(String email, String password, String displayName) async {
     final tokenResponse = await _api.register(email, password, displayName);
     await _storage.write(key: 'access_token', value: tokenResponse.accessToken);
