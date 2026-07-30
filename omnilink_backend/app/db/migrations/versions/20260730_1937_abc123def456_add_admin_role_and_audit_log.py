@@ -20,12 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # 1. Create the userrole enum type
-    userrole_enum = postgresql.ENUM('USER', 'ADMIN', name='userrole', create_type=False)
-    userrole_enum.create(op.get_bind(), checkfirst=True)
+    op.execute("CREATE TYPE userrole AS ENUM ('USER', 'ADMIN')")
 
     # 2. Add columns to users table
-    op.add_column('users', sa.Column('role', userrole_enum, nullable=False, server_default='USER'))
-    op.add_column('users', sa.Column('is_suspended', sa.Boolean(), nullable=False, server_default='false'))
+    op.execute("ALTER TABLE users ADD COLUMN role userrole NOT NULL DEFAULT 'USER'")
+    op.execute("ALTER TABLE users ADD COLUMN is_suspended BOOLEAN NOT NULL DEFAULT false")
 
     # 3. Create admin_audit_logs table
     op.create_table('admin_audit_logs',
