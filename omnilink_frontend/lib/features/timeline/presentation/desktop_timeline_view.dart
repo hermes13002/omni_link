@@ -180,6 +180,8 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                                 body: card.body,
                                 imageUrl: card.gcsSignedUrl,
                                 isPinned: card.pinned,
+                                syncStatus: card.syncStatus,
+                                localBytes: card.localBytes,
                                 onTogglePin: () {
                                   context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
                                 },

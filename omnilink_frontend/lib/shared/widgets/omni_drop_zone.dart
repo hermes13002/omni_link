@@ -8,7 +8,11 @@ import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_state.dart';
+import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
+import '../../features/timeline/presentation/bloc/timeline_event.dart';
+import '../../features/timeline/data/models/card_model.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
+import 'package:uuid/uuid.dart';
 
 class StagedFile {
   final String name;
@@ -65,6 +69,19 @@ class _OmniDropZoneState extends State<OmniDropZone> {
     setState(() => _isSending = true);
     
     try {
+      final String tempId = const Uuid().v4();
+      CardModel dummyCard = CardModel(
+        id: tempId,
+        cardType: 'text', // default to text, updated below
+        title: title.isNotEmpty ? title : null,
+        body: text.isNotEmpty ? text : null,
+        pinned: false,
+        tags: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        syncStatus: CardSyncStatus.pending,
+      );
+
       if (_stagedFile != null) {
         if (_stagedFile!.path == null && _stagedFile!.bytes == null) {
           OmniToast.showError(context, 'Invalid file: No data available. Please remove and re-select the file.');
@@ -75,19 +92,46 @@ class _OmniDropZoneState extends State<OmniDropZone> {
         String finalTitle = title.isNotEmpty ? title : text;
         if (finalTitle.isEmpty) finalTitle = _stagedFile!.name;
         
-        await getIt<CardsApi>().createFileCard(
-          filePath: _stagedFile!.path,
-          bytes: _stagedFile!.bytes,
-          fileName: _stagedFile!.name,
-          title: finalTitle.isNotEmpty ? finalTitle : null,
-          tagIds: _selectedTagIds.toList(),
+        dummyCard = dummyCard.copyWith(
+          cardType: 'file',
+          title: finalTitle,
+          localBytes: _stagedFile!.bytes != null ? Uint8List.fromList(_stagedFile!.bytes!) : null,
+          mimeType: _stagedFile!.isImage ? 'image/jpeg' : null,
         );
+        if (mounted) context.read<TimelineBloc>().add(TimelineCardCreated(dummyCard));
+
+        try {
+          final card = await getIt<CardsApi>().createFileCard(
+            filePath: _stagedFile!.path,
+            bytes: _stagedFile!.bytes,
+            fileName: _stagedFile!.name,
+            title: finalTitle.isNotEmpty ? finalTitle : null,
+            tagIds: _selectedTagIds.toList(),
+          );
+          if (mounted) context.read<TimelineBloc>().add(TimelineCardResolved(tempId, card));
+        } catch (e) {
+          if (mounted) context.read<TimelineBloc>().add(TimelineCardFailed(tempId, e.toString()));
+          rethrow;
+        }
       } else {
         final isUrl = Uri.tryParse(text)?.hasAbsolutePath ?? false;
-        if (isUrl) {
-          await getIt<CardsApi>().createMetadataCard(title.isNotEmpty ? title : text, body: text, tagIds: _selectedTagIds.toList());
-        } else {
-          await getIt<CardsApi>().createTextCard(text, title: title.isNotEmpty ? title : null, tagIds: _selectedTagIds.toList());
+        
+        dummyCard = dummyCard.copyWith(
+          cardType: isUrl ? 'metadata' : 'text',
+        );
+        if (mounted) context.read<TimelineBloc>().add(TimelineCardCreated(dummyCard));
+
+        try {
+          CardModel card;
+          if (isUrl) {
+            card = await getIt<CardsApi>().createMetadataCard(title.isNotEmpty ? title : text, body: text, tagIds: _selectedTagIds.toList());
+          } else {
+            card = await getIt<CardsApi>().createTextCard(text, title: title.isNotEmpty ? title : null, tagIds: _selectedTagIds.toList());
+          }
+          if (mounted) context.read<TimelineBloc>().add(TimelineCardResolved(tempId, card));
+        } catch (e) {
+          if (mounted) context.read<TimelineBloc>().add(TimelineCardFailed(tempId, e.toString()));
+          rethrow;
         }
       }
       

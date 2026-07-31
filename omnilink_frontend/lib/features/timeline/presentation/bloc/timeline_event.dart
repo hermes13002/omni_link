@@ -28,6 +28,26 @@ class TimelineCardCreated extends TimelineEvent {
   List<Object?> get props => [card];
 }
 
+class TimelineCardResolved extends TimelineEvent {
+  final String tempId;
+  final CardModel realCard;
+  
+  const TimelineCardResolved(this.tempId, this.realCard);
+
+  @override
+  List<Object?> get props => [tempId, realCard];
+}
+
+class TimelineCardFailed extends TimelineEvent {
+  final String tempId;
+  final String error;
+
+  const TimelineCardFailed(this.tempId, this.error);
+
+  @override
+  List<Object?> get props => [tempId, error];
+}
+
 class TimelineCardDeleted extends TimelineEvent {
   final String cardId;
 

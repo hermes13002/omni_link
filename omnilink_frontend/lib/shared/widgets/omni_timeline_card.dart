@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 import 'package:omnilink_frontend/shared/widgets/web_image/omni_web_image.dart';
+import '../../features/timeline/data/models/card_model.dart';
 
 enum TimelineCardType { image, code, file, pdf }
 
@@ -16,6 +17,8 @@ class OmniTimelineCard extends StatelessWidget {
   final String? imageUrl;
   final String? cardId;
   final bool isPinned;
+  final CardSyncStatus syncStatus;
+  final Uint8List? localBytes;
   final VoidCallback? onTogglePin;
   final VoidCallback? onTap;
 
@@ -31,13 +34,20 @@ class OmniTimelineCard extends StatelessWidget {
     this.imageUrl,
     this.cardId,
     this.isPinned = false,
+    this.syncStatus = CardSyncStatus.synced,
+    this.localBytes,
     this.onTogglePin,
     this.onTap,
   });
 
   Widget _buildBackground(BuildContext context, ColorScheme colorScheme) {
     if (type == TimelineCardType.image) {
-      if (imageUrl != null) {
+      if (localBytes != null) {
+        return Image.memory(
+          localBytes!,
+          fit: BoxFit.cover,
+        );
+      } else if (imageUrl != null) {
         return OmniWebImage(
           imageUrl: imageUrl!,
           cacheKey: cardId,
@@ -187,6 +197,21 @@ class OmniTimelineCard extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                if (syncStatus == CardSyncStatus.pending) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ] else if (syncStatus == CardSyncStatus.error) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 12,
+                    color: colorScheme.error,
+                  ),
+                ],
               ],
             ),
           ],

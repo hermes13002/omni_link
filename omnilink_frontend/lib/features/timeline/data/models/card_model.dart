@@ -1,4 +1,7 @@
+import 'dart:typed_data';
 import 'tag_model.dart';
+
+enum CardSyncStatus { pending, synced, error }
 
 class CardModel {
   final String id;
@@ -15,6 +18,8 @@ class CardModel {
   final String? sourceDeviceId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final CardSyncStatus syncStatus;
+  final Uint8List? localBytes;
 
   CardModel({
     required this.id,
@@ -31,6 +36,8 @@ class CardModel {
     this.sourceDeviceId,
     required this.createdAt,
     required this.updatedAt,
+    this.syncStatus = CardSyncStatus.synced,
+    this.localBytes,
   });
 
   CardModel copyWith({
@@ -48,6 +55,8 @@ class CardModel {
     String? sourceDeviceId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    CardSyncStatus? syncStatus,
+    Uint8List? localBytes,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -64,6 +73,8 @@ class CardModel {
       sourceDeviceId: sourceDeviceId ?? this.sourceDeviceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      localBytes: localBytes ?? this.localBytes,
     );
   }
 
@@ -86,6 +97,7 @@ class CardModel {
       sourceDeviceId: json['source_device_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      syncStatus: CardSyncStatus.synced, // Always synced when coming from API
     );
   }
 

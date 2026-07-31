@@ -9,6 +9,7 @@ import '../../data/cards_api.dart';
 import '../../data/models/isar_models.dart';
 import 'timeline_event.dart';
 import 'timeline_state.dart';
+import '../../data/models/card_model.dart';
 
 @injectable
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
@@ -23,6 +24,8 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     on<TimelineCardCreated>(_onCardCreated);
     on<TimelineCardDeleted>(_onCardDeleted);
     on<TimelineCardUpdated>(_onCardUpdated);
+    on<TimelineCardResolved>(_onCardResolved);
+    on<TimelineCardFailed>(_onCardFailed);
     on<TimelineTogglePinRequested>(_onTogglePinRequested);
 
     _eventSubscription = _eventBus.stream.listen((event) {
@@ -128,6 +131,35 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       final currentCards = (state as TimelineLoaded).cards;
       final updatedCards = currentCards.map((c) {
         return c.id == event.card.id ? event.card : c;
+      }).toList();
+      emit(TimelineLoaded(updatedCards));
+    }
+  }
+
+  void _onCardResolved(
+    TimelineCardResolved event,
+    Emitter<TimelineState> emit,
+  ) {
+    if (state is TimelineLoaded) {
+      final currentCards = (state as TimelineLoaded).cards;
+      final updatedCards = currentCards.map((c) {
+        return c.id == event.tempId ? event.realCard : c;
+      }).toList();
+      emit(TimelineLoaded(updatedCards));
+    }
+  }
+
+  void _onCardFailed(
+    TimelineCardFailed event,
+    Emitter<TimelineState> emit,
+  ) {
+    if (state is TimelineLoaded) {
+      final currentCards = (state as TimelineLoaded).cards;
+      final updatedCards = currentCards.map((c) {
+        if (c.id == event.tempId) {
+          return c.copyWith(syncStatus: CardSyncStatus.error);
+        }
+        return c;
       }).toList();
       emit(TimelineLoaded(updatedCards));
     }

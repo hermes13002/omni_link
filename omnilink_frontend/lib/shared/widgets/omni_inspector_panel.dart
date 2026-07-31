@@ -7,6 +7,10 @@ import 'omni_drop_zone.dart';
 import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
+import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
+import '../../features/timeline/presentation/bloc/timeline_event.dart';
+import '../../features/timeline/data/models/card_model.dart';
+import 'package:uuid/uuid.dart';
 
 // ... class definition
 
@@ -34,12 +38,34 @@ class _OmniInspectorPanelState extends State<OmniInspectorPanel> {
           bytes = await file.readAsBytes();
         }
 
-        await getIt<CardsApi>().createFileCard(
-          filePath: kIsWeb ? null : file.path,
-          bytes: bytes,
-          fileName: file.name,
-          title: file.name, 
+        final String tempId = const Uuid().v4();
+        final dummyCard = CardModel(
+          id: tempId,
+          cardType: 'file',
+          title: file.name,
+          pinned: false,
+          tags: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          syncStatus: CardSyncStatus.pending,
+          localBytes: bytes != null ? Uint8List.fromList(bytes) : null,
+          mimeType: file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.png') ? 'image/jpeg' : null,
         );
+
+        if (mounted) context.read<TimelineBloc>().add(TimelineCardCreated(dummyCard));
+
+        try {
+          final card = await getIt<CardsApi>().createFileCard(
+            filePath: kIsWeb ? null : file.path,
+            bytes: bytes,
+            fileName: file.name,
+            title: file.name, 
+          );
+          if (mounted) context.read<TimelineBloc>().add(TimelineCardResolved(tempId, card));
+        } catch (e) {
+          if (mounted) context.read<TimelineBloc>().add(TimelineCardFailed(tempId, e.toString()));
+          rethrow; // rethrow to be caught by the outer catch
+        }
       }
       if (mounted) {
         OmniToast.showSuccess(context, 'Uploaded ${files.length} file(s)');

@@ -164,6 +164,8 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                               body: card.body,
                               imageUrl: card.gcsSignedUrl,
                               isPinned: card.pinned,
+                              syncStatus: card.syncStatus,
+                              localBytes: card.localBytes,
                               onTogglePin: () {
                                 context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
                               },
