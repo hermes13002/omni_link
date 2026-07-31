@@ -66,6 +66,12 @@ class _OmniDropZoneState extends State<OmniDropZone> {
     
     try {
       if (_stagedFile != null) {
+        if (_stagedFile!.path == null && _stagedFile!.bytes == null) {
+          OmniToast.showError(context, 'Invalid file: No data available. Please remove and re-select the file.');
+          setState(() => _isSending = false);
+          return;
+        }
+
         String finalTitle = title.isNotEmpty ? title : text;
         if (finalTitle.isEmpty) finalTitle = _stagedFile!.name;
         
@@ -129,7 +135,7 @@ class _OmniDropZoneState extends State<OmniDropZone> {
 
   Future<void> _pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.pickFiles();
+      FilePickerResult? result = await FilePicker.pickFiles(withData: true);
       if (result != null) {
         final file = result.files.single;
         setState(() {
