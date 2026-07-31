@@ -10,19 +10,19 @@ class AdminApi {
   AdminApi(this._dio);
 
   Future<AdminOverviewMetrics> getOverviewMetrics() async {
-    final response = await _dio.get('/admin/metrics/overview');
+    final response = await _dio.get('/api/v1/admin/metrics/overview');
     return AdminOverviewMetrics.fromJson(response.data['data']);
   }
 
   Future<List<AdminUserItem>> getAllUsers() async {
-    final response = await _dio.get('/admin/users');
+    final response = await _dio.get('/api/v1/admin/users');
     final List<dynamic> usersJson = response.data['data']['users'];
     return usersJson.map((json) => AdminUserItem.fromJson(json)).toList();
   }
 
   Future<void> toggleUserSuspension(String userId, bool suspend) async {
     await _dio.patch(
-      '/admin/users/$userId/suspend',
+      '/api/v1/admin/users/$userId/suspend',
       queryParameters: {'is_suspended': suspend},
     );
   }
