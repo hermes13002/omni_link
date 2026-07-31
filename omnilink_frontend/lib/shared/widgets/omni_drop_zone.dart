@@ -34,16 +34,16 @@ class OmniDropZone extends StatefulWidget {
 class _OmniDropZoneState extends State<OmniDropZone> {
   bool _isSending = false;
   bool _showTags = false;
-  final Set<String> _selectedTagIds = {};
-  StagedFile? _stagedFile;
   
-  final TextEditingController _textController = TextEditingController();
-  final TextEditingController _titleController = TextEditingController();
+  // Make state static so it persists across responsive layout changes (desktop <-> mobile)
+  static final Set<String> _selectedTagIds = {};
+  static StagedFile? _stagedFile;
+  static final TextEditingController _textController = TextEditingController();
+  static final TextEditingController _titleController = TextEditingController();
 
   @override
   void dispose() {
-    _textController.dispose();
-    _titleController.dispose();
+    // Do not dispose static controllers
     super.dispose();
   }
 
@@ -159,6 +159,55 @@ class _OmniDropZoneState extends State<OmniDropZone> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (_stagedFile != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _stagedFile!.isImage ? Icons.image_rounded : Icons.insert_drive_file_rounded,
+                          size: 16,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            _stagedFile!.name,
+                            style: TextStyle(
+                              color: colorScheme.onPrimaryContainer,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () => setState(() => _stagedFile = null),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         OmniGlassContainer(
       borderRadius: 24.0,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -347,53 +396,6 @@ class _OmniDropZoneState extends State<OmniDropZone> {
         ],
       ),
         ),
-        if (_stagedFile != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _stagedFile!.isImage ? Icons.image_rounded : Icons.insert_drive_file_rounded,
-                        size: 16,
-                        color: colorScheme.onPrimaryContainer,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          _stagedFile!.name,
-                          style: TextStyle(
-                            color: colorScheme.onPrimaryContainer,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => setState(() => _stagedFile = null),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 16,
-                          color: colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         AnimatedBuilder(
           animation: Listenable.merge([_textController, _titleController]),
           builder: (context, child) {
