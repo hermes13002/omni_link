@@ -11,12 +11,12 @@ class AdminApi {
 
   Future<AdminOverviewMetrics> getOverviewMetrics() async {
     final response = await _dio.get('/api/v1/admin/metrics/overview');
-    return AdminOverviewMetrics.fromJson(response.data['data']);
+    return AdminOverviewMetrics.fromJson(response.data);
   }
 
   Future<List<AdminUserItem>> getAllUsers() async {
     final response = await _dio.get('/api/v1/admin/users');
-    final List<dynamic> usersJson = response.data['data']['users'];
+    final List<dynamic> usersJson = response.data['users'];
     return usersJson.map((json) => AdminUserItem.fromJson(json)).toList();
   }
 
