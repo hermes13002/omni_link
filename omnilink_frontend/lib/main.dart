@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/di/injection.dart';
 import 'core/routing/router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 
@@ -25,18 +26,21 @@ class OmniLinkApp extends StatefulWidget {
 
 class _OmniLinkAppState extends State<OmniLinkApp> {
   late final AuthBloc _authBloc;
+  late final ThemeCubit _themeCubit;
   late final RouterConfig<Object> _router;
 
   @override
   void initState() {
     super.initState();
     _authBloc = getIt<AuthBloc>()..add(AuthCheckRequested());
+    _themeCubit = getIt<ThemeCubit>();
     _router = createRouter(_authBloc);
   }
 
   @override
   void dispose() {
     _authBloc.close();
+    _themeCubit.close();
     super.dispose();
   }
 
@@ -45,15 +49,20 @@ class _OmniLinkAppState extends State<OmniLinkApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _authBloc),
+        BlocProvider.value(value: _themeCubit),
       ],
-      child: MaterialApp.router(
-        title: 'OmniLink',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.dark,
-        scaffoldMessengerKey: scaffoldMessengerKey,
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp.router(
+            title: 'OmniLink',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeMode,
+            scaffoldMessengerKey: scaffoldMessengerKey,
+            routerConfig: _router,
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

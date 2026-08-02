@@ -28,13 +28,15 @@ class SseClient {
       return;
     }
 
-    try {
-      final devices = await _deviceRepository.getDevices();
-      final clientUuid = await _deviceRepository.getClientUuid();
-      final currentDevice = devices.cast<dynamic>().firstWhere((d) => d.clientUuid == clientUuid, orElse: () => null);
-      _currentDeviceId = currentDevice?.id;
-    } catch (e) {
-      debugPrint('Failed to get current device ID for SSE filtering: $e');
+    if (_currentDeviceId == null) {
+      try {
+        final devices = await _deviceRepository.getDevices();
+        final clientUuid = await _deviceRepository.getClientUuid();
+        final currentDevice = devices.cast<dynamic>().firstWhere((d) => d.clientUuid == clientUuid, orElse: () => null);
+        _currentDeviceId = currentDevice?.id;
+      } catch (e) {
+        debugPrint('Failed to get current device ID for SSE filtering: $e');
+      }
     }
 
     try {

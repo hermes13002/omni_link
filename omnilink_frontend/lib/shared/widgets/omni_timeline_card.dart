@@ -245,7 +245,9 @@ class OmniTimelineCard extends StatelessWidget {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(32), // Squircle vibe
           border: Border.all(
-            color: Colors.white.withAlpha(60),
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white.withAlpha(60) 
+                : colorScheme.outlineVariant.withAlpha(100),
             width: 1.5,
           ),
           boxShadow: [
@@ -263,23 +265,24 @@ class OmniTimelineCard extends StatelessWidget {
             // 1. Background (Image, Code text, or Icon)
             _buildBackground(context, colorScheme),
 
-            // 2. Gradient Overlay for soft glassmorphism effect
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      colorScheme.surface.withAlpha(180),
-                      colorScheme.surface,
-                    ],
-                    stops: const [0.35, 0.75, 1.0],
+            // 2. Gradient Overlay for soft glassmorphism effect (Only for image cards)
+            if (type == TimelineCardType.image)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        colorScheme.surface.withAlpha(180),
+                        colorScheme.surface,
+                      ],
+                      stops: const [0.35, 0.75, 1.0],
+                    ),
                   ),
                 ),
               ),
-            ),
 
             // 3. Ripple effect on tap (layered below interactive elements so they can receive taps)
             Positioned.fill(

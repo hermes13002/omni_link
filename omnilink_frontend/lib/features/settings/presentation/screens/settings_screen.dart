@@ -25,6 +25,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _tagController = TextEditingController();
   bool _isAddingTag = false;
+  final Set<String> _selectedDevices = {};
 
   @override
   void initState() {
@@ -68,12 +69,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () => context.go('/'),
             ),
             title: Text(
-              'Settings',
+              _selectedDevices.isNotEmpty ? '${_selectedDevices.length} Selected' : 'Settings',
               style: textTheme.headlineLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
               ),
             ),
+            actions: [
+              if (_selectedDevices.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.delete_rounded, color: colorScheme.error),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Selected Devices?'),
+                        content: Text('Are you sure you want to delete ${_selectedDevices.length} devices?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                          TextButton(
+                            style: TextButton.styleFrom(foregroundColor: colorScheme.error),
+                            onPressed: () {
+                              for (final id in _selectedDevices) {
+                                context.read<DeviceBloc>().add(DeviceDeleteRequested(id));
+                              }
+                              setState(() {
+                                _selectedDevices.clear();
+                              });
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+            ],
           ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -231,11 +263,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final isCurrent = state.currentDevice?.id == device.id;
                 
                 return ListTile(
+                  onLongPress: () {
+                    setState(() {
+                      if (_selectedDevices.contains(device.id)) {
+                        _selectedDevices.remove(device.id);
+                      } else {
+                        _selectedDevices.add(device.id);
+                      }
+                    });
+                  },
+                  onTap: _selectedDevices.isNotEmpty ? () {
+                    setState(() {
+                      if (_selectedDevices.contains(device.id)) {
+                        _selectedDevices.remove(device.id);
+                      } else {
+                        _selectedDevices.add(device.id);
+                      }
+                    });
+                  } : null,
                   contentPadding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 8.0),
-                  leading: CircleAvatar(
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: Icon(_getDeviceIcon(device.friendlyName), color: colorScheme.onPrimaryContainer),
-                  ),
+                  leading: _selectedDevices.isNotEmpty
+                      ? Checkbox(
+                          value: _selectedDevices.contains(device.id),
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == true) {
+                                _selectedDevices.add(device.id);
+                              } else {
+                                _selectedDevices.remove(device.id);
+                              }
+                            });
+                          },
+                        )
+                      : CircleAvatar(
+                          backgroundColor: colorScheme.primaryContainer,
+                          child: Icon(_getDeviceIcon(device.friendlyName), color: colorScheme.onPrimaryContainer),
+                        ),
                   title: Row(
                     children: [
                       Expanded(
@@ -273,7 +336,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!isCurrent)
+                      if (!isCurrent && _selectedDevices.isEmpty)
                         IconButton(
                           icon: const Icon(Icons.rss_feed_rounded),
                           tooltip: 'Ping Device',
@@ -283,20 +346,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             context.read<DeviceBloc>().add(DevicePingRequested(device.id));
                           },
                         ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_rounded),
-                        tooltip: 'Rename Device',
-                        color: colorScheme.onSurfaceVariant,
-                        iconSize: 20,
-                        onPressed: () => _showRenameDeviceDialog(context, device.id, device.friendlyName),
-                      ),
-                      OmniActionButton(
-                        icon: Icons.delete_rounded,
-                        variant: OmniActionButtonVariant.error,
-                        onPressed: () {
-                          context.read<DeviceBloc>().add(DeviceDeleteRequested(device.id));
-                        },
-                      ),
+                      if (_selectedDevices.isEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.edit_rounded),
+                          tooltip: 'Rename Device',
+                          color: colorScheme.onSurfaceVariant,
+                          iconSize: 20,
+                          onPressed: () => _showRenameDeviceDialog(context, device.id, device.friendlyName),
+                        ),
                     ],
                   ),
                 );

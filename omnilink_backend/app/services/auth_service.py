@@ -13,7 +13,8 @@ from app.core.security import (
 )
 import hashlib
 from app.db.models.user import User
-from app.schemas.auth import RegisterRequest, TokenResponse
+from app.schemas.auth import RegisterRequest, TokenResponse, UpdateProfileRequest, ChangePasswordRequest
+from app.schemas.user import UserResponse
 from app.cache.redis_client import get_redis_pool
 from app.config import settings
 
@@ -86,3 +87,31 @@ async def logout_user(access_token: str, refresh_token: str) -> None:
         settings.refresh_token_expire_days * 24 * 60 * 60,
         "1"
     )
+
+async def update_display_name(user_id: uuid.UUID, payload: UpdateProfileRequest, db: AsyncSession) -> User:
+    user = await db.get(User, user_id)
+    if not user:
+        raise credentials_exception
+    user.display_name = payload.display_name
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+async def change_password(user_id: uuid.UUID, payload: ChangePasswordRequest, db: AsyncSession) -> None:
+    user = await db.get(User, user_id)
+    if not user:
+        raise credentials_exception
+    
+    if not verify_password(payload.old_password, user.hashed_password):
+        raise credentials_exception
+    
+    user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
+
+async def delete_account(user_id: uuid.UUID, db: AsyncSession) -> None:
+    user = await db.get(User, user_id)
+    if not user:
+        raise credentials_exception
+    
+    await db.delete(user)
+    await db.commit()

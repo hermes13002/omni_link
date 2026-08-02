@@ -62,6 +62,21 @@ class AuthRepository {
     await _storage.delete(key: 'device_secret');
   }
 
+  Future<UserModel> updateDisplayName(String displayName) async {
+    return await _api.updateDisplayName(displayName);
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    await _api.changePassword(oldPassword, newPassword);
+  }
+
+  Future<void> deleteAccount() async {
+    await _api.deleteAccount();
+    await _storage.delete(key: 'access_token');
+    await _storage.delete(key: 'refresh_token');
+    await _storage.delete(key: 'device_secret');
+  }
+
   Future<bool> hasSeenOnboarding() async {
     final value = await _storage.read(key: 'has_seen_onboarding');
     return value == 'true';

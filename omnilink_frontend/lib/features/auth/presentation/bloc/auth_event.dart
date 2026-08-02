@@ -43,4 +43,23 @@ class AuthRegisterRequested extends AuthEvent {
 
 class AuthLogoutRequested extends AuthEvent {}
 
+class AuthUpdateProfileRequested extends AuthEvent {
+  final String displayName;
+  const AuthUpdateProfileRequested(this.displayName);
+
+  @override
+  List<Object> get props => [displayName];
+}
+
+class AuthChangePasswordRequested extends AuthEvent {
+  final String oldPassword;
+  final String newPassword;
+  const AuthChangePasswordRequested(this.oldPassword, this.newPassword);
+
+  @override
+  List<Object> get props => [oldPassword, newPassword];
+}
+
+class AuthDeleteAccountRequested extends AuthEvent {}
+
 class AuthOnboardingCompleted extends AuthEvent {}

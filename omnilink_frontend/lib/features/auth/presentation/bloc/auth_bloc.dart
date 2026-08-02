@@ -18,6 +18,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthAdminLoginRequested>(_onAuthAdminLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
+    on<AuthUpdateProfileRequested>(_onUpdateProfileRequested);
+    on<AuthChangePasswordRequested>(_onChangePasswordRequested);
+    on<AuthDeleteAccountRequested>(_onDeleteAccountRequested);
     on<AuthOnboardingCompleted>(_onAuthOnboardingCompleted);
   }
 
@@ -98,6 +101,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     await _repository.logout();
     emit(AuthUnauthenticated());
+  }
+
+  Future<void> _onUpdateProfileRequested(
+    AuthUpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is AuthAuthenticated) {
+      try {
+        final updatedUser = await _repository.updateDisplayName(event.displayName);
+        emit(AuthAuthenticated(updatedUser));
+      } catch (e) {
+        emit(AuthError(e.toString()));
+        emit(AuthAuthenticated((state as AuthAuthenticated).user));
+      }
+    }
+  }
+
+  Future<void> _onChangePasswordRequested(
+    AuthChangePasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is AuthAuthenticated) {
+      try {
+        await _repository.changePassword(event.oldPassword, event.newPassword);
+      } catch (e) {
+        emit(AuthError(e.toString()));
+        emit(AuthAuthenticated((state as AuthAuthenticated).user));
+      }
+    }
+  }
+
+  Future<void> _onDeleteAccountRequested(
+    AuthDeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is AuthAuthenticated) {
+      try {
+        await _repository.deleteAccount();
+        emit(AuthUnauthenticated());
+      } catch (e) {
+        emit(AuthError(e.toString()));
+        emit(AuthAuthenticated((state as AuthAuthenticated).user));
+      }
+    }
   }
 
   Future<void> _onAuthOnboardingCompleted(

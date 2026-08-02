@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/theme_cubit.dart';
 
 import '../../../../shared/widgets/omni_button.dart';
 import '../../../../shared/widgets/omni_glass_container.dart';
@@ -19,8 +20,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -29,7 +31,10 @@ class ProfileScreen extends StatelessWidget {
           if (authState is AuthAuthenticated) {
             final user = authState.user;
             
-            return CustomScrollView(
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: CustomScrollView(
               slivers: [
                 SliverAppBar(
                   expandedHeight: 300.0,
@@ -71,9 +76,8 @@ class ProfileScreen extends StatelessWidget {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
-                                      colorScheme.primary.withAlpha(100),
-                                      colorScheme.secondary.withAlpha(100),
-                                      colorScheme.surface,
+                                      colorScheme.primaryContainer.withAlpha(150),
+                                      colorScheme.tertiaryContainer.withAlpha(50),
                                     ],
                                   ),
                                 ),
@@ -119,11 +123,20 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            Text(
-                              user.displayName ?? 'No name provided',
-                              style: textTheme.headlineMedium?.copyWith(
-                                color: colorScheme.onSurface,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  user.displayName ?? 'No name provided',
+                                  style: textTheme.headlineMedium?.copyWith(
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.edit_rounded, color: colorScheme.primary, size: 20),
+                                  onPressed: () => _showEditNameDialog(context, user.displayName ?? ''),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -168,6 +181,8 @@ class ProfileScreen extends StatelessWidget {
                           label: 'Account ID',
                           value: user.id.length > 10 ? '${user.id.substring(0, 10)}...' : user.id,
                         ),
+                        const SizedBox(height: 32),
+                        _buildSettingsSection(context, user),
                         const SizedBox(height: 48),
                         OmniButton.outlined(
                           text: 'Logout',
@@ -177,15 +192,24 @@ class ProfileScreen extends StatelessWidget {
                             context.read<AuthBloc>().add(AuthLogoutRequested());
                           },
                         ),
+                        const SizedBox(height: 24),
+                        OmniButton.outlined(
+                          text: 'Delete Account',
+                          icon: Icons.delete_forever_rounded,
+                          isFullWidth: true,
+                          onPressed: () => _showDeleteAccountDialog(context),
+                        ),
                         const SizedBox(height: 48),
                       ],
                     ),
                   ),
                 ),
               ],
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
+            ),
+          ),
+        );
+        }
+        return const Center(child: CircularProgressIndicator());
         },
       ),
     );
@@ -198,20 +222,24 @@ class ProfileScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatColumn(
-            context,
-            icon: Icons.devices_rounded,
-            label: 'Devices',
-            blocBuilder: BlocBuilder<DeviceBloc, DeviceState>(
-              builder: (context, state) {
-                if (state is DevicesLoaded) {
-                  return Text(
-                    '${state.devices.length}',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24),
-                  );
-                }
-                return Text('-', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24));
-              },
+          GestureDetector(
+            onTap: () => context.push('/settings'),
+            behavior: HitTestBehavior.opaque,
+            child: _buildStatColumn(
+              context,
+              icon: Icons.devices_rounded,
+              label: 'Devices',
+              blocBuilder: BlocBuilder<DeviceBloc, DeviceState>(
+                builder: (context, state) {
+                  if (state is DevicesLoaded) {
+                    return Text(
+                      '${state.devices.length}',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24),
+                    );
+                  }
+                  return Text('-', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 24));
+                },
+              ),
             ),
           ),
           Container(width: 1, height: 40, color: Theme.of(context).colorScheme.outlineVariant),
@@ -310,6 +338,152 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSettingsSection(BuildContext context, user) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Settings & Preferences',
+          style: textTheme.headlineMedium?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        OmniGlassContainer(
+          borderRadius: 16,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              BlocBuilder<ThemeCubit, ThemeMode>(
+                builder: (context, themeMode) {
+                  return SwitchListTile(
+                    title: const Text('Dark Mode'),
+                    value: themeMode == ThemeMode.dark,
+                    onChanged: (_) {
+                      context.read<ThemeCubit>().toggleTheme();
+                    },
+                    secondary: Icon(
+                      themeMode == ThemeMode.dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                      color: colorScheme.primary,
+                    ),
+                  );
+                },
+              ),
+              /*
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.password_rounded, color: colorScheme.primary),
+                title: const Text('Change Password'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => _showChangePasswordDialog(context),
+              ),
+              */
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showEditNameDialog(BuildContext context, String currentName) {
+    final controller = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Display Name'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'New Display Name'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                context.read<AuthBloc>().add(AuthUpdateProfileRequested(controller.text.trim()));
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Change Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: oldPasswordController,
+              decoration: const InputDecoration(hintText: 'Old Password'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: newPasswordController,
+              decoration: const InputDecoration(hintText: 'New Password'),
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              if (oldPasswordController.text.isNotEmpty && newPasswordController.text.isNotEmpty) {
+                context.read<AuthBloc>().add(AuthChangePasswordRequested(
+                  oldPasswordController.text, 
+                  newPasswordController.text
+                ));
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password changed successfully')),
+                );
+              }
+            },
+            child: const Text('Change'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Account?'),
+        content: const Text(
+          'This action is permanent and cannot be undone. All your clips, tags, and devices will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () {
+              context.read<AuthBloc>().add(AuthDeleteAccountRequested());
+              Navigator.pop(ctx);
+            },
+            child: const Text('Delete Permanently'),
+          ),
+        ],
+      ),
     );
   }
 }

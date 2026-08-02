@@ -46,4 +46,22 @@ class AuthApi {
       'refresh_token': refreshToken,
     });
   }
+
+  Future<UserModel> updateDisplayName(String displayName) async {
+    final response = await _dio.patch('/api/v1/auth/me', data: {
+      'display_name': displayName,
+    });
+    return UserModel.fromJson(response.data);
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    await _dio.patch('/api/v1/auth/password', data: {
+      'old_password': oldPassword,
+      'new_password': newPassword,
+    });
+  }
+
+  Future<void> deleteAccount() async {
+    await _dio.delete('/api/v1/auth/me');
+  }
 }

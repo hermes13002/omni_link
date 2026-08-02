@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, _bearer_scheme
 from app.db.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest
+from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest, UpdateProfileRequest, ChangePasswordRequest
 from app.schemas.response import ApiResponse
 from app.schemas.user import UserResponse
 from fastapi.security import HTTPAuthorizationCredentials
@@ -59,3 +59,29 @@ async def get_me(
     current_user: User = Depends(get_current_user),
 ) -> ApiResponse[UserResponse]:
     return ApiResponse(data=current_user)
+
+@router.patch("/me", response_model=ApiResponse[UserResponse])
+async def update_profile(
+    payload: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ApiResponse[UserResponse]:
+    user = await auth_service.update_display_name(current_user.id, payload, db)
+    return ApiResponse(data=user)
+
+@router.patch("/password", response_model=ApiResponse[None])
+async def update_password(
+    payload: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ApiResponse[None]:
+    await auth_service.change_password(current_user.id, payload, db)
+    return ApiResponse(data=None)
+
+@router.delete("/me", response_model=ApiResponse[None])
+async def delete_me(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ApiResponse[None]:
+    await auth_service.delete_account(current_user.id, db)
+    return ApiResponse(data=None)

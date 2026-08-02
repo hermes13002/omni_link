@@ -23,3 +23,10 @@ class TokenResponse(BaseModel):
 
 class LogoutRequest(BaseModel):
     refresh_token: str
+
+class UpdateProfileRequest(BaseModel):
+    display_name: str
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str = Field(min_length=8)
