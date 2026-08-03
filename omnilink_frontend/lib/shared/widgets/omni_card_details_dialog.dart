@@ -446,6 +446,31 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
               ),
       );
     } else if (widget.card.cardType == 'metadata') {
+      if (_isEditing) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withAlpha(128),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TextField(
+            controller: _bodyController,
+            maxLines: null,
+            minLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Link and notes...',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontFamily: 'JetBrains Mono',
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      }
+
       final bodyText = widget.card.body ?? '';
       final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
       final url = match?.group(0) ?? '';
@@ -454,15 +479,17 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: double.infinity,
-            height: 300,
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withAlpha(128),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: url.isNotEmpty && _metadataFuture != null
+          Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                height: 300,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withAlpha(128),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: url.isNotEmpty && _metadataFuture != null
                 ? FutureBuilder<Metadata?>(
                 key: ValueKey(url),
                 future: _metadataFuture,
@@ -504,25 +531,32 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
                       ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(imageUrl)}' 
                       : imageUrl;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (proxiedImageUrl != null)
-                        Expanded(
-                          child: Image.network(
-                            proxiedImageUrl,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                  return InkWell(
+                    onTap: () async {
+                      final uri = Uri.tryParse(url);
+                      if (uri != null && await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      }
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (proxiedImageUrl != null)
+                          Expanded(
+                            child: Image.network(
+                              proxiedImageUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                            ),
                           ),
-                        ),
-                      Container(
-                        padding: const EdgeInsets.all(16.0),
-                        color: colorScheme.surfaceContainerHighest.withAlpha(50),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
+                        Container(
+                          padding: const EdgeInsets.all(16.0),
+                          color: colorScheme.surfaceContainerHighest.withAlpha(50),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                             Text(
                               metadata.title ?? url,
                               maxLines: 2,
@@ -547,10 +581,32 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
                         ),
                       ),
                     ],
-                  );
-                },
-              )
-            : const SizedBox(height: 100),
+                  ),
+                );
+              },
+            )
+          : const SizedBox(height: 100),
+              ),
+              if (!_isEditing)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    style: IconButton.styleFrom(
+                      backgroundColor: colorScheme.surface.withAlpha(150),
+                    ),
+                    icon: Icon(Icons.copy_rounded, size: 16, color: colorScheme.onSurface),
+                    tooltip: 'Copy link & notes',
+                    onPressed: () {
+                      final textToCopy = widget.card.body ?? '';
+                      if (textToCopy.isNotEmpty) {
+                        Clipboard.setData(ClipboardData(text: textToCopy));
+                        OmniToast.showInfo(context, 'Copied to clipboard');
+                      }
+                    },
+                  ),
+                ),
+            ],
           ),
           if (userText.isNotEmpty) ...[
             const SizedBox(height: 16),
