@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 import 'package:omnilink_frontend/shared/widgets/web_image/omni_web_image.dart';
+import 'package:any_link_preview/any_link_preview.dart';
+import 'package:dio/dio.dart';
+import '../../core/di/injection.dart';
 import '../../features/timeline/data/models/card_model.dart';
 
-enum TimelineCardType { image, code, file, pdf }
+enum TimelineCardType { image, code, file, pdf, link }
 
 class OmniTimelineCard extends StatelessWidget {
   final TimelineCardType type;
@@ -81,6 +85,48 @@ class OmniTimelineCard extends StatelessWidget {
           ),
         );
       }
+    } else if (type == TimelineCardType.link) {
+      final bodyText = body ?? '';
+      final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
+      final url = match?.group(0) ?? '';
+
+      if (url.isEmpty) {
+        return _buildGenericLinkFallback(colorScheme);
+      }
+
+      return FutureBuilder<Metadata?>(
+        key: ValueKey(url),
+        future: AnyLinkPreview.getMetadata(
+          link: kIsWeb ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(url)}' : url,
+          cache: const Duration(hours: 1),
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Container(
+              color: colorScheme.surfaceContainerHighest.withAlpha(100),
+              child: Center(
+                child: CircularProgressIndicator(color: colorScheme.onSurfaceVariant.withAlpha(51)),
+              ),
+            );
+          }
+
+          final metadata = snapshot.data;
+          final imageUrl = metadata?.image;
+          final proxiedImageUrl = (kIsWeb && imageUrl != null && imageUrl.startsWith('http'))
+              ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(imageUrl)}'
+              : imageUrl;
+
+          if (proxiedImageUrl != null) {
+            return Image.network(
+              proxiedImageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _buildGenericLinkFallback(colorScheme),
+            );
+          }
+
+          return _buildGenericLinkFallback(colorScheme);
+        },
+      );
     } else if (type == TimelineCardType.code) {
       return Container(
         color: colorScheme.surfaceContainerHighest.withAlpha(100),
@@ -108,6 +154,19 @@ class OmniTimelineCard extends StatelessWidget {
         ),
       );
     }
+  }
+
+  Widget _buildGenericLinkFallback(ColorScheme colorScheme) {
+    return Container(
+      color: colorScheme.surfaceContainerHighest.withAlpha(100),
+      child: Center(
+        child: Icon(
+          Icons.link_rounded,
+          size: 64,
+          color: colorScheme.onSurfaceVariant.withAlpha(100),
+        ),
+      ),
+    );
   }
 
   Widget _buildContent(BuildContext context, ColorScheme colorScheme, ThemeData theme) {

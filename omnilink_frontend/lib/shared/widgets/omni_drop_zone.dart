@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cross_file/cross_file.dart';
+import 'package:dio/dio.dart';
+import 'package:any_link_preview/any_link_preview.dart';
 import 'omni_glass_container.dart';
 import '../../core/di/injection.dart';
 import '../../features/timeline/data/cards_api.dart';
@@ -32,23 +35,53 @@ class OmniDropZone extends StatefulWidget {
   const OmniDropZone({super.key});
 
   @override
-  State<OmniDropZone> createState() => _OmniDropZoneState();
+  OmniDropZoneState createState() => OmniDropZoneState();
 }
 
-class _OmniDropZoneState extends State<OmniDropZone> {
+class OmniDropZoneState extends State<OmniDropZone> {
   bool _isSending = false;
   bool _showTags = false;
   
   // Make state static so it persists across responsive layout changes (desktop <-> mobile)
   static final Set<String> _selectedTagIds = {};
   static StagedFile? _stagedFile;
+  static String? _stagedUrl;
+  static String? _dismissedUrl;
   static final TextEditingController _textController = TextEditingController();
   static final TextEditingController _titleController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _textController.addListener(_onTextChanged);
+  }
+
+  @override
   void dispose() {
-    // Do not dispose static controllers
+    _textController.removeListener(_onTextChanged);
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    final text = _textController.text;
+    final RegExp urlRegex = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+    final match = urlRegex.firstMatch(text);
+    
+    if (match != null) {
+      final url = match.group(0);
+      if (_stagedUrl != url && _dismissedUrl != url) {
+        setState(() {
+          _stagedUrl = url;
+        });
+      }
+    } else {
+      if (_stagedUrl != null || _dismissedUrl != null) {
+        setState(() {
+          _stagedUrl = null;
+          _dismissedUrl = null;
+        });
+      }
+    }
   }
 
   void _clearSelection() {
@@ -58,6 +91,8 @@ class _OmniDropZoneState extends State<OmniDropZone> {
       _selectedTagIds.clear();
       _showTags = false;
       _stagedFile = null;
+      _stagedUrl = null;
+      _dismissedUrl = null;
     });
   }
 
@@ -201,6 +236,39 @@ class _OmniDropZoneState extends State<OmniDropZone> {
     }
   }
 
+  Future<void> handleDroppedFiles(List<XFile> files) async {
+    if (files.isEmpty) return;
+    try {
+      final file = files.first;
+      List<int>? bytes;
+      if (kIsWeb) {
+        bytes = await file.readAsBytes();
+      }
+      
+      final titleLower = file.name.toLowerCase();
+      final isImage = titleLower.endsWith('.jpg') || 
+                      titleLower.endsWith('.png') || 
+                      titleLower.endsWith('.jpeg') || 
+                      titleLower.endsWith('.webp');
+
+      setState(() {
+        _stagedFile = StagedFile(
+          name: file.name,
+          path: kIsWeb ? null : file.path,
+          bytes: bytes,
+          isImage: isImage,
+        );
+        if (_titleController.text.isEmpty && _textController.text.isEmpty) {
+          _titleController.text = file.name;
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        OmniToast.showError(context, 'Failed to stage dropped file: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -266,6 +334,11 @@ class _OmniDropZoneState extends State<OmniDropZone> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: _stagedUrl != null ? _buildLinkPreview(context, colorScheme) : const SizedBox(width: double.infinity, height: 0),
+          ),
           BlocBuilder<TagsBloc, TagsState>(
             builder: (context, state) {
               if (state is TagsLoaded) {
@@ -412,34 +485,47 @@ class _OmniDropZoneState extends State<OmniDropZone> {
                 onPressed: () {},
                 iconSize: 20,
               ),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primaryContainer.withAlpha(102),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    )
-                  ],
-                ),
-                child: _isSending
-                    ? SizedBox(
-                        width: 18, 
-                        height: 18, 
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2, 
-                          color: colorScheme.onPrimaryContainer,
+              AnimatedBuilder(
+                animation: Listenable.merge([_textController, _titleController]),
+                builder: (context, child) {
+                  final hasContent = _textController.text.trim().isNotEmpty || _titleController.text.trim().isNotEmpty || _stagedFile != null;
+                  return AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: hasContent 
+                      ? Container(
+                          width: 40,
+                          height: 40,
+                          margin: const EdgeInsets.only(left: 4),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorScheme.primaryContainer.withAlpha(102),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                              )
+                            ],
+                          ),
+                          child: _isSending
+                              ? SizedBox(
+                                  width: 18, 
+                                  height: 18, 
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2, 
+                                    color: colorScheme.onPrimaryContainer,
+                                  )
+                                )
+                              : IconButton(
+                                  icon: Icon(Icons.send_rounded, color: colorScheme.onPrimaryContainer),
+                                  onPressed: _handleSend,
+                                  iconSize: 18,
+                                ),
                         )
-                      )
-                    : IconButton(
-                        icon: Icon(Icons.send_rounded, color: colorScheme.onPrimaryContainer),
-                        onPressed: _handleSend,
-                        iconSize: 18,
-                      ),
+                      : const SizedBox(width: 0, height: 40),
+                  );
+                },
               ),
             ],
           ),
@@ -485,6 +571,129 @@ class _OmniDropZoneState extends State<OmniDropZone> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildLinkPreview(BuildContext context, ColorScheme colorScheme) {
+    if (_stagedUrl == null) return const SizedBox();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4, right: 4, top: 4),
+      child: Stack(
+        children: [
+          FutureBuilder<Metadata?>(
+            key: ValueKey(_stagedUrl!),
+            future: AnyLinkPreview.getMetadata(
+              link: kIsWeb ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(_stagedUrl!)}' : _stagedUrl!,
+              cache: const Duration(hours: 1),
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Container(
+                  height: 90,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.onSurfaceVariant),
+                  ),
+                );
+              }
+
+              final metadata = snapshot.data;
+              if (metadata == null) {
+                return Container(
+                  height: 90,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.centerLeft,
+                  child: Text(_stagedUrl!, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: colorScheme.onSurface)),
+                );
+              }
+
+              final imageUrl = metadata.image;
+              final proxiedImageUrl = (kIsWeb && imageUrl != null && imageUrl.startsWith('http')) 
+                  ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(imageUrl)}' 
+                  : imageUrl;
+              
+              return Container(
+                height: 90,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (proxiedImageUrl != null)
+                      SizedBox(
+                        width: 80,
+                        child: Image.network(
+                          proxiedImageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                        ),
+                      ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              metadata.title ?? _stagedUrl!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              metadata.desc ?? metadata.url ?? '',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _dismissedUrl = _stagedUrl;
+                  _stagedUrl = null;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(128),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

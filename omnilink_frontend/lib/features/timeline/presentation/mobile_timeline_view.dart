@@ -15,6 +15,7 @@ import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
 import 'bloc/tags_bloc.dart';
 import 'bloc/tags_event.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 
 class MobileTimelineView extends StatefulWidget {
   final bool showFavorites;
@@ -29,6 +30,8 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+  bool _isDragging = false;
+  final GlobalKey<OmniDropZoneState> _dropZoneKey = GlobalKey<OmniDropZoneState>();
 
   @override
   void initState() {
@@ -72,7 +75,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
 
   TimelineCardType _mapCardType(CardModel card) {
     if (card.cardType == 'text') return TimelineCardType.code;
-    if (card.cardType == 'metadata') return TimelineCardType.image;
+    if (card.cardType == 'metadata') return TimelineCardType.link;
     if (card.cardType == 'file') {
       final titleLower = card.title?.toLowerCase() ?? '';
       final isImage = card.mimeType?.startsWith('image/') == true || 
@@ -102,10 +105,20 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
     
     return Scaffold(
       appBar: const OmniTopBar(),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      body: DropTarget(
+        onDragEntered: (detail) => setState(() => _isDragging = true),
+        onDragExited: (detail) => setState(() => _isDragging = false),
+        onDragDone: (detail) {
+          setState(() => _isDragging = false);
+          _dropZoneKey.currentState?.handleDroppedFiles(detail.files);
+        },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: OmniTextField.search(
               controller: _searchController,
               hintText: 'Search cards, links, or files...',
@@ -184,16 +197,42 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                   },
                 ),
                 if (!widget.showFavorites)
-                  const Positioned(
+                  Positioned(
                     left: 16,
                     right: 16,
                     bottom: 16,
-                    child: OmniDropZone(),
+                    child: OmniDropZone(key: _dropZoneKey),
                   ),
               ],
             ),
           ),
         ],
+      ),
+    ),
+            if (_isDragging)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withOpacity(0.85),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.cloud_upload_rounded, size: 64, color: colorScheme.primary),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Drop file to attach',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

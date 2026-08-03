@@ -14,6 +14,8 @@ import 'bloc/timeline_state.dart';
 import 'bloc/timeline_event.dart';
 import 'bloc/tags_bloc.dart';
 import 'bloc/tags_event.dart';
+import 'package:desktop_drop/desktop_drop.dart';
+import '../../../shared/widgets/omni_drop_zone.dart';
 
 class DesktopTimelineView extends StatefulWidget {
   final bool showFavorites;
@@ -28,6 +30,8 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
+  bool _isDragging = false;
+  final GlobalKey<OmniDropZoneState> _dropZoneKey = GlobalKey<OmniDropZoneState>();
 
   @override
   void initState() {
@@ -71,7 +75,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
 
   TimelineCardType _mapCardType(CardModel card) {
     if (card.cardType == 'text') return TimelineCardType.code;
-    if (card.cardType == 'metadata') return TimelineCardType.image;
+    if (card.cardType == 'metadata') return TimelineCardType.link;
     if (card.cardType == 'file') {
       final titleLower = card.title?.toLowerCase() ?? '';
       final isImage = card.mimeType?.startsWith('image/') == true || 
@@ -100,111 +104,154 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 24.0, top: 24.0, right: 24.0, bottom: 8.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Timeline',
-                        style: Theme.of(context).textTheme.displayLarge
-                            ?.copyWith(
-                              fontSize: 32,
-                              color: colorScheme.onSurface,
-                            ),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: OmniTextField.search(
-                          controller: _searchController,
-                          hintText: 'Search cards, links, or files...',
-                          onChanged: _onSearchChanged,
+      body: DropTarget(
+        onDragEntered: (detail) => setState(() => _isDragging = true),
+        onDragExited: (detail) => setState(() => _isDragging = false),
+        onDragDone: (detail) {
+          setState(() => _isDragging = false);
+          _dropZoneKey.currentState?.handleDroppedFiles(detail.files);
+        },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 24.0, top: 24.0, right: 24.0, bottom: 8.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Timeline',
+                          style: Theme.of(context).textTheme.displayLarge
+                              ?.copyWith(
+                                fontSize: 32,
+                                color: colorScheme.onSurface,
+                              ),
                         ),
-                      ),
-
-                    ],
-                  ),
-                ),
-                OmniTagFilterRow(
-                  activeTagId: _activeTagId,
-                  onTagSelected: (tagId) {
-                    setState(() => _activeTagId = tagId);
-                    context.read<TimelineBloc>().add(TimelineLoadRequested(
-                      tagId: tagId,
-                      searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-                      pinned: widget.showFavorites ? true : null,
-                    ));
-                  },
-                ),
-                Expanded(
-                  child: BlocBuilder<TimelineBloc, TimelineState>(
-                    builder: (context, state) {
-                      if (state is TimelineLoading || state is TimelineInitial) {
-                        return const Center(child: OmniDotsLoader());
-                      } else if (state is TimelineError) {
-                        return Center(child: Text(state.message));
-                      } else if (state is TimelineLoaded) {
-                        if (state.cards.isEmpty) {
-                          return const Center(child: Text("No cards found"));
-                        }
-                        return RefreshIndicator(
-                          onRefresh: () async {
-                            context.read<TimelineBloc>().add(TimelineLoadRequested(
-                              tagId: _activeTagId,
-                              searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
-                              pinned: widget.showFavorites ? true : null,
-                            ));
-                            await Future.delayed(const Duration(milliseconds: 800));
-                          },
-                          child: MasonryGridView.count(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            padding: const EdgeInsets.all(24.0),
-                            itemCount: state.cards.length,
-                            itemBuilder: (context, index) {
-                              final card = state.cards[index];
-                              return OmniTimelineCard(
-                                type: _mapCardType(card),
-                                cardId: card.id,
-                                title: card.title ?? card.body ?? 'Untitled',
-                                subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
-                                timeAgo: _timeAgo(card.createdAt),
-                                tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
-                                tagColor: colorScheme.secondary,
-                                body: card.body,
-                                imageUrl: card.gcsSignedUrl,
-                                isPinned: card.pinned,
-                                syncStatus: card.syncStatus,
-                                localBytes: card.localBytes,
-                                onTogglePin: () {
-                                  context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
-                                },
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => OmniCardDetailsDialog(card: card),
-                                  );
-                                },
-                              );
-                            },
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: OmniTextField.search(
+                            controller: _searchController,
+                            hintText: 'Search cards, links, or files...',
+                            onChanged: _onSearchChanged,
                           ),
-                        );
-                      }
-                      return const SizedBox.shrink();
+                        ),
+                      ],
+                    ),
+                  ),
+                  OmniTagFilterRow(
+                    activeTagId: _activeTagId,
+                    onTagSelected: (tagId) {
+                      setState(() => _activeTagId = tagId);
+                      context.read<TimelineBloc>().add(TimelineLoadRequested(
+                        tagId: tagId,
+                        searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                        pinned: widget.showFavorites ? true : null,
+                      ));
                     },
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: BlocBuilder<TimelineBloc, TimelineState>(
+                      builder: (context, state) {
+                        if (state is TimelineLoading || state is TimelineInitial) {
+                          return const Center(child: OmniDotsLoader());
+                        } else if (state is TimelineError) {
+                          return Center(child: Text(state.message));
+                        } else if (state is TimelineLoaded) {
+                          if (state.cards.isEmpty) {
+                            return const Center(child: Text("No cards found"));
+                          }
+                          return RefreshIndicator(
+                            onRefresh: () async {
+                              context.read<TimelineBloc>().add(TimelineLoadRequested(
+                                tagId: _activeTagId,
+                                searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+                                pinned: widget.showFavorites ? true : null,
+                              ));
+                              await Future.delayed(const Duration(milliseconds: 800));
+                            },
+                            child: MasonryGridView.count(
+                              crossAxisCount: 3,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              padding: const EdgeInsets.all(24.0).copyWith(bottom: 120),
+                              itemCount: state.cards.length,
+                              itemBuilder: (context, index) {
+                                final card = state.cards[index];
+                                return OmniTimelineCard(
+                                  type: _mapCardType(card),
+                                  cardId: card.id,
+                                  title: card.title ?? card.body ?? 'Untitled',
+                                  subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
+                                  timeAgo: _timeAgo(card.createdAt),
+                                  tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
+                                  tagColor: colorScheme.secondary,
+                                  body: card.body,
+                                  imageUrl: card.gcsSignedUrl,
+                                  isPinned: card.pinned,
+                                  syncStatus: card.syncStatus,
+                                  localBytes: card.localBytes,
+                                  onTogglePin: () {
+                                    context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
+                                  },
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => OmniCardDetailsDialog(card: card),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          OmniInspectorPanel(showFavorites: widget.showFavorites),
-        ],
+            if (_isDragging)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.withOpacity(0.85),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.cloud_upload_rounded, size: 64, color: colorScheme.primary),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Drop file to attach',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (!widget.showFavorites)
+              Positioned(
+                bottom: 24,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: OmniDropZone(key: _dropZoneKey),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../../features/timeline/data/models/isar_models.dart';
 
 import 'interceptors/auth_interceptor.dart';
@@ -23,11 +24,31 @@ abstract class NetworkModule {
     if (kIsWeb) return LocalDatabase(null);
 
     final dir = await getApplicationDocumentsDirectory();
-    final isar = await Isar.open(
-      [IsarCardSchema],
-      directory: dir.path,
-    );
-    return LocalDatabase(isar);
+    
+    try {
+      final isar = await Isar.open(
+        [IsarCardSchema],
+        directory: dir.path,
+      );
+      return LocalDatabase(isar);
+    } catch (e) {
+      // In case of schema mismatch during development (Collection id is invalid), 
+      // clear the corrupted/outdated db and try again.
+      try {
+        final dbFile = File('${dir.path}/default.isar');
+        if (dbFile.existsSync()) dbFile.deleteSync();
+        final lockFile = File('${dir.path}/default.isar.lock');
+        if (lockFile.existsSync()) lockFile.deleteSync();
+        
+        final isar = await Isar.open(
+          [IsarCardSchema],
+          directory: dir.path,
+        );
+        return LocalDatabase(isar);
+      } catch (e2) {
+        rethrow;
+      }
+    }
   }
 
   @lazySingleton

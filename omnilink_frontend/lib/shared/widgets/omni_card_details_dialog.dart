@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,7 +14,9 @@ import '../../features/timeline/presentation/bloc/tags_state.dart';
 import '../../features/timeline/presentation/bloc/tags_event.dart';
 import '../../core/di/injection.dart';
 import 'omni_glass_container.dart';
+import 'package:dio/dio.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:any_link_preview/any_link_preview.dart';
 
 class OmniCardDetailsDialog extends StatefulWidget {
   final CardModel card;
@@ -24,26 +27,44 @@ class OmniCardDetailsDialog extends StatefulWidget {
   State<OmniCardDetailsDialog> createState() => _OmniCardDetailsDialogState();
 }
 
-class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
+class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with SingleTickerProviderStateMixin {
   bool _isEditing = false;
   bool _isSaving = false;
   late bool _isPinned;
+  late TabController _tabController;
   late TextEditingController _titleController;
   late TextEditingController _bodyController;
-  late Set<String> _selectedTagIds;
+  late List<String> _selectedTagIds;
+  Future<Metadata?>? _metadataFuture;
 
   @override
   void initState() {
     super.initState();
     _isPinned = widget.card.pinned;
+    _tabController = TabController(length: 2, vsync: this);
     _titleController = TextEditingController(text: widget.card.title ?? '');
     _bodyController = TextEditingController(text: widget.card.body ?? '');
-    _selectedTagIds = widget.card.tags.map((t) => t.id).toSet();
+    _selectedTagIds = widget.card.tags.map((t) => t.id).toList();
+    
+    if (widget.card.cardType == 'metadata') {
+      final bodyText = widget.card.body ?? '';
+      final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
+      final url = match?.group(0) ?? '';
+      
+      if (url.isNotEmpty) {
+        _metadataFuture = AnyLinkPreview.getMetadata(
+          link: kIsWeb ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(url)}' : url,
+          cache: const Duration(hours: 1),
+        );
+      }
+    }
+    
     getIt<TagsBloc>().add(TagsLoadRequested());
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _titleController.dispose();
     _bodyController.dispose();
     super.dispose();
@@ -151,7 +172,8 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
     final isPdf = widget.card.mimeType == 'application/pdf' || titleLower.endsWith('.pdf');
 
     if (widget.card.cardType == 'text') headerIcon = Icons.code_rounded;
-    else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) headerIcon = Icons.image_rounded;
+    else if (widget.card.cardType == 'metadata') headerIcon = Icons.link_rounded;
+    else if (widget.card.cardType == 'file' && isImage) headerIcon = Icons.image_rounded;
     else if (widget.card.cardType == 'file' && isPdf) headerIcon = Icons.picture_as_pdf_rounded;
     else headerIcon = Icons.file_present_rounded;
 
@@ -423,7 +445,123 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> {
                 ],
               ),
       );
-    } else if (widget.card.cardType == 'metadata' || (widget.card.cardType == 'file' && isImage)) {
+    } else if (widget.card.cardType == 'metadata') {
+      final bodyText = widget.card.body ?? '';
+      final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
+      final url = match?.group(0) ?? '';
+      final userText = bodyText.replaceFirst(url, '').trim();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: double.infinity,
+            height: 300,
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withAlpha(128),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: url.isNotEmpty && _metadataFuture != null
+                ? FutureBuilder<Metadata?>(
+                key: ValueKey(url),
+                future: _metadataFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      height: 250,
+                      alignment: Alignment.center,
+                      child: CircularProgressIndicator(color: colorScheme.onSurfaceVariant),
+                    );
+                  }
+
+                  final metadata = snapshot.data;
+                  if (metadata == null) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: InkWell(
+                        onTap: () async {
+                          final uri = Uri.tryParse(url);
+                          if (uri != null && await canLaunchUrl(uri)) {
+                            await launchUrl(uri);
+                          }
+                        },
+                        child: Text(
+                          url,
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ),
+                    );
+                  }
+
+                  final imageUrl = metadata.image;
+                  final proxiedImageUrl = (kIsWeb && imageUrl != null && imageUrl.startsWith('http')) 
+                      ? '${getIt<Dio>().options.baseUrl}/api/v1/proxy?url=${Uri.encodeComponent(imageUrl)}' 
+                      : imageUrl;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (proxiedImageUrl != null)
+                        Expanded(
+                          child: Image.network(
+                            proxiedImageUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                          ),
+                        ),
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
+                        color: colorScheme.surfaceContainerHighest.withAlpha(50),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              metadata.title ?? url,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              metadata.desc ?? metadata.url ?? '',
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colorScheme.onSurfaceVariant,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              )
+            : const SizedBox(height: 100),
+          ),
+          if (userText.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            SelectableText(
+              userText,
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+          ],
+        ],
+      );
+    } else if (widget.card.cardType == 'file' && isImage) {
       return Container(
         height: 250,
         decoration: BoxDecoration(
