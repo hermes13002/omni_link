@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:omnilink_frontend/features/device/presentation/bloc/device_bloc.dart';
 import '../../../../core/theme/theme_cubit.dart';
 
 import '../../../../shared/widgets/omni_button.dart';
@@ -9,11 +10,10 @@ import '../../../../shared/widgets/omni_glass_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
-import '../../../device/presentation/bloc/device_bloc.dart';
+import 'package:omnilink_frontend/shared/widgets/omni_glass_dialog.dart';
 import '../../../device/presentation/bloc/device_state.dart';
 import '../../../timeline/presentation/bloc/timeline_bloc.dart';
 import '../../../timeline/presentation/bloc/timeline_state.dart';
-import '../../../../shared/utils/omni_toast.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -396,7 +396,7 @@ class ProfileScreen extends StatelessWidget {
     final controller = TextEditingController(text: currentName);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => OmniGlassDialog(
         title: const Text('Edit Display Name'),
         content: TextField(
           controller: controller,
@@ -424,7 +424,7 @@ class ProfileScreen extends StatelessWidget {
     final newPasswordController = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => OmniGlassDialog(
         title: const Text('Change Password'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -467,7 +467,7 @@ class ProfileScreen extends StatelessWidget {
   void _showDeleteAccountDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => OmniGlassDialog(
         title: const Text('Delete Account?'),
         content: const Text(
           'This action is permanent and cannot be undone. All your clips, tags, and devices will be permanently deleted.',

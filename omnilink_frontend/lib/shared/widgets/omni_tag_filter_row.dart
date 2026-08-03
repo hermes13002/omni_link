@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:omnilink_frontend/shared/widgets/omni_glass_dialog.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_state.dart';
 import '../../features/timeline/presentation/bloc/tags_event.dart';
@@ -61,93 +62,80 @@ class _OmniTagFilterRowState extends State<OmniTagFilterRow> {
               }
             },
             builder: (context, state) {
-              return Dialog(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                child: OmniGlassContainer(
-                  padding: const EdgeInsets.all(24.0),
-                  borderRadius: 24.0,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Create Tag',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+              return OmniGlassDialog(
+                title: const Text('Create Tag'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    OmniTextField(
+                      controller: tagController,
+                      hintText: 'e.g. workspace, ideas',
+                      prefixIcon: Icons.local_offer_rounded,
+                      autofocus: true,
+                      maxLength: 10,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Tag Color (Optional)',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(height: 16),
-                      OmniTextField(
-                        controller: tagController,
-                        hintText: 'e.g. workspace, ideas',
-                        prefixIcon: Icons.local_offer_rounded,
-                        autofocus: true,
-                        maxLength: 10,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Tag Color (Optional)',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: presetColors.map((colorHex) {
-                          final color = _hexToColor(colorHex)!;
-                          final isSelected = selectedColor == colorHex;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  selectedColor = null;
-                                } else {
-                                  selectedColor = colorHex;
-                                }
-                              });
-                            },
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                                border: isSelected 
-                                    ? Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2)
-                                    : null,
-                                boxShadow: isSelected 
-                                    ? [BoxShadow(color: color.withAlpha(100), blurRadius: 8, spreadRadius: 2)]
-                                    : null,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
-                            child: Text(
-                              'Cancel',
-                              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: presetColors.map((colorHex) {
+                        final color = _hexToColor(colorHex)!;
+                        final isSelected = selectedColor == colorHex;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelected) {
+                                selectedColor = null;
+                              } else {
+                                selectedColor = colorHex;
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: isSelected 
+                                  ? Border.all(color: Theme.of(context).colorScheme.onSurface, width: 2)
+                                  : null,
+                              boxShadow: isSelected 
+                                  ? [BoxShadow(color: color.withAlpha(100), blurRadius: 8, spreadRadius: 2)]
+                                  : null,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          OmniButton(
-                            text: 'Create',
-                            isLoading: isSubmitting,
-                            onPressed: isSubmitting
-                                ? () {}
-                                : () {
-                                    if (tagController.text.trim().isNotEmpty) {
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
+                    child: Text(
+                      'Cancel',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OmniButton(
+                    text: 'Create',
+                    isLoading: isSubmitting,
+                    onPressed: isSubmitting
+                        ? () {}
+                        : () {
+                            if (tagController.text.trim().isNotEmpty) {
                                       setState(() => isSubmitting = true);
                                       context.read<TagsBloc>().add(TagCreateRequested(
                                         tagController.text.trim(), 
@@ -157,11 +145,7 @@ class _OmniTagFilterRowState extends State<OmniTagFilterRow> {
                                   },
                           ),
                         ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
+                      );
             },
           ),
         ),

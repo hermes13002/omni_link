@@ -12,6 +12,8 @@ import '../../../timeline/presentation/bloc/tags_state.dart';
 import '../../../timeline/presentation/bloc/tags_event.dart';
 
 import '../../../../shared/widgets/omni_glass_container.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/omni_glass_dialog.dart';
 import '../../../../shared/widgets/omni_loaders.dart';
 import '../../../../shared/widgets/omni_button.dart';
 
@@ -82,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (ctx) => AlertDialog(
+                      builder: (ctx) => OmniGlassDialog(
                         title: const Text('Delete Selected Devices?'),
                         content: Text('Are you sure you want to delete ${_selectedDevices.length} devices?'),
                         actions: [
@@ -197,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final controller = TextEditingController(text: currentName);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => OmniGlassDialog(
         title: const Text('Rename Device'),
         content: TextField(
           controller: controller,
