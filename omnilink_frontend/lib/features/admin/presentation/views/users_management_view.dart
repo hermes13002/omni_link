@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../../../../shared/widgets/omni_glass_container.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/admin_bloc.dart';
 import '../bloc/admin_event.dart';
 import '../bloc/admin_state.dart';
@@ -44,16 +44,22 @@ class UsersManagementView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                OmniGlassContainer(
-                  padding: const EdgeInsets.all(0),
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                  ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
+                        headingRowColor: WidgetStateProperty.all(colorScheme.surfaceContainerHighest.withOpacity(0.5)),
+                        dataRowMinHeight: 64,
+                        dataRowMaxHeight: 64,
                         columns: const [
-                          DataColumn(label: Text('User Email')),
+                          DataColumn(label: Text('User ID / Email')),
                           DataColumn(label: Text('Join Date')),
                           DataColumn(label: Text('Devices')),
                           DataColumn(label: Text('Storage Used')),
@@ -85,10 +91,23 @@ class UsersManagementView extends StatelessWidget {
   }
 
   DataRow _buildRow(BuildContext context, String userId, String email, String joinDate, String devices, String storage, String status) {
+    final theme = Theme.of(context);
     final isSuspended = status == 'Suspended';
     return DataRow(
       cells: [
-        DataCell(Text(email)),
+        DataCell(
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                child: Text(email[0].toUpperCase(), style: TextStyle(color: theme.colorScheme.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 12),
+              Text(email, style: const TextStyle(fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
         DataCell(Text(joinDate)),
         DataCell(Text(devices)),
         DataCell(Text(storage)),
@@ -96,13 +115,14 @@ class UsersManagementView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: isSuspended ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+              color: isSuspended ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isSuspended ? Colors.red.withOpacity(0.5) : Colors.green.withOpacity(0.5)),
             ),
             child: Text(
               status,
               style: TextStyle(
-                color: isSuspended ? Colors.red : Colors.green,
+                color: isSuspended ? Colors.redAccent : Colors.greenAccent,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -113,9 +133,12 @@ class UsersManagementView extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.remove_red_eye_outlined, size: 20),
-                onPressed: () {},
-                tooltip: 'View Audit Log',
+                icon: const Icon(Icons.open_in_new, size: 20),
+                onPressed: () {
+                  // Navigate to user details
+                  // context.push('/admin/users/$userId');
+                },
+                tooltip: 'View Profile',
               ),
               IconButton(
                 icon: Icon(

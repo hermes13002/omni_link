@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../../../../shared/widgets/omni_glass_container.dart';
 import '../bloc/admin_bloc.dart';
 import '../bloc/admin_state.dart';
 
@@ -12,8 +11,13 @@ class TechnicalHealthView extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Expanded(
-      child: OmniGlassContainer(
-        padding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -24,12 +28,13 @@ class TechnicalHealthView extends StatelessWidget {
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Icon(icon, color: colorScheme.primary, size: 24),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               value,
               style: theme.textTheme.headlineMedium?.copyWith(
@@ -37,11 +42,11 @@ class TechnicalHealthView extends StatelessWidget {
                 color: colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: Colors.green,
+                color: Colors.greenAccent,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -53,22 +58,24 @@ class TechnicalHealthView extends StatelessWidget {
 
   Widget _buildLineChart(BuildContext context, String title) {
     final colorScheme = Theme.of(context).colorScheme;
-    return OmniGlassContainer(
+    return Container(
       padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          Text(title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 24),
           SizedBox(
             height: 250,
             child: LineChart(
               LineChartData(
-                gridData: const FlGridData(show: true, drawVerticalLine: false),
-                titlesData: const FlTitlesData(
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                ),
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
@@ -88,7 +95,7 @@ class TechnicalHealthView extends StatelessWidget {
                     dotData: const FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withOpacity(0.1),
                     ),
                   ),
                 ],
@@ -119,41 +126,46 @@ class TechnicalHealthView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Technical Health',
+                  'System Health',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                Text(
+                  'Real-time metrics for backend performance.',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 32),
                 if (isMobile) ...[
-                  _buildKpiCard(context, 'Sync Latency', '${state.metrics.syncLatencyMs} ms', 'Simulated', Icons.speed),
+                  Row(children: [_buildKpiCard(context, 'Sync Latency', '${state.metrics.syncLatencyMs} ms', 'Simulated', Icons.speed)]),
                   const SizedBox(height: 16),
-                  _buildKpiCard(context, 'Active SSE Connections', '${state.metrics.activeSseConnections}', 'Approximate', Icons.wifi_tethering),
+                  Row(children: [_buildKpiCard(context, 'Active SSE Connections', '${state.metrics.activeSseConnections}', 'Approximate', Icons.wifi_tethering)]),
                   const SizedBox(height: 16),
-                  _buildKpiCard(context, 'DB Pool Saturation', '${state.metrics.dbPoolSaturationPercent}%', 'Simulated', Icons.storage),
+                  Row(children: [_buildKpiCard(context, 'DB Pool Saturation', '${state.metrics.dbPoolSaturationPercent}%', 'Simulated', Icons.storage)]),
                   const SizedBox(height: 16),
-                  _buildKpiCard(context, 'API Error Rate', '${state.metrics.apiErrorRatePercent}%', 'Simulated', Icons.error_outline),
+                  Row(children: [_buildKpiCard(context, 'API Error Rate', '${state.metrics.apiErrorRatePercent}%', 'Simulated', Icons.error_outline)]),
                 ] else
                   Row(
                     children: [
                       _buildKpiCard(context, 'Sync Latency', '${state.metrics.syncLatencyMs} ms', 'Simulated', Icons.speed),
                       const SizedBox(width: 16),
-                      _buildKpiCard(context, 'Active SSE Connections', '${state.metrics.activeSseConnections}', 'Approximate', Icons.wifi_tethering),
+                      _buildKpiCard(context, 'Active SSE Connections', '${state.metrics.activeSseConnections}', 'Multiplexed', Icons.wifi_tethering),
                       const SizedBox(width: 16),
-                      _buildKpiCard(context, 'DB Pool Saturation', '${state.metrics.dbPoolSaturationPercent}%', 'Simulated', Icons.storage),
+                      _buildKpiCard(context, 'DB Pool Saturation', '${state.metrics.dbPoolSaturationPercent}%', 'Healthy', Icons.storage),
                       const SizedBox(width: 16),
-                      _buildKpiCard(context, 'API Error Rate', '${state.metrics.apiErrorRatePercent}%', 'Simulated', Icons.error_outline),
+                      _buildKpiCard(context, 'Redis Usage', '1', 'Connections', Icons.dns),
                     ],
                   ),
                 const SizedBox(height: 32),
                 if (isMobile) ...[
                   _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)'),
                   const SizedBox(height: 24),
-                  _buildLineChart(context, 'Metadata Processing Latency (ms)'),
+                  _buildLineChart(context, 'API Request Latency (ms)'),
                 ] else
                   Row(
                     children: [
                       Expanded(child: _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)')),
                       const SizedBox(width: 24),
-                      Expanded(child: _buildLineChart(context, 'Metadata Processing Latency (ms)')),
+                      Expanded(child: _buildLineChart(context, 'API Request Latency (ms)')),
                     ],
                   ),
               ],

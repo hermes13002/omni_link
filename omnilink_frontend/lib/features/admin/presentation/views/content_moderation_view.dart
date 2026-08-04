@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../../shared/widgets/omni_glass_container.dart';
 
 class ContentModerationView extends StatelessWidget {
   const ContentModerationView({super.key});
@@ -14,128 +13,148 @@ class ContentModerationView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Content Moderation Queue',
-            style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Review flagged items or unusually large files. Actions are logged.',
-            style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: 32),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 3,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final isMobile = MediaQuery.of(context).size.width < 600;
-              final contentInfo = Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Flagged: Large File',
-                          style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Uploaded 2 hours ago',
-                        style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                      ),
-                    ],
+                  Text(
+                    'Moderation Queue',
+                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'User: us***@example.com',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'File: suspicious_binary.exe (2.4 GB)',
-                    style: theme.textTheme.bodyMedium,
+                    '24 items pending your review.',
+                    style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ],
-              );
-              
-              final actions = Column(
-                crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+              ),
+              Row(
                 children: [
-                  FilledButton.tonalIcon(
+                  OutlinedButton.icon(
                     onPressed: () {},
-                    icon: const Icon(Icons.remove_red_eye),
-                    label: const Text('Review'),
+                    icon: const Icon(Icons.history),
+                    label: const Text('Audit Log'),
                   ),
-                  SizedBox(height: isMobile ? 12 : 8),
+                  const SizedBox(width: 12),
                   FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colorScheme.error,
-                      foregroundColor: colorScheme.onError,
-                    ),
                     onPressed: () {},
-                    icon: const Icon(Icons.delete_forever),
-                    label: const Text('Delete'),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh Queue'),
                   ),
                 ],
-              );
-
-              return OmniGlassContainer(
-                padding: const EdgeInsets.all(24),
-                child: isMobile 
-                  ? Column(
+              )
+            ],
+          ),
+          const SizedBox(height: 32),
+          Center(
+            child: Container(
+              width: 600,
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      image: const DecorationImage(
+                        image: NetworkImage('https://picsum.photos/600/200'),
+                        fit: BoxFit.cover,
+                      )
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Container(
-                              width: 60,
-                              height: 60,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: colorScheme.errorContainer,
-                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.orange.withOpacity(0.5)),
                               ),
-                              child: Icon(Icons.warning_amber_rounded, color: colorScheme.onErrorContainer, size: 30),
+                              child: const Text('Reported: Spam', style: TextStyle(color: Colors.orangeAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(child: contentInfo),
+                            const Spacer(),
+                            Text('Reported 2 hrs ago', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
                           ],
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Suspicious Crypto Link',
+                          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'https://free-crypto-giveaway.scam/login',
+                          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
                         ),
                         const SizedBox(height: 16),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [actions],
+                          children: [
+                            CircleAvatar(radius: 12, backgroundColor: colorScheme.primaryContainer, child: const Icon(Icons.person, size: 14)),
+                            const SizedBox(width: 8),
+                            Text('user_93842 (3 previous strikes)', style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                          ],
                         ),
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: colorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(Icons.warning_amber_rounded, color: colorScheme.onErrorContainer, size: 40),
-                        ),
-                        const SizedBox(width: 24),
-                        Expanded(child: contentInfo),
-                        actions,
+                        const SizedBox(height: 32),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {},
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  foregroundColor: Colors.greenAccent,
+                                  side: BorderSide(color: Colors.greenAccent.withOpacity(0.5)),
+                                ),
+                                child: const Text('APPROVE'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () {},
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.orange,
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                ),
+                                child: const Text('DELETE CARD'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () {},
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                ),
+                                child: const Text('BAN USER'),
+                              ),
+                            ),
+                          ],
+                        )
                       ],
                     ),
-              );
-            },
-          ),
+                  ),
+                ],
+              ),
+            ),
+          )
         ],
       ),
     );
