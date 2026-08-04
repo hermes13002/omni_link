@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:omnilink_frontend/features/admin/presentation/views/admin_overview_view.dart';
-import 'package:omnilink_frontend/features/admin/presentation/views/technical_health_view.dart';
-import 'package:omnilink_frontend/features/admin/presentation/views/users_management_view.dart';
-import 'package:omnilink_frontend/features/admin/presentation/views/content_moderation_view.dart';
-import 'package:omnilink_frontend/features/admin/presentation/bloc/admin_bloc.dart';
-import 'package:omnilink_frontend/features/admin/presentation/bloc/admin_event.dart';
-import 'package:omnilink_frontend/features/admin/presentation/widgets/admin_side_nav.dart';
-import 'package:omnilink_frontend/features/admin/presentation/widgets/admin_top_bar.dart';
+import 'package:omnilink_admin/features/admin/presentation/views/admin_overview_view.dart';
+import 'package:omnilink_admin/features/admin/presentation/views/technical_health_view.dart';
+import 'package:omnilink_admin/features/admin/presentation/views/users_management_view.dart';
+import 'package:omnilink_admin/features/admin/presentation/views/content_moderation_view.dart';
+import 'package:omnilink_admin/features/admin/presentation/bloc/admin_bloc.dart';
+import 'package:omnilink_admin/features/admin/presentation/bloc/admin_event.dart';
+import 'package:omnilink_admin/features/admin/presentation/widgets/admin_side_nav.dart';
+import 'package:omnilink_admin/features/admin/presentation/widgets/admin_top_bar.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});

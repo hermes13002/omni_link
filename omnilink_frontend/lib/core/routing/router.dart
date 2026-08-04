@@ -6,14 +6,11 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
-import '../../features/auth/presentation/screens/admin_login_screen.dart';
-import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/timeline/presentation/timeline_screen.dart';
 import '../../features/timeline/presentation/bloc/timeline_bloc.dart';
 import '../../features/timeline/presentation/bloc/timeline_event.dart';
-import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/device/presentation/bloc/device_bloc.dart';
 import '../../features/device/presentation/bloc/device_event.dart';
@@ -34,7 +31,6 @@ GoRouter createRouter(AuthBloc authBloc) {
     redirect: (context, state) {
       final authState = authBloc.state;
       final isGoingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      final isGoingToAdminDashboard = state.matchedLocation == '/admin/dashboard';
 
       if (authState is AuthInitial) {
         if (state.matchedLocation == '/splash') return null;
@@ -79,17 +75,6 @@ GoRouter createRouter(AuthBloc authBloc) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: '/admin-portal',
-        builder: (context, state) => const AdminLoginScreen(),
-      ),
-      GoRoute(
-        path: '/admin/dashboard',
-        builder: (context, state) => BlocProvider(
-          create: (_) => getIt<AdminBloc>(),
-          child: const AdminDashboardScreen(),
-        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
