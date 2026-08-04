@@ -23,6 +23,11 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Prevent infinite loop if the refresh token request itself fails with 401
+    if (err.requestOptions.path.contains('/auth/refresh')) {
+      return handler.next(err);
+    }
+
     if (err.response?.statusCode == 401) {
       final refreshToken = await _storage.read(key: 'refresh_token');
       if (refreshToken != null) {
