@@ -44,8 +44,8 @@ async def _redis_listener_loop():
     try:
         async for message in pubsub.listen():
             if message["type"] == "pmessage":
-                channel = message["channel"].decode("utf-8")
-                data = message["data"].decode("utf-8")
+                channel = message["channel"]
+                data = message["data"]
                 
                 # Extract user_id from channel: user:<uuid>:inbox
                 parts = channel.split(":")
