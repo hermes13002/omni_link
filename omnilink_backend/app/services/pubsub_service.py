@@ -68,6 +68,15 @@ async def _redis_listener_loop():
             pass
 
 
+def get_active_sse_stats() -> dict:
+    """Return real-time SSE multiplexer stats from in-memory state."""
+    total_streams = sum(len(queues) for queues in _user_queues.values())
+    return {
+        "active_users": len(_user_queues),      # unique users with open streams
+        "total_streams": total_streams,          # total SSE connections (users × devices)
+    }
+
+
 def start_multiplexer():
     global _listener_task
     if _listener_task is None:

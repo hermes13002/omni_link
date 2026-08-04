@@ -17,6 +17,7 @@ from app.config import settings
 from app.schemas.auth import TokenResponse
 from app.schemas.response import ApiResponse
 from app.schemas.admin import AdminOverviewMetrics, AdminUserItem, AdminUsersResponse
+from app.services.pubsub_service import get_active_sse_stats
 
 router = APIRouter()
 
@@ -137,9 +138,12 @@ async def get_overview_metrics(
         type_name = c_type.value if hasattr(c_type, 'value') else str(c_type)
         items_by_type[type_name] = count
 
+    # Live SSE multiplexer stats
+    sse_stats = get_active_sse_stats()
+
     return ApiResponse(data=AdminOverviewMetrics(
         sync_latency_ms=45.0, # Placeholder for APM
-        active_sse_connections=total_devices, # Approximation
+        active_sse_connections=sse_stats["total_streams"],
         db_pool_saturation_percent=12.5, # Placeholder for APM
         api_error_rate_percent=0.01, # Placeholder for APM
         daily_active_users=total_users, # Approximation (needs active session tracking ideally)
