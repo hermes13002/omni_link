@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   flutter_secure_storage_windows
   isar_flutter_libs
+  speech_to_text_windows
   system_tray
   url_launcher_windows
 )

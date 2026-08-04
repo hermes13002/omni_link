@@ -16,6 +16,8 @@ import '../../features/timeline/presentation/bloc/timeline_event.dart';
 import '../../features/timeline/data/models/card_model.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 import 'package:uuid/uuid.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:speech_to_text/speech_recognition_result.dart';
 
 class StagedFile {
   final String name;
@@ -49,17 +51,77 @@ class OmniDropZoneState extends State<OmniDropZone> {
   static String? _dismissedUrl;
   static final TextEditingController _textController = TextEditingController();
   static final TextEditingController _titleController = TextEditingController();
+  
+  // Speech to text state
+  final stt.SpeechToText _speechToText = stt.SpeechToText();
+  bool _speechEnabled = false;
+  bool _isListening = false;
+  String _lastWords = '';
 
   @override
   void initState() {
     super.initState();
     _textController.addListener(_onTextChanged);
+    _initSpeech();
+  }
+
+  void _initSpeech() async {
+    try {
+      _speechEnabled = await _speechToText.initialize();
+      setState(() {});
+    } catch (e) {
+      if (mounted) OmniToast.showError(context, 'Speech recognition init failed: $e');
+    }
   }
 
   @override
   void dispose() {
     _textController.removeListener(_onTextChanged);
+    _speechToText.cancel();
     super.dispose();
+  }
+
+  void _startListening() async {
+    if (!_speechEnabled) {
+      _initSpeech();
+      return;
+    }
+    await _speechToText.listen(onResult: _onSpeechResult);
+    setState(() {
+      _isListening = true;
+    });
+  }
+
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {
+      _isListening = false;
+    });
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      // If we have previous text, ensure a space is added
+      final currentText = _textController.text;
+      if (_lastWords.isNotEmpty && currentText.endsWith(_lastWords)) {
+        // Replace the last recognized segment with the updated one
+        _textController.text = currentText.substring(0, currentText.length - _lastWords.length) + result.recognizedWords;
+      } else {
+        if (currentText.isNotEmpty && !currentText.endsWith(' ')) {
+          _textController.text = '$currentText ${result.recognizedWords}';
+        } else {
+          _textController.text = currentText + result.recognizedWords;
+        }
+      }
+      _lastWords = result.recognizedWords;
+      _textController.selection = TextSelection.fromPosition(TextPosition(offset: _textController.text.length));
+    });
+    
+    // When final result is received, stop listening
+    if (result.finalResult) {
+      _lastWords = '';
+      _stopListening();
+    }
   }
 
   void _onTextChanged() {
@@ -481,8 +543,11 @@ class OmniDropZoneState extends State<OmniDropZone> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.mic_rounded, color: colorScheme.onSurfaceVariant),
-                onPressed: () {},
+                icon: Icon(
+                  _isListening ? Icons.stop_rounded : Icons.mic_rounded, 
+                  color: _isListening ? colorScheme.error : colorScheme.onSurfaceVariant,
+                ),
+                onPressed: _speechToText.isNotListening ? _startListening : _stopListening,
                 iconSize: 20,
               ),
               AnimatedBuilder(

@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Omnilink needs access to your microphone to transcribe speech to text.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Omnilink needs access to speech recognition to convert your voice to text.</string>
 </dict>
 </plist>
