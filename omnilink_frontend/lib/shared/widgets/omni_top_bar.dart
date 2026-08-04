@@ -20,17 +20,6 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-
-        Padding(
-          padding: const EdgeInsets.only(right: 8.0),
-          child: IconButton(
-            icon: Icon(Icons.settings_rounded, color: colorScheme.onSurfaceVariant),
-            tooltip: 'Settings',
-            onPressed: () {
-              context.go('/settings');
-            },
-          ),
-        ),
       ],
     );
   }
