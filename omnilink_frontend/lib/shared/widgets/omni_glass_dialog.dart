@@ -25,38 +25,41 @@ class OmniGlassDialog extends StatelessWidget {
         child: OmniGlassContainer(
           padding: const EdgeInsets.all(24.0),
           borderRadius: 24.0,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Title
-              DefaultTextStyle(
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ) ?? const TextStyle(),
-                child: title,
-              ),
-              const SizedBox(height: 16),
-              
-              // Content
-              DefaultTextStyle(
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ) ?? const TextStyle(),
-                child: content,
-              ),
-              const SizedBox(height: 24),
-              
-              // Actions
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actions.map((a) => Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: a,
-                )).toList(),
-              ),
-            ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Title
+                DefaultTextStyle(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ) ?? const TextStyle(),
+                  child: title,
+                ),
+                const SizedBox(height: 16),
+                
+                // Content
+                DefaultTextStyle(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ) ?? const TextStyle(),
+                  child: content,
+                ),
+                const SizedBox(height: 24),
+                
+                // Actions
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: actions.map((a) => Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: a,
+                  )).toList(),
+                ),
+              ],
+            ),
           ),
         ),
       ),

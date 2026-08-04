@@ -27,6 +27,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     on<TimelineCardResolved>(_onCardResolved);
     on<TimelineCardFailed>(_onCardFailed);
     on<TimelineTogglePinRequested>(_onTogglePinRequested);
+    on<TimelineDeleteCardsRequested>(_onDeleteCardsRequested);
 
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event == 'reload') {
@@ -192,6 +193,39 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
         emit(TimelineLoaded(revertCards));
         emit(TimelineError("Failed to pin card: $e"));
         emit(TimelineLoaded(revertCards));
+      }
+    }
+  }
+
+  Future<void> _onDeleteCardsRequested(
+    TimelineDeleteCardsRequested event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (state is TimelineLoaded) {
+      final currentCards = (state as TimelineLoaded).cards;
+      
+      // Optimistic update
+      final optimisticCards = currentCards.where((c) => !event.cardIds.contains(c.id)).toList();
+      emit(TimelineLoaded(optimisticCards));
+
+      try {
+        // Run API deletes concurrently
+        await Future.wait(
+          event.cardIds.map((id) => _cardsApi.deleteCard(id)),
+        );
+        
+        // Remove from Isar database
+        if (_isar != null) {
+          await _isar!.writeTxn(() async {
+            for (final id in event.cardIds) {
+              await _isar!.isarCards.filter().idEqualTo(id).deleteAll();
+            }
+          });
+        }
+      } catch (e) {
+        // Revert on failure
+        emit(TimelineError("Failed to delete selected cards: $e"));
+        emit(TimelineLoaded(currentCards));
       }
     }
   }

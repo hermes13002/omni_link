@@ -74,3 +74,12 @@ class TimelineTogglePinRequested extends TimelineEvent {
   @override
   List<Object?> get props => [card];
 }
+
+class TimelineDeleteCardsRequested extends TimelineEvent {
+  final List<String> cardIds;
+
+  const TimelineDeleteCardsRequested(this.cardIds);
+
+  @override
+  List<Object?> get props => [cardIds];
+}

@@ -32,6 +32,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
   Timer? _debounce;
   bool _isDragging = false;
   final GlobalKey<OmniDropZoneState> _dropZoneKey = GlobalKey<OmniDropZoneState>();
+  final Set<String> _selectedCardIds = {};
 
   @override
   void initState() {
@@ -179,14 +180,37 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                               isPinned: card.pinned,
                               syncStatus: card.syncStatus,
                               localBytes: card.localBytes,
+                              isSelected: _selectedCardIds.contains(card.id),
                               onTogglePin: () {
                                 context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
                               },
+                              onLongPress: () {
+                                setState(() {
+                                  if (_selectedCardIds.contains(card.id)) {
+                                    _selectedCardIds.remove(card.id);
+                                  } else {
+                                    _selectedCardIds.add(card.id);
+                                  }
+                                });
+                              },
                               onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => OmniCardDetailsDialog(card: card),
-                                );
+                                if (_selectedCardIds.isNotEmpty) {
+                                  setState(() {
+                                    if (_selectedCardIds.contains(card.id)) {
+                                      _selectedCardIds.remove(card.id);
+                                    } else {
+                                      _selectedCardIds.add(card.id);
+                                    }
+                                  });
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => BlocProvider.value(
+                                      value: context.read<TimelineBloc>(),
+                                      child: OmniCardDetailsDialog(card: card),
+                                    ),
+                                  );
+                                }
                               },
                             );
                           },
@@ -225,6 +249,63 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                                 color: colorScheme.primary,
                                 fontWeight: FontWeight.bold,
                               ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+            // Selection Action Bar
+            if (_selectedCardIds.isNotEmpty)
+              Positioned(
+                bottom: 24,
+                left: 16,
+                right: 16,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(50),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${_selectedCardIds.length} selected',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        IconButton(
+                          onPressed: () {
+                            context.read<TimelineBloc>().add(TimelineDeleteCardsRequested(_selectedCardIds.toList()));
+                            setState(() {
+                              _selectedCardIds.clear();
+                            });
+                          },
+                          icon: Icon(Icons.delete_outline_rounded, color: colorScheme.error),
+                          tooltip: 'Delete Selected',
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedCardIds.clear();
+                            });
+                          },
+                          icon: Icon(Icons.close_rounded, color: colorScheme.onSurfaceVariant),
+                          tooltip: 'Cancel',
                         ),
                       ],
                     ),

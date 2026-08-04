@@ -76,7 +76,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
     });
     // Create a fake old card so the bloc correctly computes the new state as _isPinned
     final fakeOldCard = widget.card.copyWith(pinned: !_isPinned);
-    getIt<TimelineBloc>().add(TimelineTogglePinRequested(fakeOldCard));
+    context.read<TimelineBloc>().add(TimelineTogglePinRequested(fakeOldCard));
   }
 
   String _formatFileSize(int? bytes) {
@@ -126,8 +126,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
 
     if (confirmed == true && mounted) {
       try {
-        await getIt<CardsApi>().deleteCard(widget.card.id);
-        getIt<TimelineBloc>().add(TimelineCardDeleted(widget.card.id));
+        context.read<TimelineBloc>().add(TimelineDeleteCardsRequested([widget.card.id]));
         if (mounted) Navigator.pop(context);
       } catch (e) {
         if (mounted) {

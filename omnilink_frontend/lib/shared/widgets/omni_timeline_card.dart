@@ -25,6 +25,8 @@ class OmniTimelineCard extends StatelessWidget {
   final Uint8List? localBytes;
   final VoidCallback? onTogglePin;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final bool isSelected;
 
   const OmniTimelineCard({
     super.key,
@@ -42,6 +44,8 @@ class OmniTimelineCard extends StatelessWidget {
     this.localBytes,
     this.onTogglePin,
     this.onTap,
+    this.onLongPress,
+    this.isSelected = false,
   });
 
   Widget _buildBackground(BuildContext context, ColorScheme colorScheme) {
@@ -304,10 +308,12 @@ class OmniTimelineCard extends StatelessWidget {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(32), // Squircle vibe
           border: Border.all(
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white.withAlpha(60) 
-                : colorScheme.outlineVariant.withAlpha(100),
-            width: 1.5,
+            color: isSelected 
+                ? colorScheme.primary 
+                : (theme.brightness == Brightness.dark 
+                    ? Colors.white.withAlpha(60) 
+                    : colorScheme.outlineVariant.withAlpha(100)),
+            width: isSelected ? 3.0 : 1.5,
           ),
           boxShadow: [
             BoxShadow(
@@ -349,6 +355,7 @@ class OmniTimelineCard extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onTap,
+                  onLongPress: onLongPress,
                   splashColor: colorScheme.onSurface.withAlpha(20),
                   highlightColor: colorScheme.onSurface.withAlpha(10),
                 ),
@@ -385,7 +392,31 @@ class OmniTimelineCard extends StatelessWidget {
                 ),
               ),
 
-
+            // 6. Selection Overlay Checkmark
+            if (isSelected)
+              Positioned(
+                top: 12,
+                left: 12,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(40),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.check_rounded,
+                    color: colorScheme.onPrimary,
+                    size: 20,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
