@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -37,9 +38,9 @@ class AdminOverviewView extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(child: _MetricCard(title: 'ACTIVE CARDS', value: metrics.totalItems.toString(), icon: Icons.dashboard, trend: '+5%')),
                     const SizedBox(width: 16),
-                    Expanded(child: _MetricCard(title: 'API REQUESTS', value: '1.2M', icon: Icons.api, trend: '+18%')),
+                    Expanded(child: _MetricCard(title: 'API REQUESTS', value: '1.2M', icon: Icons.api, trend: '+18%', isDummy: true)),
                     const SizedBox(width: 16),
-                    Expanded(child: _MetricCard(title: 'SYSTEM STATUS', value: 'Healthy', icon: Icons.check_circle, isHealthy: true)),
+                    Expanded(child: _MetricCard(title: 'SYSTEM STATUS', value: 'Healthy', icon: Icons.check_circle, isHealthy: true, isDummy: true)),
                   ],
                 ),
                 const SizedBox(height: 32),
@@ -52,6 +53,7 @@ class AdminOverviewView extends StatelessWidget {
                       flex: 2,
                       child: _ChartCard(
                         title: 'User Growth (7 Days)',
+                        isDummy: true,
                         child: SizedBox(
                           height: 250,
                           child: LineChart(
@@ -127,6 +129,7 @@ class AdminOverviewView extends StatelessWidget {
                       flex: 1,
                       child: _ChartCard(
                         title: 'Server Load',
+                        isDummy: true,
                         child: SizedBox(
                           height: 250,
                           child: BarChart(
@@ -194,6 +197,7 @@ class _MetricCard extends StatelessWidget {
   final IconData icon;
   final String? trend;
   final bool? isHealthy;
+  final bool isDummy;
 
   const _MetricCard({
     required this.title,
@@ -201,6 +205,7 @@ class _MetricCard extends StatelessWidget {
     required this.icon,
     this.trend,
     this.isHealthy,
+    this.isDummy = false,
   });
 
   @override
@@ -236,31 +241,42 @@ class _MetricCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                value,
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: isHealthy == true ? Colors.green : colorScheme.onSurface,
-                ),
+          if (isDummy)
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('999', style: theme.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800)),
+                ],
               ),
-              if (trend != null) ...[
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text(
-                    trend!,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
+            )
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  value,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: isHealthy == true ? Colors.green : colorScheme.onSurface,
                   ),
                 ),
+                if (trend != null) ...[
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4.0),
+                    child: Text(
+                      trend!,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -270,8 +286,9 @@ class _MetricCard extends StatelessWidget {
 class _ChartCard extends StatelessWidget {
   final String title;
   final Widget child;
+  final bool isDummy;
 
-  const _ChartCard({required this.title, required this.child});
+  const _ChartCard({required this.title, required this.child, this.isDummy = false});
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +308,13 @@ class _ChartCard extends StatelessWidget {
         children: [
           Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 24),
-          child,
+          if (isDummy)
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: child,
+            )
+          else
+            child,
         ],
       ),
     );
