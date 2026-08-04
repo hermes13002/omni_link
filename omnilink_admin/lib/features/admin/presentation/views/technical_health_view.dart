@@ -170,9 +170,9 @@ class TechnicalHealthView extends StatelessWidget {
         }
         
         if (state is AdminLoaded) {
-          final isMobile = MediaQuery.of(context).size.width < 600;
+          final isMobile = MediaQuery.of(context).size.width < 800;
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.all(isMobile ? 16 : 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

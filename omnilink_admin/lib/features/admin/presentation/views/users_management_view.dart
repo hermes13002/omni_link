@@ -24,25 +24,41 @@ class UsersManagementView extends StatelessWidget {
         }
         
         if (state is AdminLoaded) {
+          final isMobile = MediaQuery.of(context).size.width < 800;
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
+            padding: EdgeInsets.all(isMobile ? 16 : 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Users Directory',
-                      style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    FilledButton.icon(
+                if (isMobile) ...[
+                  Text(
+                    'Users Directory',
+                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.download),
                       label: const Text('Export CSV'),
                     ),
-                  ],
-                ),
+                  ),
+                ] else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Users Directory',
+                        style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.download),
+                        label: const Text('Export CSV'),
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 24),
                 Container(
                   decoration: BoxDecoration(

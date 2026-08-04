@@ -39,6 +39,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'System Health',
   ];
 
+  final List<IconData> _icons = [
+    Icons.dashboard,
+    Icons.people,
+    Icons.admin_panel_settings,
+    Icons.memory,
+  ];
+
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 800;
@@ -55,6 +62,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           final colorScheme = Theme.of(context).colorScheme;
           return Scaffold(
             backgroundColor: colorScheme.surface,
+            drawer: isMobile
+                ? Drawer(
+                    child: AdminSideNav(
+                      selectedIndex: _selectedIndex,
+                      onDestinationSelected: (int index) {
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                        Navigator.of(context).pop(); // close drawer
+                      },
+                    ),
+                  )
+                : null,
             body: Row(
               children: [
                 if (!isMobile)
@@ -69,7 +89,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Expanded(
                   child: Column(
                     children: [
-                      AdminTopBar(title: _titles[_selectedIndex]),
+                      AdminTopBar(
+                        title: _titles[_selectedIndex],
+                        showMenuButton: isMobile,
+                      ),
                       Expanded(
                         child: _pages[_selectedIndex],
                       ),
@@ -78,8 +101,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ],
             ),
+            bottomNavigationBar: isMobile
+                ? NavigationBar(
+                    selectedIndex: _selectedIndex,
+                    onDestinationSelected: (int index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                    destinations: List.generate(_titles.length, (i) {
+                      return NavigationDestination(
+                        icon: Icon(_icons[i]),
+                        label: _titles[i],
+                      );
+                    }),
+                  )
+                : null,
           );
-        }
+        },
       ),
     );
   }
