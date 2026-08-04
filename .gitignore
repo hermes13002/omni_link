@@ -3,6 +3,7 @@
 # credentials — never commit
 .env
 *.env
+env
 .env.example
 gcp-credentials.json
 OmniLink_API.postman_collection.json
