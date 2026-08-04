@@ -33,7 +33,7 @@ GoRouter createRouter(AuthBloc authBloc) {
     refreshListenable: GoRouterRefreshStream(authBloc.stream),
     redirect: (context, state) {
       final authState = authBloc.state;
-      final isGoingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register' || state.matchedLocation == '/admin-portal';
+      final isGoingToAuth = state.matchedLocation == '/login' || state.matchedLocation == '/register';
       final isGoingToAdminDashboard = state.matchedLocation == '/admin/dashboard';
 
       if (authState is AuthInitial) {
