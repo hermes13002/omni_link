@@ -56,7 +56,7 @@ class TechnicalHealthView extends StatelessWidget {
     );
   }
 
-  Widget _buildLineChart(BuildContext context, String title) {
+  Widget _buildLineChart(BuildContext context, String title, String xTitle, String yTitle, double yInterval) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(24),
@@ -74,8 +74,41 @@ class TechnicalHealthView extends StatelessWidget {
             height: 250,
             child: LineChart(
               LineChartData(
-                gridData: const FlGridData(show: false),
-                titlesData: const FlTitlesData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: colorScheme.outlineVariant.withOpacity(0.5),
+                    strokeWidth: 1,
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    axisNameWidget: Text(xTitle),
+                    axisNameSize: 22,
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) => Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text('${value.toInt()}m', style: const TextStyle(fontSize: 10)),
+                      ),
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    axisNameWidget: Text(yTitle),
+                    axisNameSize: 22,
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: yInterval,
+                      getTitlesWidget: (value, meta) => Text(value.toInt().toString(), style: const TextStyle(fontSize: 10)),
+                    ),
+                  ),
+                ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
@@ -157,15 +190,15 @@ class TechnicalHealthView extends StatelessWidget {
                   ),
                 const SizedBox(height: 32),
                 if (isMobile) ...[
-                  _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)'),
+                  _buildLineChart(context, 'Redis Pub/Sub Throughput', 'Time (mins ago)', 'Messages', 20),
                   const SizedBox(height: 24),
-                  _buildLineChart(context, 'API Request Latency (ms)'),
+                  _buildLineChart(context, 'API Request Latency', 'Time (mins ago)', 'ms', 20),
                 ] else
                   Row(
                     children: [
-                      Expanded(child: _buildLineChart(context, 'Redis Pub/Sub Throughput (msg/min)')),
+                      Expanded(child: _buildLineChart(context, 'Redis Pub/Sub Throughput', 'Time (mins ago)', 'Messages', 20)),
                       const SizedBox(width: 24),
-                      Expanded(child: _buildLineChart(context, 'API Request Latency (ms)')),
+                      Expanded(child: _buildLineChart(context, 'API Request Latency', 'Time (mins ago)', 'ms', 20)),
                     ],
                   ),
               ],

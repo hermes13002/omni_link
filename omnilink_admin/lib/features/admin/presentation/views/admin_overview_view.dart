@@ -56,8 +56,44 @@ class AdminOverviewView extends StatelessWidget {
                           height: 250,
                           child: LineChart(
                             LineChartData(
-                              gridData: const FlGridData(show: false),
-                              titlesData: const FlTitlesData(show: false),
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                getDrawingHorizontalLine: (value) => FlLine(
+                                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                                  strokeWidth: 1,
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                show: true,
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                bottomTitles: AxisTitles(
+                                  axisNameWidget: const Text('Days Ago'),
+                                  axisNameSize: 22,
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 1,
+                                    getTitlesWidget: (value, meta) {
+                                      final days = ['6d', '5d', '4d', '3d', '2d', '1d', 'Today'];
+                                      if (value.toInt() >= 0 && value.toInt() < days.length) {
+                                        return Padding(padding: const EdgeInsets.only(top: 8.0), child: Text(days[value.toInt()], style: const TextStyle(fontSize: 10)));
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  axisNameWidget: const Text('Users'),
+                                  axisNameSize: 22,
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 30,
+                                    interval: 2,
+                                    getTitlesWidget: (value, meta) => Text(value.toInt().toString(), style: const TextStyle(fontSize: 10)),
+                                  ),
+                                ),
+                              ),
                               borderData: FlBorderData(show: false),
                               lineBarsData: [
                                 LineChartBarData(
@@ -95,8 +131,38 @@ class AdminOverviewView extends StatelessWidget {
                           height: 250,
                           child: BarChart(
                             BarChartData(
-                              gridData: const FlGridData(show: false),
-                              titlesData: const FlTitlesData(show: false),
+                              gridData: FlGridData(
+                                show: true,
+                                drawVerticalLine: false,
+                                getDrawingHorizontalLine: (value) => FlLine(
+                                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                                  strokeWidth: 1,
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                show: true,
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                bottomTitles: AxisTitles(
+                                  axisNameWidget: const Text('Instance'),
+                                  axisNameSize: 22,
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 1,
+                                    getTitlesWidget: (value, meta) => Padding(padding: const EdgeInsets.only(top: 8.0), child: Text('Node ${value.toInt()}', style: const TextStyle(fontSize: 10))),
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  axisNameWidget: const Text('Load (%)'),
+                                  axisNameSize: 22,
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 30,
+                                    interval: 5,
+                                    getTitlesWidget: (value, meta) => Text('${value.toInt()}%', style: const TextStyle(fontSize: 10)),
+                                  ),
+                                ),
+                              ),
                               borderData: FlBorderData(show: false),
                               barGroups: [
                                 BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 8, color: theme.colorScheme.primary, width: 16, borderRadius: BorderRadius.circular(4))]),
