@@ -17,11 +17,16 @@ from slowapi.errors import RateLimitExceeded
 from app.storage.gcs_client import init_gcs_client
 
 
+from app.services.pubsub_service import start_multiplexer, stop_multiplexer
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await init_redis_pool()
+    start_multiplexer()
     init_gcs_client()
     yield
+    await stop_multiplexer()
     await close_redis_pool()
 
 
