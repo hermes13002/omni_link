@@ -1,11 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:omnilink_frontend/features/device/presentation/bloc/device_bloc.dart';
 import '../../../../core/theme/theme_cubit.dart';
-
-import '../../../../shared/widgets/omni_button.dart';
 import '../../../../shared/widgets/omni_glass_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -26,6 +23,21 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
+          onPressed: () => context.go('/'),
+        ),
+        title: Text(
+          'Profile & Settings',
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      ),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, authState) {
           if (authState is AuthAuthenticated) {
@@ -34,183 +46,168 @@ class ProfileScreen extends StatelessWidget {
             return Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 800),
-                child: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  expandedHeight: 300.0,
-                  pinned: true,
-                  backgroundColor: colorScheme.surface,
-                  elevation: 0,
-                  leading: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: CircleAvatar(
-                      backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(150),
-                      child: IconButton(
-                        icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
-                        onPressed: () => context.go('/'),
-                      ),
-                    ),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Background Gradient and Glass effect wrapped in ShaderMask
-                        ShaderMask(
-                          shaderCallback: (rect) {
-                            return const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.black, Colors.black, Colors.transparent],
-                              stops: [0.0, 0.6, 1.0],
-                            ).createShader(rect);
-                          },
-                          blendMode: BlendMode.dstIn,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // Background Gradient
-                              Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      colorScheme.primaryContainer.withAlpha(150),
-                                      colorScheme.tertiaryContainer.withAlpha(50),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // Glass effect overlay
-                              Positioned.fill(
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                                  child: Container(color: Colors.transparent),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Avatar and name
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Hero(
-                              tag: 'profile_avatar',
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: colorScheme.primary.withAlpha(150), width: 3),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: colorScheme.primary.withAlpha(100),
-                                      blurRadius: 20,
-                                      spreadRadius: 5,
-                                    ),
-                                  ],
-                                ),
-                                child: CircleAvatar(
-                                  radius: 50,
-                                  backgroundColor: colorScheme.surfaceContainerHighest,
-                                  child: Text(
-                                    user.email[0].toUpperCase(),
-                                    style: textTheme.displayLarge?.copyWith(
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Minimal Header
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: colorScheme.primaryContainer,
+                            child: Text(
+                              user.email[0].toUpperCase(),
+                              style: textTheme.headlineMedium?.copyWith(
+                                color: colorScheme.onPrimaryContainer,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   user.displayName ?? 'No name provided',
-                                  style: textTheme.headlineMedium?.copyWith(
-                                    color: colorScheme.onSurface,
+                                  style: textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                IconButton(
-                                  icon: Icon(Icons.edit_rounded, color: colorScheme.primary, size: 20),
-                                  onPressed: () => _showEditNameDialog(context, user.displayName ?? ''),
+                                const SizedBox(height: 4),
+                                Text(
+                                  user.email,
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user.email,
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.edit_rounded, color: colorScheme.primary),
+                            onPressed: () => _showEditNameDialog(context, user.displayName ?? ''),
+                            style: IconButton.styleFrom(
+                              backgroundColor: colorScheme.primaryContainer.withAlpha(100),
                             ),
-                            const SizedBox(height: 24),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      
+                      // Stats Dashboard
+                      _buildStatsDashboard(context),
+                      const SizedBox(height: 48),
+
+                      // Group 1: Organization
+                      _buildSectionTitle(context, 'Organization'),
+                      const SizedBox(height: 12),
+                      OmniGlassContainer(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(Icons.label_rounded, color: colorScheme.primary),
+                              title: const Text('Manage Tags'),
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap: () => context.push('/tags'),
+                            ),
+                            const Divider(height: 1),
+                            ListTile(
+                              leading: Icon(Icons.devices_rounded, color: colorScheme.primary),
+                              title: const Text('Linked Devices'),
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap: () => context.push('/devices'),
+                            ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Group 2: Preferences
+                      _buildSectionTitle(context, 'Preferences'),
+                      const SizedBox(height: 12),
+                      OmniGlassContainer(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          children: [
+                            BlocBuilder<ThemeCubit, ThemeMode>(
+                              builder: (context, themeMode) {
+                                return SwitchListTile(
+                                  title: const Text('Dark Mode'),
+                                  value: themeMode == ThemeMode.dark,
+                                  onChanged: (_) {
+                                    context.read<ThemeCubit>().toggleTheme();
+                                  },
+                                  secondary: Icon(
+                                    themeMode == ThemeMode.dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                                    color: colorScheme.primary,
+                                  ),
+                                );
+                              },
+                            ),
+                            const Divider(height: 1),
+                            ListTile(
+                              leading: Icon(Icons.lock_rounded, color: colorScheme.primary),
+                              title: const Text('Change Password'),
+                              trailing: const Icon(Icons.chevron_right_rounded),
+                              onTap: () => _showChangePasswordDialog(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+
+                      // Group 3: Danger Zone
+                      OmniGlassContainer(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: Icon(Icons.logout_rounded, color: colorScheme.onSurfaceVariant),
+                              title: Text('Logout', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                              onTap: () {
+                                context.read<AuthBloc>().add(AuthLogoutRequested());
+                              },
+                            ),
+                            const Divider(height: 1),
+                            ListTile(
+                              leading: Icon(Icons.delete_forever_rounded, color: colorScheme.error),
+                              title: Text('Delete Account', style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.bold)),
+                              onTap: () => _showDeleteAccountDialog(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                    ],
                   ),
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildStatsDashboard(context),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Account Details',
-                          style: textTheme.headlineMedium?.copyWith(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildDetailItem(
-                          context,
-                          icon: Icons.calendar_today_rounded,
-                          label: 'Member Since',
-                          value: '${user.createdAt.year}-${user.createdAt.month.toString().padLeft(2, '0')}-${user.createdAt.day.toString().padLeft(2, '0')}',
-                        ),
-                        const SizedBox(height: 16),
-                        _buildDetailItem(
-                          context,
-                          icon: Icons.person_rounded,
-                          label: 'Account ID',
-                          value: user.id.length > 10 ? '${user.id.substring(0, 10)}...' : user.id,
-                        ),
-                        const SizedBox(height: 32),
-                        _buildSettingsSection(context, user),
-                        const SizedBox(height: 48),
-                        OmniButton.outlined(
-                          text: 'Logout',
-                          icon: Icons.logout_rounded,
-                          isFullWidth: true,
-                          onPressed: () {
-                            context.read<AuthBloc>().add(AuthLogoutRequested());
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        OmniButton.outlined(
-                          text: 'Delete Account',
-                          icon: Icons.delete_forever_rounded,
-                          isFullWidth: true,
-                          onPressed: () => _showDeleteAccountDialog(context),
-                        ),
-                        const SizedBox(height: 48),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-        }
-        return const Center(child: CircularProgressIndicator());
+              ),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
         },
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Text(
+        title.toUpperCase(),
+        style: textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: colorScheme.primary,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }
@@ -223,7 +220,7 @@ class ProfileScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           GestureDetector(
-            onTap: () => context.push('/settings'),
+            onTap: () => context.push('/devices'),
             behavior: HitTestBehavior.opaque,
             child: _buildStatColumn(
               context,
@@ -299,93 +296,6 @@ class ProfileScreen extends StatelessWidget {
           label,
           style: textTheme.labelSmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailItem(BuildContext context, {required IconData icon, required String label, required String value}) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withAlpha(100),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: colorScheme.primary, size: 20),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingsSection(BuildContext context, user) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Settings & Preferences',
-          style: textTheme.headlineMedium?.copyWith(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        OmniGlassContainer(
-          borderRadius: 16,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            children: [
-              BlocBuilder<ThemeCubit, ThemeMode>(
-                builder: (context, themeMode) {
-                  return SwitchListTile(
-                    title: const Text('Dark Mode'),
-                    value: themeMode == ThemeMode.dark,
-                    onChanged: (_) {
-                      context.read<ThemeCubit>().toggleTheme();
-                    },
-                    secondary: Icon(
-                      themeMode == ThemeMode.dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                      color: colorScheme.primary,
-                    ),
-                  );
-                },
-              ),
-              /*
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(Icons.password_rounded, color: colorScheme.primary),
-                title: const Text('Change Password'),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => _showChangePasswordDialog(context),
-              ),
-              */
-            ],
           ),
         ),
       ],

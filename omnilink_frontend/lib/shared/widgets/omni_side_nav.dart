@@ -163,20 +163,11 @@ class _OmniSideNavState extends State<OmniSideNav> {
                     //   onTap: () {},
                     // ),
                     _SideNavItem(
-                      icon: Icons.person_rounded,
-                      label: 'Profile',
-                      isExpanded: _isExpanded,
-                      onTap: () {
-                        context.push('/profile');
-                      },
-                    ),
-                    const Spacer(),
-                    _SideNavItem(
-                      icon: Icons.settings_rounded,
+                      icon: Icons.manage_accounts_rounded,
                       label: 'Settings',
                       isExpanded: _isExpanded,
                       onTap: () {
-                        GoRouter.of(context).push('/settings');
+                        context.push('/profile');
                       },
                     ),
                     const SizedBox(height: 24),

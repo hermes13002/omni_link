@@ -17,7 +17,8 @@ import '../../features/admin/presentation/bloc/admin_bloc.dart';
 import '../../features/timeline/presentation/bloc/tags_bloc.dart';
 import '../../features/device/presentation/bloc/device_bloc.dart';
 import '../../features/device/presentation/bloc/device_event.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/timeline/presentation/screens/tags_screen.dart';
+import '../../features/device/presentation/screens/devices_screen.dart';
 import '../network/sse_client.dart';
 import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
@@ -137,13 +138,17 @@ GoRouter createRouter(AuthBloc authBloc) {
         ],
       ),
       GoRoute(
-        path: '/settings',
-        builder: (context, state) => MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: getIt<DeviceBloc>()),
-            BlocProvider.value(value: getIt<TagsBloc>()),
-          ],
-          child: const SettingsScreen(),
+        path: '/devices',
+        builder: (context, state) => BlocProvider.value(
+          value: getIt<DeviceBloc>(),
+          child: const DevicesScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/tags',
+        builder: (context, state) => BlocProvider.value(
+          value: getIt<TagsBloc>(),
+          child: const TagsScreen(),
         ),
       ),
       GoRoute(
