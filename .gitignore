@@ -1,6 +1,9 @@
 /DESIGN.md
+node_modules
+.git-rewrite
+.claude
 
-# credentials — never commit
+# credentials , never commit
 .env
 *.env
 env
@@ -25,4 +28,3 @@ dist/
 **/.dart_tool/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
-.git-rewrite

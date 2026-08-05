@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Colors are stored as space-separated RGB channels, not hex, so Tailwind's
+ * opacity modifiers (bg-surface/60) can compose them via
+ * rgb(var(--token) / <alpha-value>). Switching .light swaps every channel
+ * triplet, so every Tailwind color utility re-themes automatically.
+ */
+:root {
+  --surface: 11 19 38;
+  --surface-container-lowest: 6 13 32;
+  --surface-container-low: 19 27 46;
+  --surface-container: 23 31 51;
+  --surface-container-high: 34 42 62;
+  --surface-container-highest: 45 52 73;
+  --primary: 216 226 255;
+  --primary-container: 173 198 255;
+  --on-primary: 18 47 95;
+  --secondary: 208 188 255;
+  --on-secondary: 55 38 94;
+  --tertiary: 111 251 190;
+  --tertiary-container: 78 222 163;
+  --on-tertiary: 0 56 36;
+  --on-surface: 219 226 253;
+  --on-surface-variant: 194 198 214;
+  --outline: 142 144 154;
+  --outline-variant: 66 71 84;
+  --error: 255 180 171;
+  --on-error: 105 0 5;
+
+  /* Surface tint used by glass panels , light in dark mode, dark in light mode */
+  --glass-tint: 255 255 255;
+}
+
+.light {
+  --surface: 253 251 255;
+  --surface-container-lowest: 255 255 255;
+  --surface-container-low: 243 243 250;
+  --surface-container: 237 237 244;
+  --surface-container-high: 231 232 238;
+  --surface-container-highest: 226 226 233;
+  --primary: 18 47 95;
+  --primary-container: 51 89 153;
+  --on-primary: 255 255 255;
+  --secondary: 80 63 121;
+  --on-secondary: 255 255 255;
+  --tertiary: 0 95 64;
+  --tertiary-container: 0 128 86;
+  --on-tertiary: 255 255 255;
+  --on-surface: 26 27 31;
+  --on-surface-variant: 68 71 78;
+  --outline: 116 119 127;
+  --outline-variant: 196 198 208;
+  --error: 179 38 30;
+  --on-error: 255 255 255;
+
+  --glass-tint: 12 18 32;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: rgb(var(--surface));
+  color: rgb(var(--on-surface));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Geist', sans-serif;
+}
+
+code, pre {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Masonry grid for file type showcase */
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .masonry-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
