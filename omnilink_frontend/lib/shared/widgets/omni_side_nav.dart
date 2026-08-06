@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/device/presentation/bloc/device_bloc.dart';
 import '../../features/device/presentation/bloc/device_state.dart';
 import '../../features/device/presentation/bloc/device_event.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_event.dart';
 
 class OmniSideNav extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -61,20 +63,11 @@ class _OmniSideNavState extends State<OmniSideNav> {
                         children: [
                           GestureDetector(
                             onTap: _toggleExpanded,
-                            child: Container(
+                            child: Image.asset(
+                              'assets/images/logo/infinity.png',
                               width: 32,
                               height: 32,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Image.asset(
-                                  'assets/images/logo/infinity.png',
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              ),
+                              color: colorScheme.primary,
                             ),
                           ),
                           if (_isExpanded) ...[
@@ -170,6 +163,13 @@ class _OmniSideNavState extends State<OmniSideNav> {
                         context.push('/profile');
                       },
                     ),
+                    const Spacer(),
+                    _SideNavItem(
+                      icon: Icons.logout_rounded,
+                      label: 'Logout',
+                      isExpanded: _isExpanded,
+                      onTap: () => _showLogoutDialog(context),
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -178,6 +178,39 @@ class _OmniSideNavState extends State<OmniSideNav> {
           );
         }
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Log Out'),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 400),
+            child: Text('Are you sure you want to log out?'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+              },
+              child: const Text('Log Out'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

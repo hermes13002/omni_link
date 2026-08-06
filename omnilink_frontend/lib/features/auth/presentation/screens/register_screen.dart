@@ -8,6 +8,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../../../../shared/utils/omni_toast.dart';
+import '../../../../shared/widgets/omni_grid_background.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -49,17 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colorScheme.surface,
-              colorScheme.primaryContainer.withValues(alpha: 0.3),
-            ],
-          ),
-        ),
+      body: OmniGridBackground(
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
