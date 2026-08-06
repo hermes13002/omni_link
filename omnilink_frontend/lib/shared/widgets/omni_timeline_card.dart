@@ -290,7 +290,7 @@ class OmniTimelineCard extends StatelessWidget {
       return 0.65 + (hash % 4) * 0.1;
     }
     if (type == TimelineCardType.code) {
-      return 1.4; // Text/Code is shorter (smaller height)
+      return 1.1; // Text/Code is shorter (smaller height)
     }
     return 0.85; // Files/PDFs are shorter
   }
