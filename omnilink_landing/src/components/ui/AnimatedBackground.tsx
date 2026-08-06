@@ -6,56 +6,58 @@ interface BackgroundProps {
 }
 
 /**
- * Animated grid background. Subtle data-pipeline aesthetic , moving grid
- * lines that suggest network topology without competing with foreground
- * content for attention.
+ * Animated dot grid background. Subtle data-pipeline aesthetic — a field of
+ * dots that pulse and shimmer, suggesting a distributed network without
+ * competing with foreground content.
  */
 export function AnimatedBackground({ children }: BackgroundProps) {
+  // 20x12 grid of dots, evenly spaced
+  const cols = 20
+  const rows = 12
+  const dots = Array.from({ length: cols * rows }, (_, i) => ({
+    id: i,
+    col: i % cols,
+    row: Math.floor(i / cols),
+  }))
+
   return (
     <div className="relative">
-      {/* Grid lines */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.015]">
-        <svg className="w-full h-full">
+      {/* Dot grid */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.15]">
+        <svg className="w-full h-full" preserveAspectRatio="xMidYMid slice">
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <motion.path
-                d="M 40 0 L 0 0 0 40"
-                fill="none"
-                stroke="white"
-                strokeWidth="0.5"
-                initial={{ opacity: 0.3 }}
-                animate={{ opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              />
-            </pattern>
+            <radialGradient id="dotGrad">
+              <stop offset="0%" stopColor="rgb(var(--primary-container))" stopOpacity="1" />
+              <stop offset="100%" stopColor="rgb(var(--primary-container))" stopOpacity="0" />
+            </radialGradient>
           </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
-      </div>
+          {dots.map(({ id, col, row }) => {
+            const x = ((col + 0.5) / cols) * 100
+            const y = ((row + 0.5) / rows) * 100
+            const delay = (col * 0.08 + row * 0.12) % 3
 
-      {/* Floating particles */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-primary-container/20 rounded-full"
-            style={{
-              left: `${(i * 8 + 10) % 100}%`,
-              top: `${(i * 13 + 5) % 100}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, Math.sin(i) * 20, 0],
-              opacity: [0, 0.4, 0],
-            }}
-            transition={{
-              duration: 8 + i * 0.5,
-              repeat: Infinity,
-              delay: i * 0.7,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
+            return (
+              <motion.circle
+                key={id}
+                cx={`${x}%`}
+                cy={`${y}%`}
+                r="1.5"
+                fill="url(#dotGrad)"
+                initial={{ opacity: 0.3, scale: 1 }}
+                animate={{
+                  opacity: [0.3, 0.7, 0.3],
+                  scale: [1, 1.4, 1],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  delay,
+                  ease: 'easeInOut',
+                }}
+              />
+            )
+          })}
+        </svg>
       </div>
 
       {children}
