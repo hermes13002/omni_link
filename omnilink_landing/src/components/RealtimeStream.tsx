@@ -5,7 +5,6 @@ import {
   DeviceMobile,
   DeviceTablet,
   Laptop,
-  Monitor,
   WindowsLogo,
 } from '@phosphor-icons/react'
 
@@ -47,15 +46,18 @@ export function RealtimeStream() {
   const windowsRef = useRef<HTMLDivElement>(null)
   const ipadRef = useRef<HTMLDivElement>(null)
   const hubRef = useRef<HTMLDivElement>(null)
-  const displayRef = useRef<HTMLDivElement>(null)
 
-  // Sources fan into the hub; each is offset in time so packets arrive in sequence.
+  // Circular layout radius (adjust for responsiveness if needed, but 160 works well on most screens)
+  const radius = 160
+
+  // Random delays to make the pulsing sequence random instead of sequential
+  // Devices placed around the circle (angles in degrees).
   const sources = [
-    { ref: macbookRef, curvature: -80, endYOffset: -12, delay: 0 },
-    { ref: iphoneRef, curvature: -35, endYOffset: -6, delay: 0.8 },
-    { ref: androidRef, curvature: 0, endYOffset: 0, delay: 1.6 },
-    { ref: windowsRef, curvature: 35, endYOffset: 6, delay: 2.4 },
-    { ref: ipadRef, curvature: 80, endYOffset: 12, delay: 3.2 },
+    { ref: macbookRef, label: 'MacBook Pro', icon: <Laptop size={22} weight="regular" />, angle: -90, delay: 1.2 },
+    { ref: iphoneRef, label: 'iPhone', icon: <AppleLogo size={22} weight="regular" />, angle: -18, delay: 0.3 },
+    { ref: androidRef, label: 'Android', icon: <DeviceMobile size={22} weight="regular" />, angle: 54, delay: 2.8 },
+    { ref: windowsRef, label: 'Windows PC', icon: <WindowsLogo size={22} weight="regular" />, angle: 126, delay: 0.9 },
+    { ref: ipadRef, label: 'iPad', icon: <DeviceTablet size={22} weight="regular" />, angle: 198, delay: 2.1 },
   ]
 
   return (
@@ -66,32 +68,13 @@ export function RealtimeStream() {
     >
       <div
         ref={containerRef}
-        className="relative mx-auto flex w-full max-w-3xl items-center justify-between gap-4 overflow-hidden px-2 py-10 sm:px-6"
+        className="relative mx-auto flex h-[500px] w-full max-w-3xl items-center justify-center overflow-visible px-2 py-10 sm:px-6"
       >
-        {/* Sending devices */}
-        <div className="flex flex-col justify-between gap-8">
-          <DeviceNode ref={macbookRef} label="MacBook Pro">
-            <Laptop size={22} weight="regular" />
-          </DeviceNode>
-          <DeviceNode ref={iphoneRef} label="iPhone">
-            <AppleLogo size={22} weight="regular" />
-          </DeviceNode>
-          <DeviceNode ref={androidRef} label="Android">
-            <DeviceMobile size={22} weight="regular" />
-          </DeviceNode>
-          <DeviceNode ref={windowsRef} label="Windows PC">
-            <WindowsLogo size={22} weight="regular" />
-          </DeviceNode>
-          <DeviceNode ref={ipadRef} label="iPad">
-            <DeviceTablet size={22} weight="regular" />
-          </DeviceNode>
-        </div>
-
-        {/* Sync hub — pulses as each packet lands */}
-        <div className="flex flex-col items-center gap-2">
+        {/* Sync hub — pulses */}
+        <div className="absolute z-20 flex flex-col items-center gap-2">
           <motion.div
             ref={hubRef}
-            className="z-10 flex size-16 items-center justify-center rounded-full border border-primary-container/40 bg-surface-container text-primary-container shadow-[0_0_40px_-8px_rgba(173,198,255,0.55)]"
+            className="flex size-16 items-center justify-center rounded-full border border-primary-container/40 bg-surface-container text-primary-container shadow-[0_0_40px_-8px_rgba(173,198,255,0.55)]"
             animate={reduceMotion ? undefined : { scale: [1, 0.92, 1.04, 1] }}
             transition={{ duration: 0.8, repeat: Infinity, repeatDelay: 0, ease: 'easeInOut' }}
           >
@@ -102,22 +85,29 @@ export function RealtimeStream() {
           </span>
         </div>
 
-        {/* Receiving display */}
-        <div className="flex flex-col items-center gap-2">
-          <DeviceNode ref={displayRef} label="Main Display" className="size-14">
-            <Monitor size={26} weight="regular" />
-          </DeviceNode>
-        </div>
+        {/* Sending devices arranged in a circle */}
+        {sources.map((source) => (
+          <div
+            key={source.label}
+            className="absolute z-10"
+            style={{
+              transform: `rotate(${source.angle}deg) translate(${radius}px) rotate(${-source.angle}deg)`,
+            }}
+          >
+            <DeviceNode ref={source.ref} label={source.label}>
+              {source.icon}
+            </DeviceNode>
+          </div>
+        ))}
 
-        {/* device → hub */}
-        {sources.map(({ ref, curvature, endYOffset, delay }, i) => (
+        {/* device ↔ hub beams */}
+        {sources.map(({ ref, delay }, i) => (
           <AnimatedBeam
-            key={`in-${i}`}
+            key={`beam-${i}`}
             containerRef={containerRef}
             fromRef={ref}
             toRef={hubRef}
-            curvature={curvature}
-            endYOffset={endYOffset}
+            curvature={0} // Straight lines to the center look best
             delay={delay}
             duration={2.4}
             pathColor="white"
@@ -125,24 +115,7 @@ export function RealtimeStream() {
             pathWidth={2}
             gradientStartColor="#4edea3"
             gradientStopColor="#adc6ff"
-          />
-        ))}
-
-        {/* hub → main display, staggered to fire just after each arrival */}
-        {sources.map(({ delay }, i) => (
-          <AnimatedBeam
-            key={`out-${i}`}
-            containerRef={containerRef}
-            fromRef={hubRef}
-            toRef={displayRef}
-            curvature={0}
-            delay={delay + 1.1}
-            duration={1.8}
-            pathColor="white"
-            pathOpacity={0.28}
-            pathWidth={2}
-            gradientStartColor="#adc6ff"
-            gradientStopColor="#4edea3"
+            repeatType="reverse" // Makes the beam go back and forth
           />
         ))}
       </div>

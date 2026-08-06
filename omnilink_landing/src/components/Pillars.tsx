@@ -41,7 +41,7 @@ export function Pillars() {
         {PILLARS.map(({ Icon, title, description }, i) => (
           <motion.div key={i} variants={revealUp}>
             <Card hover glass="high" className="h-full">
-              <div className="w-14 h-14 rounded-xl bg-primary-container/10 border border-primary-container/20 flex items-center justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-primary-container/10 border border-primary-container/20 flex items-center justify-center mb-4">
                 <Icon size={28} weight="regular" className="text-primary-container" />
               </div>
               <h3 className="text-headline-md font-display text-on-surface mb-3">{title}</h3>

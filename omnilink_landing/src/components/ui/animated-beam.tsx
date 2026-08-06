@@ -21,6 +21,7 @@ export interface AnimatedBeamProps {
   startYOffset?: number
   endXOffset?: number
   endYOffset?: number
+  repeatType?: 'loop' | 'reverse' | 'mirror'
 }
 
 /**
@@ -47,6 +48,7 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
   startYOffset = 0,
   endXOffset = 0,
   endYOffset = 0,
+  repeatType = 'loop',
 }) => {
   const id = useId()
   const [pathD, setPathD] = useState('')
@@ -149,6 +151,7 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
             duration,
             ease: [0.16, 1, 0.3, 1],
             repeat: Infinity,
+            repeatType,
             repeatDelay: 0,
           }}
         >

@@ -40,7 +40,7 @@ export default function Security() {
         {FEATURES.map(({ Icon, title, description }) => (
           <motion.div key={title} variants={revealUp}>
             <Card glass="low" className="text-center h-full">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-primary-container/10 border border-primary-container/20 flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary-container/10 border border-primary-container/20 flex items-center justify-center">
                 <Icon size={24} weight="regular" className="text-primary-container" />
               </div>
               <h3 className="text-headline-md font-display text-on-surface mb-2">{title}</h3>

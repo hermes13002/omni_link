@@ -28,7 +28,7 @@ export function FileTypeShowcase() {
           <motion.div key={i} variants={revealUp} className="masonry-item">
             <Card hover glass="high" className="h-full">
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-primary-container/10 border border-primary-container/20 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-primary-container/10 border border-primary-container/20 flex items-center justify-center flex-shrink-0">
                   <group.Icon size={24} weight="regular" className="text-primary-container" />
                 </div>
                 <div>

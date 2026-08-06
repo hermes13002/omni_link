@@ -57,7 +57,7 @@ export default {
       },
       borderRadius: {
         card: '12px',
-        button: '8px',
+        button: '9999px',
         chip: '9999px',
       },
       backdropBlur: {
