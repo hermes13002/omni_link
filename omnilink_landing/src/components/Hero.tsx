@@ -93,7 +93,7 @@ export function Hero() {
           }}
           className="flex flex-col sm:flex-row gap-3 justify-center mb-14"
         >
-          <Button variant="primary" icon={<ArrowRight size={18} weight="bold" />}>
+          <Button variant="primary" href="https://omnilink-frontend.onrender.com" icon={<ArrowRight size={18} weight="bold" />}>
             Get Started Free
           </Button>
           <Button variant="secondary" href="#how-it-works">

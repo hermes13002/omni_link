@@ -28,7 +28,7 @@ export default function CTA() {
           Join thousands who've replaced scattered notes with one universal pipeline.
           Start free on all platforms.
         </p>
-        <Button variant="primary" icon={<ArrowRight size={18} weight="bold" />}>
+        <Button variant="primary" href="https://omnilink-frontend.onrender.com" icon={<ArrowRight size={18} weight="bold" />}>
           Get Started Free
         </Button>
       </motion.div>

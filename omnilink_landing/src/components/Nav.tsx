@@ -64,7 +64,7 @@ export default function Nav() {
           >
             {theme === 'dark' ? <Sun size={18} weight="regular" /> : <Moon size={18} weight="regular" />}
           </motion.button>
-          <Button variant="primary">Get Started</Button>
+          <Button variant="primary" href="https://omnilink-frontend.onrender.com">Get Started</Button>
         </div>
       </div>
     </motion.nav>
