@@ -13,7 +13,7 @@ import { AnimatedBackground } from './components/ui/AnimatedBackground'
 function App() {
   return (
     <AnimatedBackground>
-      <div className="min-h-screen bg-surface">
+      <div className="min-h-screen bg-transparent">
         <Nav />
         <main>
           <Hero />
