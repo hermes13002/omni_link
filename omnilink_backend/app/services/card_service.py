@@ -258,7 +258,7 @@ async def list_cards(
         select(Card)
         .where(*base_filters)
         .options(selectinload(Card.tags))
-        .order_by(Card.created_at.desc())
+        .order_by(Card.updated_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
