@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/admin_overview_metrics.dart';
 import '../../data/models/admin_user_item.dart';
+import '../../data/models/admin_audit_log_item.dart';
 
 abstract class AdminState extends Equatable {
   const AdminState();
@@ -16,19 +17,26 @@ class AdminLoading extends AdminState {}
 class AdminLoaded extends AdminState {
   final AdminOverviewMetrics metrics;
   final List<AdminUserItem> users;
+  final List<AdminAuditLogItem> auditLogs;
 
-  const AdminLoaded({required this.metrics, required this.users});
+  const AdminLoaded({
+    required this.metrics, 
+    required this.users,
+    required this.auditLogs,
+  });
 
   @override
-  List<Object?> get props => [metrics, users];
+  List<Object?> get props => [metrics, users, auditLogs];
   
   AdminLoaded copyWith({
     AdminOverviewMetrics? metrics,
     List<AdminUserItem>? users,
+    List<AdminAuditLogItem>? auditLogs,
   }) {
     return AdminLoaded(
       metrics: metrics ?? this.metrics,
       users: users ?? this.users,
+      auditLogs: auditLogs ?? this.auditLogs,
     );
   }
 }

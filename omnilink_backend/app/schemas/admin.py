@@ -33,3 +33,17 @@ class AdminUserItem(BaseModel):
 
 class AdminUsersResponse(BaseModel):
     users: List[AdminUserItem]
+
+class AdminAuditLogItem(BaseModel):
+    id: uuid.UUID
+    admin_id: uuid.UUID | None
+    action: str
+    resource_type: str
+    resource_id: str | None
+    details: Dict[str, Any] | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+class AdminAuditLogsResponse(BaseModel):
+    logs: List[AdminAuditLogItem]

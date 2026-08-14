@@ -8,6 +8,7 @@ import 'package:omnilink_admin/features/admin/presentation/bloc/admin_bloc.dart'
 import 'package:omnilink_admin/features/admin/presentation/bloc/admin_event.dart';
 import 'package:omnilink_admin/features/admin/presentation/widgets/admin_side_nav.dart';
 import 'package:omnilink_admin/features/admin/presentation/widgets/admin_top_bar.dart';
+import 'package:omnilink_admin/features/admin/presentation/views/security_alerts_view.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -30,6 +31,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     const UsersManagementView(),
     const ContentModerationView(),
     const TechnicalHealthView(),
+    const SecurityAlertsView(),
   ];
 
   final List<String> _titles = [
@@ -37,6 +39,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     'Users',
     'Moderation',
     'System Health',
+    'Security Alerts',
   ];
 
   final List<IconData> _icons = [
@@ -44,6 +47,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Icons.people,
     Icons.admin_panel_settings,
     Icons.memory,
+    Icons.security,
   ];
 
   @override

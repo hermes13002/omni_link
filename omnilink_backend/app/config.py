@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 30
     gcs_signed_url_expire_minutes: int = 60
+    environment: str = "development"
+    db_encryption_key: str
 
     model_config = SettingsConfigDict(
         env_file=".env",

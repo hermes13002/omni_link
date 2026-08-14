@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.db.models.associations import card_tags
+from app.db.encrypted_type import EncryptedText
 
 
 class CardType(str, enum.Enum):
@@ -35,8 +36,8 @@ class Card(Base):
     card_type: Mapped[CardType] = mapped_column(
         SAEnum(CardType, name="cardtype"), nullable=False
     )
-    title: Mapped[str | None] = mapped_column(Text)
-    body: Mapped[str | None] = mapped_column(Text)
+    title: Mapped[str | None] = mapped_column(EncryptedText)
+    body: Mapped[str | None] = mapped_column(EncryptedText)
     gcs_object_key: Mapped[str | None] = mapped_column(Text)
     mime_type: Mapped[str | None] = mapped_column(Text)
     file_size_bytes: Mapped[int | None] = mapped_column(BigInteger)

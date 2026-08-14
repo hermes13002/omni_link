@@ -64,4 +64,12 @@ class AuthApi {
   Future<void> deleteAccount() async {
     await _dio.delete('/api/v1/auth/me');
   }
+
+  Future<void> securityAlert(String alertType, String message, String? deviceInfo) async {
+    await _dio.post('/api/v1/auth/security-alert', data: {
+      'alert_type': alertType,
+      'message': message,
+      'device_info': deviceInfo,
+    });
+  }
 }

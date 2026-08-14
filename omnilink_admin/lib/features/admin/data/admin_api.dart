@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'models/admin_overview_metrics.dart';
 import 'models/admin_user_item.dart';
+import 'models/admin_audit_log_item.dart';
 
 @injectable
 class AdminApi {
@@ -25,5 +26,11 @@ class AdminApi {
       '/api/v1/admin/users/$userId/suspend',
       queryParameters: {'is_suspended': suspend},
     );
+  }
+
+  Future<List<AdminAuditLogItem>> getAuditLogs() async {
+    final response = await _dio.get('/api/v1/admin/audit-logs');
+    final List<dynamic> logsJson = response.data['logs'];
+    return logsJson.map((json) => AdminAuditLogItem.fromJson(json)).toList();
   }
 }

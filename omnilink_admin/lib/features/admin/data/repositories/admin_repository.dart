@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:omnilink_admin/features/admin/data/models/admin_overview_metrics.dart';
 import 'package:omnilink_admin/features/admin/data/models/admin_user_item.dart';
+import 'package:omnilink_admin/features/admin/data/models/admin_audit_log_item.dart';
 import '../admin_api.dart';
 
 @injectable
@@ -19,5 +20,9 @@ class AdminRepository {
 
   Future<void> toggleUserSuspension(String userId, bool suspend) async {
     await _adminApi.toggleUserSuspension(userId, suspend);
+  }
+
+  Future<List<AdminAuditLogItem>> getAuditLogs() async {
+    return await _adminApi.getAuditLogs();
   }
 }

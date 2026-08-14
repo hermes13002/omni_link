@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db, _bearer_scheme
 from app.db.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest, UpdateProfileRequest, ChangePasswordRequest
+from app.db.models.audit_log import AdminAuditLog
+from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest, UpdateProfileRequest, ChangePasswordRequest, SecurityAlertRequest
 from app.schemas.response import ApiResponse
 from app.schemas.user import UserResponse
 from fastapi.security import HTTPAuthorizationCredentials
@@ -84,4 +85,21 @@ async def delete_me(
     db: AsyncSession = Depends(get_db),
 ) -> ApiResponse[None]:
     await auth_service.delete_account(current_user.id, db)
+    return ApiResponse(data=None)
+
+@router.post("/security-alert", response_model=ApiResponse[None])
+async def security_alert(
+    payload: SecurityAlertRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ApiResponse[None]:
+    # Log the security alert to the admin audit log
+    audit_log = AdminAuditLog(
+        admin_id=current_user.id, # The user themselves triggered it, but we log it for admin
+        action=f"SECURITY_ALERT_{payload.alert_type}",
+        resource_type="USER",
+        resource_id=str(current_user.id)
+    )
+    db.add(audit_log)
+    await db.commit()
     return ApiResponse(data=None)

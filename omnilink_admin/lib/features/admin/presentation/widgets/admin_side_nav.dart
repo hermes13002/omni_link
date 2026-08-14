@@ -105,6 +105,13 @@ class AdminSideNav extends StatelessWidget {
                     isSelected: selectedIndex == 3,
                     onTap: () => onDestinationSelected(3),
                   ),
+                  _SideNavItem(
+                    icon: Icons.security_outlined,
+                    activeIcon: Icons.security,
+                    label: 'Security Alerts',
+                    isSelected: selectedIndex == 4,
+                    onTap: () => onDestinationSelected(4),
+                  ),
                 ],
               ),
             ),

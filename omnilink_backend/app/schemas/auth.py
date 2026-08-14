@@ -30,3 +30,8 @@ class UpdateProfileRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str = Field(min_length=8)
+
+class SecurityAlertRequest(BaseModel):
+    alert_type: str
+    message: str
+    device_info: str | None = None

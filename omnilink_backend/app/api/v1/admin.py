@@ -16,10 +16,21 @@ from app.services import auth_service
 from app.config import settings
 from app.schemas.auth import TokenResponse
 from app.schemas.response import ApiResponse
-from app.schemas.admin import AdminOverviewMetrics, AdminUserItem, AdminUsersResponse
+from app.schemas.admin import AdminOverviewMetrics, AdminUserItem, AdminUsersResponse, AdminAuditLogItem, AdminAuditLogsResponse
 from app.services.pubsub_service import get_active_sse_stats
 
 router = APIRouter()
+
+def mask_email(email: str) -> str:
+    parts = email.split('@')
+    if len(parts) != 2:
+        return email
+    name, domain = parts
+    if len(name) <= 2:
+        masked_name = '*' * len(name)
+    else:
+        masked_name = name[0] + '*' * (len(name) - 2) + name[-1]
+    return f"{masked_name}@{domain}"
 
 class AdminLoginRequest(BaseModel):
     email: str
@@ -80,7 +91,7 @@ async def get_all_users(
     for user_obj, d_count, s_used in rows:
         users.append(AdminUserItem(
             id=user_obj.id,
-            email=user_obj.email,
+            email=mask_email(user_obj.email),
             display_name=user_obj.display_name,
             created_at=user_obj.created_at,
             role=user_obj.role.value if hasattr(user_obj.role, 'value') else str(user_obj.role),
@@ -154,3 +165,18 @@ async def get_overview_metrics(
         total_devices=total_devices,
         total_items=total_items
     ))
+
+@router.get("/audit-logs", response_model=ApiResponse[AdminAuditLogsResponse])
+async def get_audit_logs(
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(get_current_admin)
+) -> ApiResponse[AdminAuditLogsResponse]:
+    query = select(AdminAuditLog).order_by(AdminAuditLog.created_at.desc()).limit(100)
+    result = await db.execute(query)
+    rows = result.scalars().all()
+    
+    logs = []
+    for log in rows:
+        logs.append(AdminAuditLogItem.model_validate(log))
+        
+    return ApiResponse(data=AdminAuditLogsResponse(logs=logs))

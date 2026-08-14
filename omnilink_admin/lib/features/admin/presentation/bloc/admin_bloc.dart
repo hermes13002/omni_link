@@ -21,7 +21,8 @@ class AdminBloc extends Bloc<AdminEvent, AdminState> {
     try {
       final metrics = await _adminRepository.getOverviewMetrics();
       final users = await _adminRepository.getAllUsers();
-      emit(AdminLoaded(metrics: metrics, users: users));
+      final auditLogs = await _adminRepository.getAuditLogs();
+      emit(AdminLoaded(metrics: metrics, users: users, auditLogs: auditLogs));
     } catch (e) {
       emit(AdminError(e.toString()));
     }
