@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     gcs_signed_url_expire_minutes: int = 60
     environment: str = "development"
     db_encryption_key: str
+    cors_origins: list[str] = ["*"]
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -49,14 +49,7 @@ app.add_middleware(RequestIdMiddleware)
 app.add_middleware(ContentSizeLimitMiddleware, max_upload_size=50 * 1024 * 1024)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:8080",
-        "http://localhost:50130",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:8080",
-        "http://127.0.0.1:50130"
-    ],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
