@@ -53,8 +53,9 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     // load from local Isar cache
     if (_isar != null) {
       try {
-        final isarCards = await _isar.isarCards.where().sortByCreatedAtDesc().findAll();
+        final isarCards = await _isar.isarCards.where().findAll();
         var localCards = isarCards.map((c) => c.toModel()).toList();
+        localCards.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       
       if (event.cardType != null) localCards = localCards.where((c) => c.cardType == event.cardType).toList();
       if (event.pinned != null) localCards = localCards.where((c) => c.pinned == event.pinned).toList();
@@ -133,6 +134,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
       final updatedCards = currentCards.map((c) {
         return c.id == event.card.id ? event.card : c;
       }).toList();
+      updatedCards.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       emit(TimelineLoaded(updatedCards));
     }
   }

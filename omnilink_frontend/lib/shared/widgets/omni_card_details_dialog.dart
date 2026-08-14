@@ -20,8 +20,9 @@ import 'package:any_link_preview/any_link_preview.dart';
 
 class OmniCardDetailsDialog extends StatefulWidget {
   final CardModel card;
+  final bool initialEditMode;
   
-  const OmniCardDetailsDialog({super.key, required this.card});
+  const OmniCardDetailsDialog({super.key, required this.card, this.initialEditMode = false});
 
   @override
   State<OmniCardDetailsDialog> createState() => _OmniCardDetailsDialogState();
@@ -40,6 +41,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
   @override
   void initState() {
     super.initState();
+    _isEditing = widget.initialEditMode;
     _isPinned = widget.card.pinned;
     _tabController = TabController(length: 2, vsync: this);
     _titleController = TextEditingController(text: widget.card.title ?? '');
@@ -182,10 +184,14 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
         backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.all(24),
-      child: OmniGlassContainer(
-        padding: const EdgeInsets.all(24.0),
-        borderRadius: 24.0,
-        child: ConstrainedBox(
+      child: Hero(
+        tag: widget.card.id,
+        child: Material(
+          type: MaterialType.transparency,
+          child: OmniGlassContainer(
+            padding: const EdgeInsets.all(24.0),
+            borderRadius: 24.0,
+            child: ConstrainedBox(
           constraints: BoxConstraints(
             minHeight: MediaQuery.of(context).size.height * 0.5,
             maxWidth: 600,
@@ -351,7 +357,8 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
         ),
       ),
       ),
-    );
+      ),
+    ));
   }
 
   Widget _buildTagEditor(BuildContext context, ColorScheme colorScheme) {

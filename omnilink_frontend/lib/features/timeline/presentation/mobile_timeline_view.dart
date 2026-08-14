@@ -167,51 +167,69 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                           itemCount: state.cards.length,
                           itemBuilder: (context, index) {
                             final card = state.cards[index];
-                            return OmniTimelineCard(
-                              type: _mapCardType(card),
-                              cardId: card.id,
-                              title: card.title ?? card.body ?? 'Untitled',
-                              subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
-                              timeAgo: _timeAgo(card.createdAt),
-                              tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
-                              tagColor: colorScheme.secondary,
-                              body: card.body,
-                              imageUrl: card.gcsSignedUrl,
-                              isPinned: card.pinned,
-                              syncStatus: card.syncStatus,
-                              localBytes: card.localBytes,
-                              isSelected: _selectedCardIds.contains(card.id),
-                              onTogglePin: () {
-                                context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
-                              },
-                              onLongPress: () {
-                                setState(() {
-                                  if (_selectedCardIds.contains(card.id)) {
-                                    _selectedCardIds.remove(card.id);
-                                  } else {
-                                    _selectedCardIds.add(card.id);
-                                  }
-                                });
-                              },
-                              onTap: () {
-                                if (_selectedCardIds.isNotEmpty) {
-                                  setState(() {
-                                    if (_selectedCardIds.contains(card.id)) {
-                                      _selectedCardIds.remove(card.id);
+                            return Hero(
+                              tag: card.id,
+                              child: Material(
+                                type: MaterialType.transparency,
+                                child: OmniTimelineCard(
+                                  type: _mapCardType(card),
+                                  cardId: card.id,
+                                  title: card.title ?? card.body ?? 'Untitled',
+                                  subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
+                                  timeAgo: _timeAgo(card.createdAt),
+                                  tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
+                                  tagColor: colorScheme.secondary,
+                                  body: card.body,
+                                  imageUrl: card.gcsSignedUrl,
+                                  isPinned: card.pinned,
+                                  syncStatus: card.syncStatus,
+                                  localBytes: card.localBytes,
+                                  isSelected: _selectedCardIds.contains(card.id),
+                                  onTogglePin: () {
+                                    context.read<TimelineBloc>().add(TimelineTogglePinRequested(card));
+                                  },
+                                  onEdit: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (ctx) => BlocProvider.value(
+                                        value: context.read<TimelineBloc>(),
+                                        child: OmniCardDetailsDialog(card: card, initialEditMode: true),
+                                      ),
+                                    );
+                                  },
+                                  onDelete: () {
+                                    context.read<TimelineBloc>().add(TimelineDeleteCardsRequested([card.id]));
+                                  },
+                                  onLongPress: () {
+                                    setState(() {
+                                      if (_selectedCardIds.contains(card.id)) {
+                                        _selectedCardIds.remove(card.id);
+                                      } else {
+                                        _selectedCardIds.add(card.id);
+                                      }
+                                    });
+                                  },
+                                  onTap: () {
+                                    if (_selectedCardIds.isNotEmpty) {
+                                      setState(() {
+                                        if (_selectedCardIds.contains(card.id)) {
+                                          _selectedCardIds.remove(card.id);
+                                        } else {
+                                          _selectedCardIds.add(card.id);
+                                        }
+                                      });
                                     } else {
-                                      _selectedCardIds.add(card.id);
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => BlocProvider.value(
+                                          value: context.read<TimelineBloc>(),
+                                          child: OmniCardDetailsDialog(card: card, initialEditMode: false),
+                                        ),
+                                      );
                                     }
-                                  });
-                                } else {
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => BlocProvider.value(
-                                      value: context.read<TimelineBloc>(),
-                                      child: OmniCardDetailsDialog(card: card),
-                                    ),
-                                  );
-                                }
-                              },
+                                  },
+                                ),
+                              ),
                             );
                           },
                         ),

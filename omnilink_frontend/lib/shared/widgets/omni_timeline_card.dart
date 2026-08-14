@@ -24,6 +24,8 @@ class OmniTimelineCard extends StatelessWidget {
   final CardSyncStatus syncStatus;
   final Uint8List? localBytes;
   final VoidCallback? onTogglePin;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final bool isSelected;
@@ -43,6 +45,8 @@ class OmniTimelineCard extends StatelessWidget {
     this.syncStatus = CardSyncStatus.synced,
     this.localBytes,
     this.onTogglePin,
+    this.onEdit,
+    this.onDelete,
     this.onTap,
     this.onLongPress,
     this.isSelected = false,
@@ -178,30 +182,6 @@ class OmniTimelineCard extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (type == TimelineCardType.code)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  final textToCopy = body ?? title;
-                  if (textToCopy.isNotEmpty) {
-                    Clipboard.setData(ClipboardData(text: textToCopy));
-                    OmniToast.showInfo(context, 'Copied to clipboard');
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withAlpha(150),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.copy_rounded, size: 14, color: colorScheme.onSurface),
-                ),
-              ),
-            ],
-          ),
-        if (type == TimelineCardType.code) const SizedBox(height: 8),
         Text(
           title,
           style: theme.textTheme.titleMedium?.copyWith(
@@ -225,58 +205,107 @@ class OmniTimelineCard extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: tagColor?.withAlpha(40) ?? colorScheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  tag,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: tagColor ?? colorScheme.onSecondaryContainer,
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: tagColor?.withAlpha(40) ?? colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      tag,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: tagColor ?? colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Row(
-              children: [
-                Icon(
-                  type == TimelineCardType.image ? Icons.smartphone_rounded : Icons.monitor_rounded,
-                  size: 12,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  timeAgo,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (syncStatus == CardSyncStatus.pending) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ] else if (syncStatus == CardSyncStatus.error) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.error_outline_rounded,
-                    size: 12,
-                    color: colorScheme.error,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        type == TimelineCardType.image ? Icons.smartphone_rounded : Icons.monitor_rounded,
+                        size: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        timeAgo,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (syncStatus == CardSyncStatus.pending) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ] else if (syncStatus == CardSyncStatus.error) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 12,
+                          color: colorScheme.error,
+                        ),
+                      ],
+                    ],
                   ),
                 ],
-              ],
+              ),
             ),
+            if (onEdit != null || onDelete != null)
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface.withAlpha(150),
+                  shape: BoxShape.circle,
+                ),
+                child: PopupMenuButton<String>(
+                  icon: Icon(Icons.more_horiz_rounded, size: 20, color: colorScheme.onSurface),
+                  padding: EdgeInsets.zero,
+                  position: PopupMenuPosition.under,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (value) {
+                    if (value == 'edit') onEdit?.call();
+                    if (value == 'delete') onDelete?.call();
+                  },
+                  itemBuilder: (context) => [
+                    if (onEdit != null)
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 12),
+                            const Text('Edit'),
+                          ],
+                        ),
+                      ),
+                    if (onDelete != null)
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_rounded, size: 20, color: colorScheme.error),
+                            const SizedBox(width: 12),
+                            Text('Delete', style: TextStyle(color: colorScheme.error)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
           ],
         ),
       ],
@@ -370,27 +399,55 @@ class OmniTimelineCard extends StatelessWidget {
               child: _buildContent(context, colorScheme, theme),
             ),
 
-            // 5. Pin Button Top Right
-            if (onTogglePin != null)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: GestureDetector(
-                  onTap: onTogglePin,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface.withAlpha(isPinned ? 200 : 100),
-                      shape: BoxShape.circle,
+            // 5. Action Buttons Top Right
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (type == TimelineCardType.code || type == TimelineCardType.link)
+                    GestureDetector(
+                      onTap: () {
+                        final textToCopy = body ?? title;
+                        if (textToCopy.isNotEmpty) {
+                          Clipboard.setData(ClipboardData(text: textToCopy));
+                          OmniToast.showInfo(context, 'Copied to clipboard');
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withAlpha(200),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.copy_rounded,
+                          color: colorScheme.onSurface,
+                          size: 18,
+                        ),
+                      ),
                     ),
-                    child: Icon(
-                      isPinned ? Icons.star_rounded : Icons.star_border_rounded,
-                      color: isPinned ? Colors.amber : colorScheme.onSurface,
-                      size: 18,
+                  if (onTogglePin != null)
+                    GestureDetector(
+                      onTap: onTogglePin,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withAlpha(isPinned ? 200 : 200),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isPinned ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: isPinned ? Colors.amber : colorScheme.onSurface,
+                          size: 18,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                ],
               ),
+            ),
 
             // 6. Selection Overlay Checkmark
             if (isSelected)
