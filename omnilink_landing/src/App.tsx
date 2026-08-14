@@ -6,6 +6,7 @@ import { FileTypeShowcase } from './components/FileTypeShowcase'
 import { RealtimeStream } from './components/RealtimeStream'
 import Organization from './components/Organization'
 import Security from './components/Security'
+import FAQ from './components/FAQ'
 import CTA from './components/CTA'
 import Footer from './components/Footer'
 import { AnimatedBackground } from './components/ui/AnimatedBackground'
@@ -29,6 +30,7 @@ function App() {
           </div>
           <Organization />
           <Security />
+          <FAQ />
           <CTA />
         </main>
         <Footer />
