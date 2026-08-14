@@ -188,7 +188,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
                                       cardId: card.id,
                                       title: card.title ?? card.body ?? 'Untitled',
                                       subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
-                                      timeAgo: _timeAgo(card.createdAt),
+                                      timeAgo: _timeAgo(card.updatedAt),
                                       tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
                                       tagColor: colorScheme.secondary,
                                       body: card.body,

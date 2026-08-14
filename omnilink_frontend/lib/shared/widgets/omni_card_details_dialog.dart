@@ -335,7 +335,7 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
                   _buildChip(
                     context, 
                     Icons.timer_rounded, 
-                    '${widget.card.createdAt.toLocal().toString().split('.')[0]}'
+                    'Updated ${widget.card.updatedAt.toLocal().toString().split('.')[0]}'
                   ),
                   if (widget.card.fileSizeBytes != null)
                     _buildChip(
