@@ -9,7 +9,6 @@ import 'interceptors/envelope_interceptor.dart';
 
 @module
 abstract class NetworkModule {
-
   @lazySingleton
   FlutterSecureStorage get secureStorage => const FlutterSecureStorage();
 
@@ -18,7 +17,8 @@ abstract class NetworkModule {
     final dio = Dio(
       BaseOptions(
         // baseUrl: 'http://127.0.0.1:8000', // localhost
-        baseUrl: 'https://omnilink-backend.onrender.com',
+        // baseUrl: 'https://omnilink-backend.onrender.com',
+        baseUrl: 'https://omnilink-backend-45215730119.europe-west2.run.app',
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         contentType: 'application/json',

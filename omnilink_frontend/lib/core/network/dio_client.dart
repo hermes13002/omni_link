@@ -24,26 +24,20 @@ abstract class NetworkModule {
     if (kIsWeb) return LocalDatabase(null);
 
     final dir = await getApplicationDocumentsDirectory();
-    
+
     try {
-      final isar = await Isar.open(
-        [IsarCardSchema],
-        directory: dir.path,
-      );
+      final isar = await Isar.open([IsarCardSchema], directory: dir.path);
       return LocalDatabase(isar);
     } catch (e) {
-      // In case of schema mismatch during development (Collection id is invalid), 
+      // In case of schema mismatch during development (Collection id is invalid),
       // clear the corrupted/outdated db and try again.
       try {
         final dbFile = File('${dir.path}/default.isar');
         if (dbFile.existsSync()) dbFile.deleteSync();
         final lockFile = File('${dir.path}/default.isar.lock');
         if (lockFile.existsSync()) lockFile.deleteSync();
-        
-        final isar = await Isar.open(
-          [IsarCardSchema],
-          directory: dir.path,
-        );
+
+        final isar = await Isar.open([IsarCardSchema], directory: dir.path);
         return LocalDatabase(isar);
       } catch (e2) {
         rethrow;
@@ -59,7 +53,8 @@ abstract class NetworkModule {
     final dio = Dio(
       BaseOptions(
         // baseUrl: 'http://127.0.0.1:8000', // localhost
-        baseUrl: 'https://omnilink-backend.onrender.com',
+        // baseUrl: 'https://omnilink-backend.onrender.com',
+        baseUrl: 'https://omnilink-backend-45215730119.europe-west2.run.app',
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         contentType: 'application/json',
