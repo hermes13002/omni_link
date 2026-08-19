@@ -67,6 +67,20 @@ async def generate_signed_url(object_key: str, download_filename: str | None = N
     if download_filename:
         kwargs["response_disposition"] = f'attachment; filename="{download_filename}"'
 
+    # Cloud Run default credentials don't have a private key, so they must use the IAM API to sign URLs.
+    # We must explicitly pass the service_account_email for this to work.
+    if not hasattr(client.credentials, "signer") or client.credentials.signer is None:
+        try:
+            import urllib.request
+            req = urllib.request.Request(
+                "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email", 
+                headers={"Metadata-Flavor": "Google"}
+            )
+            sa_email = urllib.request.urlopen(req, timeout=2).read().decode('utf-8')
+            kwargs["service_account_email"] = sa_email
+        except Exception:
+            pass
+
     signed_url: str = await loop.run_in_executor(
         None,
         partial(
