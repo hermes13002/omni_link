@@ -94,7 +94,8 @@ def _get_sa_token() -> str | None:
 def _generate_signed_url_sync(blob: storage.Blob, kwargs: dict, client: storage.Client) -> str:
     # Cloud Run default credentials don't have a private key, so they must use the IAM API to sign URLs.
     # This requires both service_account_email and a valid access_token.
-    if not hasattr(client.credentials, "signer") or client.credentials.signer is None:
+    creds = getattr(client, "_credentials", getattr(client, "credentials", None))
+    if not hasattr(creds, "signer") or creds.signer is None:
         email = _get_sa_email()
         if email:
             kwargs["service_account_email"] = email
