@@ -28,4 +28,11 @@ class Settings(BaseSettings):
 settings = Settings()
 
 if settings.google_application_credentials:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
+    if settings.google_application_credentials.strip().startswith("{"):
+        import tempfile
+        fd, path = tempfile.mkstemp(suffix=".json")
+        with os.fdopen(fd, 'w') as f:
+            f.write(settings.google_application_credentials)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = path
+    else:
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials

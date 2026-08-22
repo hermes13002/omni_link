@@ -54,7 +54,7 @@ abstract class NetworkModule {
       BaseOptions(
         // baseUrl: 'http://127.0.0.1:8000', // localhost
         // baseUrl: 'https://omnilink-backend.onrender.com',
-        baseUrl: 'https://omnilink-backend-45215730119.europe-west2.run.app',
+        baseUrl: 'https://omnilink-bkd.fastapicloud.dev',
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         contentType: 'application/json',
