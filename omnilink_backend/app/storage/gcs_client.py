@@ -53,6 +53,8 @@ async def upload_file_stream(object_key: str, file_obj, content_type: str) -> No
 
 
 _cached_sa_email: str | None = None
+_cached_sa_token: str | None = None
+_sa_token_expiry: float = 0
 
 def _get_sa_email() -> str | None:
     global _cached_sa_email
@@ -69,6 +71,26 @@ def _get_sa_email() -> str | None:
         logger.error(f"Failed to fetch SA email: {e}")
     return _cached_sa_email
 
+def _get_sa_token() -> str | None:
+    global _cached_sa_token, _sa_token_expiry
+    import time
+    if _cached_sa_token and time.time() < _sa_token_expiry:
+        return _cached_sa_token
+    try:
+        import urllib.request
+        import json
+        req = urllib.request.Request(
+            "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token", 
+            headers={"Metadata-Flavor": "Google"}
+        )
+        resp = urllib.request.urlopen(req, timeout=2).read().decode('utf-8')
+        data = json.loads(resp)
+        _cached_sa_token = data["access_token"]
+        _sa_token_expiry = time.time() + data.get("expires_in", 3600) - 60
+    except Exception as e:
+        logger.error(f"Failed to fetch SA token: {e}")
+    return _cached_sa_token
+
 def _generate_signed_url_sync(blob: storage.Blob, kwargs: dict, client: storage.Client) -> str:
     # Cloud Run default credentials don't have a private key, so they must use the IAM API to sign URLs.
     # This requires both service_account_email and a valid access_token.
@@ -77,14 +99,9 @@ def _generate_signed_url_sync(blob: storage.Blob, kwargs: dict, client: storage.
         if email:
             kwargs["service_account_email"] = email
 
-        try:
-            # Refresh credentials to ensure we have a valid token
-            from google.auth.transport.requests import Request as AuthRequest
-            client.credentials.refresh(AuthRequest())
-            if hasattr(client.credentials, "token") and client.credentials.token:
-                kwargs["access_token"] = client.credentials.token
-        except Exception as e:
-            logger.error(f"Failed to refresh credentials for signed url: {e}")
+        token = _get_sa_token()
+        if token:
+            kwargs["access_token"] = token
 
     return blob.generate_signed_url(**kwargs)
 
