@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../auth_api.dart';
 import '../models/user_model.dart';
@@ -13,6 +14,26 @@ class AuthRepository {
 
   Future<UserModel> login(String email, String password) async {
     final tokenResponse = await _api.login(email, password);
+    await _storage.write(key: 'access_token', value: tokenResponse.accessToken);
+    await _storage.write(key: 'refresh_token', value: tokenResponse.refreshToken);
+    return await _api.getMe();
+  }
+
+  Future<UserModel> signInWithGoogle() async {
+    final googleSignIn = GoogleSignIn(
+      clientId: '45215730119-qtcuih2b8bp9lmhne4ar4085n26jo6kr.apps.googleusercontent.com',
+    );
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      throw Exception('Google Sign-In aborted');
+    }
+    final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null) {
+      throw Exception('Failed to obtain ID token from Google');
+    }
+
+    final tokenResponse = await _api.googleLogin(idToken);
     await _storage.write(key: 'access_token', value: tokenResponse.accessToken);
     await _storage.write(key: 'refresh_token', value: tokenResponse.refreshToken);
     return await _api.getMe();

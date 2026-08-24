@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._repository) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
+    on<AuthGoogleLoginRequested>(_onAuthGoogleLoginRequested);
     on<AuthAdminLoginRequested>(_onAuthAdminLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
@@ -55,6 +56,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final user = await _repository.login(event.email, event.password);
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      if (e is DioException && e.error != null) {
+        emit(AuthError(e.error.toString()));
+      } else {
+        emit(AuthError(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _onAuthGoogleLoginRequested(
+      AuthGoogleLoginRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final user = await _repository.signInWithGoogle();
       emit(AuthAuthenticated(user));
     } catch (e) {
       if (e is DioException && e.error != null) {

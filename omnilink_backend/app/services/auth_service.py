@@ -36,7 +36,11 @@ async def register_user(payload: RegisterRequest, db: AsyncSession) -> User:
 
 async def authenticate_user(email: str, password: str, db: AsyncSession) -> User:
     user = await db.scalar(select(User).where(User.email == email))
-    if user is None or not verify_password(password, user.hashed_password):
+    if user is None:
+        raise credentials_exception
+    if user.hashed_password is None:
+        raise credentials_exception # Password not set, likely signed up via Google
+    if not verify_password(password, user.hashed_password):
         raise credentials_exception
     return user
 
@@ -47,6 +51,32 @@ def build_token_response(user_id: uuid.UUID) -> TokenResponse:
         access_token=create_access_token(subject),
         refresh_token=create_refresh_token(subject),
     )
+
+
+from google.oauth2 import id_token
+from google.auth.transport import requests
+
+async def authenticate_google_user(token: str, db: AsyncSession) -> User:
+    try:
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), settings.google_client_id)
+        email = idinfo.get('email')
+        display_name = idinfo.get('name')
+        if not email:
+            raise credentials_exception
+        
+        user = await db.scalar(select(User).where(User.email == email))
+        if user is None:
+            user = User(
+                email=email,
+                hashed_password=None,
+                display_name=display_name,
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        return user
+    except ValueError:
+        raise credentials_exception
 
 
 async def refresh_tokens(refresh_token: str, db: AsyncSession) -> TokenResponse:
@@ -102,8 +132,9 @@ async def change_password(user_id: uuid.UUID, payload: ChangePasswordRequest, db
     if not user:
         raise credentials_exception
     
-    if not verify_password(payload.old_password, user.hashed_password):
-        raise credentials_exception
+    if user.hashed_password is not None:
+        if not payload.old_password or not verify_password(payload.old_password, user.hashed_password):
+            raise credentials_exception
     
     user.hashed_password = hash_password(payload.new_password)
     await db.commit()

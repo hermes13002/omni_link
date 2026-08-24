@@ -19,13 +19,20 @@ class AuthApi {
     return TokenResponse.fromJson(response.data);
   }
 
-  Future<TokenResponse> login(String email, String password) async {
-    final response = await _dio.post('/api/v1/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
-    return TokenResponse.fromJson(response.data);
-  }
+    Future<TokenResponse> login(String email, String password) async {
+      final response = await _dio.post('/api/v1/auth/login', data: {
+        'email': email,
+        'password': password,
+      });
+      return TokenResponse.fromJson(response.data);
+    }
+
+    Future<TokenResponse> googleLogin(String idToken) async {
+      final response = await _dio.post('/api/v1/auth/google', data: {
+        'id_token': idToken,
+      });
+      return TokenResponse.fromJson(response.data);
+    }
 
   Future<TokenResponse> adminLogin(String email, String password, String secretKey) async {
     final response = await _dio.post('/api/v1/admin/login', data: {

@@ -12,6 +12,10 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 
@@ -28,7 +32,7 @@ class UpdateProfileRequest(BaseModel):
     display_name: str
 
 class ChangePasswordRequest(BaseModel):
-    old_password: str
+    old_password: str | None = None
     new_password: str = Field(min_length=8)
 
 class SecurityAlertRequest(BaseModel):

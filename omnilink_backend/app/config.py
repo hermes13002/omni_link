@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     gcs_signed_url_expire_minutes: int = 60
     environment: str = "development"
     db_encryption_key: str
+    google_client_id: str | None = None
     cors_origins: list[str] = ["*"]
 
     model_config = SettingsConfigDict(
@@ -36,3 +37,15 @@ if settings.google_application_credentials:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = path
     else:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
+
+if not settings.google_client_id:
+    import glob
+    import json
+    secret_files = glob.glob("client_secret_*.json")
+    if secret_files:
+        try:
+            with open(secret_files[0]) as f:
+                data = json.load(f)
+                settings.google_client_id = data.get("web", {}).get("client_id")
+        except Exception:
+            pass

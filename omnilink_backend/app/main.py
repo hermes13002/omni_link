@@ -23,6 +23,16 @@ from app.services.pubsub_service import start_multiplexer, stop_multiplexer
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
+    # run alembic upgrade head to create new tables on startup
+    try:
+        import alembic.config
+        import alembic.command
+        alembic_cfg = alembic.config.Config("alembic.ini")
+        alembic.command.upgrade(alembic_cfg, "head")
+        print("Successfully ran alembic upgrade head")
+    except Exception as e:
+        print(f"Alembic upgrade failed: {e}")
+        
     await init_redis_pool()
     start_multiplexer()
     init_gcs_client()

@@ -68,6 +68,7 @@ dependencies:
   intl: ^0.20.3
   speech_to_text: ^7.4.0
   flutter_jailbreak_detection: ^1.10.0
+  google_sign_in: ^6.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,4 +1,4 @@
-package com.example.omnilink_frontend
+package com.omnilinkftd.app
 
 import io.flutter.embedding.android.FlutterActivity
 

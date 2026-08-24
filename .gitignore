@@ -10,6 +10,7 @@ env
 .env.example
 gcp-credentials.json
 OmniLink_API.postman_collection.json
+client_secret*.json
 
 # python
 __pycache__/

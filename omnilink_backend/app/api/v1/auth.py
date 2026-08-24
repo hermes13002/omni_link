@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db, _bearer_scheme
 from app.db.models.user import User
 from app.db.models.audit_log import AdminAuditLog
-from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest, UpdateProfileRequest, ChangePasswordRequest, SecurityAlertRequest
+from app.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, TokenResponse, LogoutRequest, UpdateProfileRequest, ChangePasswordRequest, SecurityAlertRequest, GoogleLoginRequest
 from app.schemas.response import ApiResponse
 from app.schemas.user import UserResponse
 from fastapi.security import HTTPAuthorizationCredentials
@@ -33,6 +33,17 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ) -> ApiResponse[TokenResponse]:
     user = await auth_service.authenticate_user(payload.email, payload.password, db)
+    return ApiResponse(data=auth_service.build_token_response(user.id))
+
+
+@router.post("/google", response_model=ApiResponse[TokenResponse])
+@limiter.limit("5/minute")
+async def google_login(
+    request: Request,
+    payload: GoogleLoginRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ApiResponse[TokenResponse]:
+    user = await auth_service.authenticate_google_user(payload.id_token, db)
     return ApiResponse(data=auth_service.build_token_response(user.id))
 
 

@@ -212,6 +212,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           if (isDesktop) ...[
                             const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: Text('OR', style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                ),
+                                Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            BlocBuilder<AuthBloc, AuthState>(
+                              builder: (context, state) {
+                                return OmniButton.outlined(
+                                  text: 'Sign in with Google',
+                                  onPressed: () {
+                                    context.read<AuthBloc>().add(AuthGoogleLoginRequested());
+                                  },
+                                  isFullWidth: true,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 24),
                             Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
                             const SizedBox(height: 24),
                             Row(
@@ -237,6 +260,29 @@ class _LoginScreenState extends State<LoginScreen> {
                               ],
                             ),
                           ] else ...[
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: Text('OR', style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+                                ),
+                                Expanded(child: Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.5))),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            BlocBuilder<AuthBloc, AuthState>(
+                              builder: (context, state) {
+                                return OmniButton.outlined(
+                                  text: 'Sign in with Google',
+                                  onPressed: () {
+                                    context.read<AuthBloc>().add(AuthGoogleLoginRequested());
+                                  },
+                                  isFullWidth: true,
+                                );
+                              },
+                            ),
                             const SizedBox(height: 16),
                             OmniButton.text(
                               text: "Don't have an account? Sign up",
