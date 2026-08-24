@@ -43,7 +43,7 @@ async def google_login(
     payload: GoogleLoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> ApiResponse[TokenResponse]:
-    user = await auth_service.authenticate_google_user(payload.id_token, db)
+    user = await auth_service.authenticate_google_user(payload.id_token, payload.access_token, db)
     return ApiResponse(data=auth_service.build_token_response(user.id))
 
 

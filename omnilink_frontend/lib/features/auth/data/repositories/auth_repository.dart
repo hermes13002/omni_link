@@ -31,11 +31,13 @@ class AuthRepository {
     }
     final googleAuth = await googleUser.authentication;
     final idToken = googleAuth.idToken;
-    if (idToken == null) {
-      throw Exception('Failed to obtain ID token from Google');
+    final accessToken = googleAuth.accessToken;
+    
+    if (idToken == null && accessToken == null) {
+      throw Exception('Failed to obtain any auth token from Google');
     }
 
-    final tokenResponse = await _api.googleLogin(idToken);
+    final tokenResponse = await _api.googleLogin(idToken, accessToken);
     await _storage.write(key: 'access_token', value: tokenResponse.accessToken);
     await _storage.write(key: 'refresh_token', value: tokenResponse.refreshToken);
     return await _api.getMe();

@@ -13,7 +13,8 @@ class LoginRequest(BaseModel):
 
 
 class GoogleLoginRequest(BaseModel):
-    id_token: str
+    id_token: str | None = None
+    access_token: str | None = None
 
 
 class RefreshRequest(BaseModel):

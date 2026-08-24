@@ -27,9 +27,10 @@ class AuthApi {
       return TokenResponse.fromJson(response.data);
     }
 
-    Future<TokenResponse> googleLogin(String idToken) async {
+    Future<TokenResponse> googleLogin(String? idToken, String? accessToken) async {
       final response = await _dio.post('/api/v1/auth/google', data: {
         'id_token': idToken,
+        'access_token': accessToken,
       });
       return TokenResponse.fromJson(response.data);
     }

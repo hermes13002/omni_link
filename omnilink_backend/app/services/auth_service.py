@@ -56,27 +56,47 @@ def build_token_response(user_id: uuid.UUID) -> TokenResponse:
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
-async def authenticate_google_user(token: str, db: AsyncSession) -> User:
-    try:
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), settings.google_client_id)
-        email = idinfo.get('email')
-        display_name = idinfo.get('name')
-        if not email:
+import httpx
+
+async def authenticate_google_user(id_token_str: str | None, access_token_str: str | None, db: AsyncSession) -> User:
+    email = None
+    display_name = None
+    
+    if id_token_str:
+        try:
+            idinfo = id_token.verify_oauth2_token(id_token_str, requests.Request(), settings.google_client_id)
+            email = idinfo.get('email')
+            display_name = idinfo.get('name')
+        except ValueError:
             raise credentials_exception
-        
-        user = await db.scalar(select(User).where(User.email == email))
-        if user is None:
-            user = User(
-                email=email,
-                hashed_password=None,
-                display_name=display_name,
+    elif access_token_str:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {access_token_str}"}
             )
-            db.add(user)
-            await db.commit()
-            await db.refresh(user)
-        return user
-    except ValueError:
+            if response.status_code != 200:
+                raise credentials_exception
+            data = response.json()
+            email = data.get('email')
+            display_name = data.get('name')
+    else:
         raise credentials_exception
+
+    if not email:
+        raise credentials_exception
+    
+    user = await db.scalar(select(User).where(User.email == email))
+    if user is None:
+        user = User(
+            email=email,
+            hashed_password=None,
+            display_name=display_name,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    return user
 
 
 async def refresh_tokens(refresh_token: str, db: AsyncSession) -> TokenResponse:
