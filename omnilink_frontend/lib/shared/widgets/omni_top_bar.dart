@@ -10,6 +10,8 @@ class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       centerTitle: false,
       title: Text(
         'OmniLink',

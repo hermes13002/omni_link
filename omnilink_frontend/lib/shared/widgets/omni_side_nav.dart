@@ -43,7 +43,7 @@ class _OmniSideNavState extends State<OmniSideNav> {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
       width: _isExpanded ? 256 : 80,
-      color: colorScheme.surfaceContainerLowest,
+      color: Colors.transparent,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
