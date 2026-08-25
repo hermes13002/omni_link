@@ -53,7 +53,7 @@ GoRouter createRouter(AuthBloc authBloc) {
       }
 
       if (authState is AuthAuthenticated) {
-        if (isGoingToAuth || state.matchedLocation == '/splash') return '/';
+        if (isGoingToAuth) return '/';
         return null;
       }
 

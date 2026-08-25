@@ -51,12 +51,17 @@ class OmniDropZoneState extends State<OmniDropZone> {
   static String? _dismissedUrl;
   static final TextEditingController _textController = TextEditingController();
   static final TextEditingController _titleController = TextEditingController();
+  static final FocusNode _textFocusNode = FocusNode();
   
   // Speech to text state
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _speechEnabled = false;
   bool _isListening = false;
   String _lastWords = '';
+
+  void focusTextField() {
+    _textFocusNode.requestFocus();
+  }
 
   @override
   void initState() {
@@ -533,6 +538,7 @@ class OmniDropZoneState extends State<OmniDropZone> {
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
+                  focusNode: _textFocusNode,
                   controller: _textController,
                   minLines: 1,
                   maxLines: 4,

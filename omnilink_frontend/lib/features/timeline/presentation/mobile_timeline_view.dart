@@ -16,6 +16,7 @@ import 'bloc/timeline_event.dart';
 import 'bloc/tags_bloc.dart';
 import 'bloc/tags_event.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import '../../../shared/widgets/omni_empty_state.dart';
 
 class MobileTimelineView extends StatefulWidget {
   final bool showFavorites;
@@ -143,12 +144,16 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                 BlocBuilder<TimelineBloc, TimelineState>(
                   builder: (context, state) {
                     if (state is TimelineLoading || state is TimelineInitial) {
-                      return const Center(child: OmniDotsLoader());
+                      return const OmniSkeletonTimeline(isMobile: true);
                     } else if (state is TimelineError) {
                       return Center(child: Text(state.message));
                     } else if (state is TimelineLoaded) {
                       if (state.cards.isEmpty) {
-                        return const Center(child: Text("No cards found"));
+                        return OmniEmptyState(
+                          onAction: () {
+                            _dropZoneKey.currentState?.focusTextField();
+                          },
+                        );
                       }
                       return RefreshIndicator(
                         onRefresh: () async {

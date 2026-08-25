@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'dart:math';
 
 class OmniDotsLoader extends StatefulWidget {
   final Color? color;
@@ -67,6 +69,126 @@ class _OmniDotsLoaderState extends State<OmniDotsLoader> with SingleTickerProvid
           },
         );
       }),
+    );
+  }
+}
+
+class OmniLogoLoader extends StatefulWidget {
+  final double size;
+  const OmniLogoLoader({super.key, this.size = 100});
+
+  @override
+  State<OmniLogoLoader> createState() => _OmniLogoLoaderState();
+}
+
+class _OmniLogoLoaderState extends State<OmniLogoLoader> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    
+    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine)
+    );
+    _opacityAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine)
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Opacity(
+            opacity: _opacityAnimation.value,
+            child: Image.asset(
+              'assets/images/logo/infinity.png',
+              width: widget.size,
+              height: widget.size,
+            ),
+          ),
+        );
+      }
+    );
+  }
+}
+
+class OmniSkeletonTimeline extends StatefulWidget {
+  final bool isMobile;
+  const OmniSkeletonTimeline({super.key, this.isMobile = false});
+
+  @override
+  State<OmniSkeletonTimeline> createState() => _OmniSkeletonTimelineState();
+}
+
+class _OmniSkeletonTimelineState extends State<OmniSkeletonTimeline> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacityAnimation;
+  late List<double> _randomHeights;
+
+  @override
+  void initState() {
+    super.initState();
+    final random = Random(42); // fixed seed for stable layout
+    _randomHeights = List.generate(12, (index) => 150.0 + random.nextInt(200));
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    
+    _opacityAnimation = Tween<double>(begin: 0.2, end: 0.6).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine)
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MasonryGridView.extent(
+      maxCrossAxisExtent: widget.isMobile ? 600 : 320,
+      mainAxisSpacing: 24,
+      crossAxisSpacing: 24,
+      padding: const EdgeInsets.all(24.0).copyWith(bottom: 120),
+      itemCount: 12,
+      itemBuilder: (context, index) {
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _opacityAnimation.value,
+              child: Container(
+                height: _randomHeights[index],
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            );
+          }
+        );
+      },
     );
   }
 }
