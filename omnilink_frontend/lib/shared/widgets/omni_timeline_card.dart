@@ -356,8 +356,7 @@ class OmniTimelineCard extends StatelessWidget {
             ),
           ),
 
-        if (type != TimelineCardType.link)
-          Positioned.fill(
+        Positioned.fill(
             child: Material(
               color: Colors.transparent,
               child: InkWell(
@@ -386,7 +385,6 @@ class OmniTimelineCard extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.all(16),
-                color: colorScheme.surface,
                 child: _buildLinkContentDetails(context, colorScheme, theme),
               ),
             ],
@@ -505,52 +503,44 @@ class OmniTimelineCard extends StatelessWidget {
   Widget _buildLinkContentDetails(BuildContext context, ColorScheme colorScheme, ThemeData theme) {
     final bodyText = body ?? '';
     final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
-    final url = match?.group(0) ?? '';
-    final remainingText = bodyText.replaceAll(url, '').trim();
-    final hasTitle = title.isNotEmpty && title != url;
+    final extractedUrl = match?.group(0) ?? '';
+    
+    // Sometimes title is exactly the URL or empty, handle gracefully
+    final displayUrl = extractedUrl.isNotEmpty ? extractedUrl : (title.startsWith('http') ? title : '');
+    final cleanTitle = title.trim();
+    final cleanSubtitle = subtitle.trim();
+    final cleanUrl = displayUrl.trim();
+    
+    final showTitle = cleanTitle.isNotEmpty && cleanTitle != cleanUrl;
+    final showSubtitle = cleanSubtitle.isNotEmpty && cleanSubtitle != cleanTitle && cleanSubtitle != cleanUrl;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (url.isNotEmpty)
-          Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () async {
-                    final uri = Uri.parse(url);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri);
-                    }
-                  },
-                  child: Text(
-                    url,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.primary,
-                      decoration: TextDecoration.underline,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+        if (displayUrl.isNotEmpty)
+          GestureDetector(
+            onTap: () async {
+              final uri = Uri.parse(displayUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              }
+            },
+            child: Text(
+              displayUrl,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.primary,
+                decoration: TextDecoration.underline,
               ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(Icons.copy_rounded, size: 18, color: colorScheme.onSurfaceVariant),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: url));
-                  OmniToast.showInfo(context, 'URL copied to clipboard');
-                },
-              ),
-            ],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        if (url.isNotEmpty && (hasTitle || remainingText.isNotEmpty))
+        if (displayUrl.isNotEmpty && (showTitle || showSubtitle))
           const SizedBox(height: 8),
-        if (hasTitle)
+        if (showTitle)
           SelectableText(
-            title,
+            cleanTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -558,11 +548,11 @@ class OmniTimelineCard extends StatelessWidget {
               height: 1.2,
             ),
           ),
-        if (hasTitle && remainingText.isNotEmpty)
+        if (showTitle && showSubtitle)
           const SizedBox(height: 4),
-        if (remainingText.isNotEmpty)
+        if (showSubtitle)
           SelectableText(
-            remainingText,
+            cleanSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
