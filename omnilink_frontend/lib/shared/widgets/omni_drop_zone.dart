@@ -126,11 +126,14 @@ class OmniDropZoneState extends State<OmniDropZone> {
 
   void _onTextChanged() {
     final text = _textController.text;
-    final RegExp urlRegex = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+    final RegExp urlRegex = RegExp(r'(https?:\/\/[^\s]+|(?:www\.)[^\s]+)', caseSensitive: false);
     final match = urlRegex.firstMatch(text);
     
     if (match != null) {
-      final url = match.group(0);
+      String url = match.group(0)!;
+      if (!url.startsWith('http')) {
+        url = 'https://$url';
+      }
       if (_stagedUrl != url && _dismissedUrl != url) {
         setState(() {
           _stagedUrl = url;
@@ -158,92 +161,99 @@ class OmniDropZoneState extends State<OmniDropZone> {
     });
   }
 
-  Future<void> _handleSend() async {
+  void _handleSend() {
     final text = _textController.text.trim();
     final title = _titleController.text.trim();
     if (text.isEmpty && title.isEmpty && _stagedFile == null) return;
-
-    setState(() => _isSending = true);
     
-    try {
-      final String tempId = const Uuid().v4();
-      CardModel dummyCard = CardModel(
-        id: tempId,
-        cardType: 'text', // default to text, updated below
-        title: title.isNotEmpty ? title : null,
-        body: text.isNotEmpty ? text : null,
-        pinned: false,
-        tags: [],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        syncStatus: CardSyncStatus.pending,
+    final String tempId = const Uuid().v4();
+    CardModel dummyCard = CardModel(
+      id: tempId,
+      cardType: 'text', // default to text, updated below
+      title: title.isNotEmpty ? title : null,
+      body: text.isNotEmpty ? text : null,
+      pinned: false,
+      tags: [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      syncStatus: CardSyncStatus.pending,
+    );
+    
+    final timelineBloc = context.read<TimelineBloc>();
+    final cardsApi = getIt<CardsApi>();
+    final selectedTagIds = _selectedTagIds.toList();
+
+    if (_stagedFile != null) {
+      if (_stagedFile!.path == null && _stagedFile!.bytes == null) {
+        OmniToast.showError(context, 'Invalid file: No data available. Please remove and re-select the file.');
+        return;
+      }
+
+      String finalTitle = title.isNotEmpty ? title : text;
+      if (finalTitle.isEmpty) finalTitle = _stagedFile!.name;
+      
+      dummyCard = dummyCard.copyWith(
+        cardType: 'file',
+        title: finalTitle,
+        localBytes: _stagedFile!.bytes != null ? Uint8List.fromList(_stagedFile!.bytes!) : null,
+        mimeType: _stagedFile!.isImage ? 'image/jpeg' : null,
       );
+      timelineBloc.add(TimelineCardCreated(dummyCard));
+      
+      final filePath = _stagedFile!.path;
+      final bytes = _stagedFile!.bytes;
+      final fileName = _stagedFile!.name;
 
-      if (_stagedFile != null) {
-        if (_stagedFile!.path == null && _stagedFile!.bytes == null) {
-          OmniToast.showError(context, 'Invalid file: No data available. Please remove and re-select the file.');
-          setState(() => _isSending = false);
-          return;
-        }
-
-        String finalTitle = title.isNotEmpty ? title : text;
-        if (finalTitle.isEmpty) finalTitle = _stagedFile!.name;
-        
-        dummyCard = dummyCard.copyWith(
-          cardType: 'file',
-          title: finalTitle,
-          localBytes: _stagedFile!.bytes != null ? Uint8List.fromList(_stagedFile!.bytes!) : null,
-          mimeType: _stagedFile!.isImage ? 'image/jpeg' : null,
-        );
-        if (mounted) context.read<TimelineBloc>().add(TimelineCardCreated(dummyCard));
-
+      Future(() async {
         try {
-          final card = await getIt<CardsApi>().createFileCard(
-            filePath: _stagedFile!.path,
-            bytes: _stagedFile!.bytes,
-            fileName: _stagedFile!.name,
+          final card = await cardsApi.createFileCard(
+            filePath: filePath,
+            bytes: bytes,
+            fileName: fileName,
             title: finalTitle.isNotEmpty ? finalTitle : null,
-            tagIds: _selectedTagIds.toList(),
+            tagIds: selectedTagIds,
           );
-          if (mounted) context.read<TimelineBloc>().add(TimelineCardResolved(tempId, card));
+          timelineBloc.add(TimelineCardResolved(tempId, card));
         } catch (e) {
-          if (mounted) context.read<TimelineBloc>().add(TimelineCardFailed(tempId, e.toString()));
-          rethrow;
+          timelineBloc.add(TimelineCardFailed(tempId, e.toString()));
         }
-      } else {
-        final isUrl = Uri.tryParse(text)?.hasAbsolutePath ?? false;
-        
-        dummyCard = dummyCard.copyWith(
-          cardType: isUrl ? 'metadata' : 'text',
-        );
-        if (mounted) context.read<TimelineBloc>().add(TimelineCardCreated(dummyCard));
+      });
+    } else {
+      // Normalize 'www.' to 'https://www.' for the backend request if it matches the regex
+      String normalizedText = text;
+      final RegExp urlRegex = RegExp(r'(https?:\/\/[^\s]+|(?:www\.)[^\s]+)', caseSensitive: false);
+      final match = urlRegex.firstMatch(text);
+      if (match != null) {
+        String url = match.group(0)!;
+        if (!url.startsWith('http')) {
+           normalizedText = text.replaceFirst(url, 'https://$url');
+        }
+      }
 
+      final isUrl = Uri.tryParse(normalizedText)?.hasAbsolutePath ?? false;
+      
+      dummyCard = dummyCard.copyWith(
+        cardType: isUrl ? 'metadata' : 'text',
+        body: normalizedText.isNotEmpty ? normalizedText : null,
+      );
+      timelineBloc.add(TimelineCardCreated(dummyCard));
+
+      Future(() async {
         try {
           CardModel card;
           if (isUrl) {
-            card = await getIt<CardsApi>().createMetadataCard(title.isNotEmpty ? title : text, body: text, tagIds: _selectedTagIds.toList());
+            card = await cardsApi.createMetadataCard(title.isNotEmpty ? title : normalizedText, body: normalizedText, tagIds: selectedTagIds);
           } else {
-            card = await getIt<CardsApi>().createTextCard(text, title: title.isNotEmpty ? title : null, tagIds: _selectedTagIds.toList());
+            card = await cardsApi.createTextCard(normalizedText, title: title.isNotEmpty ? title : null, tagIds: selectedTagIds);
           }
-          if (mounted) context.read<TimelineBloc>().add(TimelineCardResolved(tempId, card));
+          timelineBloc.add(TimelineCardResolved(tempId, card));
         } catch (e) {
-          if (mounted) context.read<TimelineBloc>().add(TimelineCardFailed(tempId, e.toString()));
-          rethrow;
+          timelineBloc.add(TimelineCardFailed(tempId, e.toString()));
         }
-      }
-      
-      if (mounted) {
-        _clearSelection();
-      }
-    } catch (e) {
-      if (mounted) {
-        OmniToast.showError(context, 'Failed to send: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSending = false);
-      }
+      });
     }
+
+    _clearSelection();
   }
 
   Future<void> _pickImage(ImageSource source) async {

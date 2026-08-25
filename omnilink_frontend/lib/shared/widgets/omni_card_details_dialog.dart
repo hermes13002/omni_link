@@ -50,8 +50,11 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
     
     if (widget.card.cardType == 'metadata') {
       final bodyText = widget.card.body ?? '';
-      final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
-      final url = match?.group(0) ?? '';
+      final match = RegExp(r'(https?:\/\/[^\s]+|(?:www\.)[^\s]+)', caseSensitive: false).firstMatch(bodyText);
+      String url = match?.group(0) ?? '';
+      if (url.isNotEmpty && !url.startsWith('http')) {
+        url = 'https://$url';
+      }
       
       if (url.isNotEmpty) {
         _metadataFuture = AnyLinkPreview.getMetadata(
@@ -478,8 +481,11 @@ class _OmniCardDetailsDialogState extends State<OmniCardDetailsDialog> with Sing
       }
 
       final bodyText = widget.card.body ?? '';
-      final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
-      final url = match?.group(0) ?? '';
+      final match = RegExp(r'(https?:\/\/[^\s]+|(?:www\.)[^\s]+)', caseSensitive: false).firstMatch(bodyText);
+      String url = match?.group(0) ?? '';
+      if (url.isNotEmpty && !url.startsWith('http')) {
+        url = 'https://$url';
+      }
       final userText = bodyText.replaceFirst(url, '').trim();
 
       return Column(

@@ -96,8 +96,11 @@ class OmniTimelineCard extends StatelessWidget {
       }
     } else if (type == TimelineCardType.link) {
       final bodyText = body ?? '';
-      final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
-      final url = match?.group(0) ?? '';
+      final match = RegExp(r'(https?:\/\/[^\s]+|(?:www\.)[^\s]+)', caseSensitive: false).firstMatch(bodyText);
+      String url = match?.group(0) ?? '';
+      if (url.isNotEmpty && !url.startsWith('http')) {
+        url = 'https://$url';
+      }
 
       if (url.isEmpty) {
         return _buildGenericLinkFallback(colorScheme);
@@ -381,11 +384,15 @@ class OmniTimelineCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
+                flex: 6,
                 child: _buildBackground(context, colorScheme),
               ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: _buildLinkContentDetails(context, colorScheme, theme),
+              Expanded(
+                flex: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildLinkContentDetails(context, colorScheme, theme),
+                ),
               ),
             ],
           ),
@@ -502,8 +509,11 @@ class OmniTimelineCard extends StatelessWidget {
 
   Widget _buildLinkContentDetails(BuildContext context, ColorScheme colorScheme, ThemeData theme) {
     final bodyText = body ?? '';
-    final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
-    final extractedUrl = match?.group(0) ?? '';
+    final match = RegExp(r'(https?:\/\/[^\s]+|(?:www\.)[^\s]+)', caseSensitive: false).firstMatch(bodyText);
+    String extractedUrl = match?.group(0) ?? '';
+    if (extractedUrl.isNotEmpty && !extractedUrl.startsWith('http')) {
+      extractedUrl = 'https://$extractedUrl';
+    }
     
     // Sometimes title is exactly the URL or empty, handle gracefully
     final displayUrl = extractedUrl.isNotEmpty ? extractedUrl : (title.startsWith('http') ? title : '');
