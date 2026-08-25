@@ -525,10 +525,15 @@ class OmniTimelineCard extends StatelessWidget {
     final showSubtitle = cleanSubtitle.isNotEmpty && cleanSubtitle != cleanTitle && cleanSubtitle != cleanUrl;
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (displayUrl.isNotEmpty)
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (displayUrl.isNotEmpty)
           GestureDetector(
             onTap: () async {
               final uri = Uri.parse(displayUrl);
@@ -567,6 +572,10 @@ class OmniTimelineCard extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(height: 12),
         // Footer (Tags, Time, Horiz icon) uses the same structure from _buildContent
         Row(

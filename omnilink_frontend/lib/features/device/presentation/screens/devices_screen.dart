@@ -5,8 +5,9 @@ import '../bloc/device_bloc.dart';
 import '../bloc/device_state.dart';
 import '../bloc/device_event.dart';
 import '../../../../shared/widgets/omni_glass_dialog.dart';
-import '../../../../shared/widgets/omni_loaders.dart';
+import '../../../../shared/widgets/omni_faded_grid_background.dart';
 import '../../../../shared/widgets/omni_glass_container.dart';
+import '../../../../shared/widgets/omni_loaders.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
@@ -80,10 +81,11 @@ class _DevicesScreenState extends State<DevicesScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+    return OmniFadedGridBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
@@ -250,6 +252,6 @@ class _DevicesScreenState extends State<DevicesScreen> {
           return const SizedBox.shrink();
         },
       ),
-    );
+    ));
   }
 }

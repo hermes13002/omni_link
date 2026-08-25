@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:omnilink_frontend/features/device/presentation/bloc/device_bloc.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../shared/widgets/omni_glass_container.dart';
+import '../../../../shared/widgets/omni_faded_grid_background.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -21,10 +22,11 @@ class ProfileScreen extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+    return OmniFadedGridBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
@@ -193,7 +195,7 @@ class ProfileScreen extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         },
       ),
-    );
+    ));
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {

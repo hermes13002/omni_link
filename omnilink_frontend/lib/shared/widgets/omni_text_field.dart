@@ -127,23 +127,23 @@ class _OmniTextFieldState extends State<OmniTextField> {
               vertical: 16,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
               borderSide: BorderSide(color: outlineColor),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
               borderSide: BorderSide(color: outlineColor),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
               borderSide: BorderSide(color: colorScheme.primaryContainer),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
               borderSide: BorderSide(color: colorScheme.error),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
               borderSide: BorderSide(color: colorScheme.error),
             ),
           ),

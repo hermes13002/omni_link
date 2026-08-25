@@ -468,9 +468,10 @@ class OmniDropZoneState extends State<OmniDropZone> {
             children: [
               Container(
                 height: 40,
+                width: 40,
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(20),
+                  shape: BoxShape.circle,
                 ),
                 child: PopupMenuButton<String>(
                   icon: Icon(Icons.add_rounded, color: colorScheme.onSurface),

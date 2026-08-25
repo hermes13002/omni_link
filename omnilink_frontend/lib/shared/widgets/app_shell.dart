@@ -4,6 +4,7 @@ import 'package:responsive_builder/responsive_builder.dart';
 
 import 'omni_bottom_nav.dart';
 import 'omni_side_nav.dart';
+import 'omni_faded_grid_background.dart';
 
 class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -12,25 +13,30 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenTypeLayout.builder(
-      mobile: (context) => Scaffold(
-        body: navigationShell,
-        bottomNavigationBar: OmniBottomNav(navigationShell: navigationShell),
-      ),
-      tablet: (context) => Scaffold(
-        body: Row(
-          children: [
-            OmniSideNav(navigationShell: navigationShell),
-            Expanded(child: navigationShell),
-          ],
+    return OmniFadedGridBackground(
+      child: ScreenTypeLayout.builder(
+        mobile: (context) => Scaffold(
+          backgroundColor: Colors.transparent,
+          body: navigationShell,
+          bottomNavigationBar: OmniBottomNav(navigationShell: navigationShell),
         ),
-      ),
-      desktop: (context) => Scaffold(
-        body: Row(
-          children: [
-            OmniSideNav(navigationShell: navigationShell),
-            Expanded(child: navigationShell),
-          ],
+        tablet: (context) => Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Row(
+            children: [
+              OmniSideNav(navigationShell: navigationShell),
+              Expanded(child: navigationShell),
+            ],
+          ),
+        ),
+        desktop: (context) => Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Row(
+            children: [
+              OmniSideNav(navigationShell: navigationShell),
+              Expanded(child: navigationShell),
+            ],
+          ),
         ),
       ),
     );

@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../bloc/tags_bloc.dart';
 import '../bloc/tags_state.dart';
 import '../bloc/tags_event.dart';
-import '../../../../shared/widgets/omni_loaders.dart';
+import '../../../../shared/widgets/omni_faded_grid_background.dart';
 import '../../../../shared/widgets/omni_glass_container.dart';
+import '../../../../shared/widgets/omni_loaders.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({super.key});
@@ -46,10 +47,11 @@ class _TagsScreenState extends State<TagsScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+    return OmniFadedGridBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: colorScheme.onSurface),
@@ -168,6 +170,6 @@ class _TagsScreenState extends State<TagsScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
