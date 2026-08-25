@@ -17,34 +17,16 @@ class OmniFadedGridBackground extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   colorScheme.surface,
-                  colorScheme.primaryContainer.withAlpha(76), // 0.3 alpha roughly
+                  colorScheme.primaryContainer.withAlpha(76),
                 ],
               ),
             ),
           ),
         ),
         Positioned.fill(
-          child: ShaderMask(
-            shaderCallback: (bounds) {
-              return const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.transparent,
-                  Colors.black,
-                  Colors.black,
-                  Colors.transparent,
-                  Colors.transparent,
-                ],
-                stops: [0.0, 0.3, 0.4, 0.6, 0.7, 1.0],
-              ).createShader(bounds);
-            },
-            blendMode: BlendMode.dstIn,
-            child: CustomPaint(
-              painter: _GridPainter(
-                color: colorScheme.onSurface.withAlpha(10), // 0.04 alpha roughly
-              ),
+          child: CustomPaint(
+            painter: _GridPainter(
+              color: colorScheme.onSurface.withAlpha(20),
             ),
           ),
         ),
@@ -61,10 +43,23 @@ class _GridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final Rect rect = Offset.zero & size;
     final paint = Paint()
-      ..color = color
       ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.transparent,
+          Colors.transparent,
+          color,
+          color,
+          Colors.transparent,
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.3, 0.4, 0.6, 0.7, 1.0],
+      ).createShader(rect);
 
     const double gridSize = 48.0;
 

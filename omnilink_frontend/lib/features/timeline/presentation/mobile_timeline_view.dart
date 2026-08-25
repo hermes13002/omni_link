@@ -106,6 +106,7 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
     final colorScheme = Theme.of(context).colorScheme;
     
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: const OmniTopBar(),
       body: DropTarget(
         onDragEntered: (detail) => setState(() => _isDragging = true),

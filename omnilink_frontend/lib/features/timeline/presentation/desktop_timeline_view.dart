@@ -105,6 +105,7 @@ class _DesktopTimelineViewState extends State<DesktopTimelineView> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: DropTarget(
         onDragEntered: (detail) => setState(() => _isDragging = true),
         onDragExited: (detail) => setState(() => _isDragging = false),
