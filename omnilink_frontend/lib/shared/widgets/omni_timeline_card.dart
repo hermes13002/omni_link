@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:omnilink_frontend/shared/utils/omni_toast.dart';
 import 'package:omnilink_frontend/shared/widgets/web_image/omni_web_image.dart';
 import 'package:any_link_preview/any_link_preview.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import '../../core/di/injection.dart';
 import '../../features/timeline/data/models/card_model.dart';
@@ -321,6 +322,9 @@ class OmniTimelineCard extends StatelessWidget {
     if (type == TimelineCardType.code) {
       return 1.1; // Text/Code is shorter (smaller height)
     }
+    if (type == TimelineCardType.link) {
+      return 0.70; // Taller for the split view
+    }
     return 0.85; // Files/PDFs are shorter
   }
 
@@ -329,13 +333,148 @@ class OmniTimelineCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final cardStack = Stack(
+      fit: StackFit.expand,
+      children: [
+        if (type != TimelineCardType.link) _buildBackground(context, colorScheme),
+
+        if (type == TimelineCardType.image)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    colorScheme.surface.withAlpha(180),
+                    colorScheme.surface,
+                  ],
+                  stops: const [0.35, 0.75, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+        if (type != TimelineCardType.link)
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                onLongPress: onLongPress,
+                splashColor: colorScheme.onSurface.withAlpha(20),
+                highlightColor: colorScheme.onSurface.withAlpha(10),
+              ),
+            ),
+          ),
+
+        if (type != TimelineCardType.link)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 16,
+            child: _buildContent(context, colorScheme, theme),
+          ),
+
+        if (type == TimelineCardType.link)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _buildBackground(context, colorScheme),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: colorScheme.surface,
+                child: _buildLinkContentDetails(context, colorScheme, theme),
+              ),
+            ],
+          ),
+
+        Positioned(
+          top: 12,
+          right: 12,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (type == TimelineCardType.code)
+                GestureDetector(
+                  onTap: () {
+                    final textToCopy = body ?? title;
+                    if (textToCopy.isNotEmpty) {
+                      Clipboard.setData(ClipboardData(text: textToCopy));
+                      OmniToast.showInfo(context, 'Copied to clipboard');
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface.withAlpha(200),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.copy_rounded,
+                      color: colorScheme.onSurface,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              if (onTogglePin != null)
+                GestureDetector(
+                  onTap: onTogglePin,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface.withAlpha(isPinned ? 200 : 200),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isPinned ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: isPinned ? Colors.amber : colorScheme.onSurface,
+                      size: 18,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        if (isSelected)
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(40),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.check_rounded,
+                color: colorScheme.onPrimary,
+                size: 20,
+              ),
+            ),
+          ),
+      ],
+    );
+
     return AspectRatio(
-      aspectRatio: _getCardAspectRatio(), // Dynamically staggered
+      aspectRatio: _getCardAspectRatio(),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(32), // Squircle vibe
+          borderRadius: BorderRadius.circular(32),
           border: Border.all(
             color: isSelected 
                 ? colorScheme.primary 
@@ -353,130 +492,189 @@ class OmniTimelineCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // 1. Background (Image, Code text, or Icon)
-            _buildBackground(context, colorScheme),
+        child: type == TimelineCardType.link 
+          ? GestureDetector(
+              onLongPress: onLongPress,
+              child: cardStack,
+            )
+          : cardStack,
+      ),
+    );
+  }
 
-            // 2. Gradient Overlay for soft glassmorphism effect (Only for image cards)
-            if (type == TimelineCardType.image)
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        colorScheme.surface.withAlpha(180),
-                        colorScheme.surface,
-                      ],
-                      stops: const [0.35, 0.75, 1.0],
+  Widget _buildLinkContentDetails(BuildContext context, ColorScheme colorScheme, ThemeData theme) {
+    final bodyText = body ?? '';
+    final match = RegExp(r'https?:\/\/[^\s]+').firstMatch(bodyText);
+    final url = match?.group(0) ?? '';
+    final remainingText = bodyText.replaceAll(url, '').trim();
+    final hasTitle = title.isNotEmpty && title != url;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (url.isNotEmpty)
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () async {
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    }
+                  },
+                  child: Text(
+                    url,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.primary,
+                      decoration: TextDecoration.underline,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-
-            // 3. Ripple effect on tap (layered below interactive elements so they can receive taps)
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onTap,
-                  onLongPress: onLongPress,
-                  splashColor: colorScheme.onSurface.withAlpha(20),
-                  highlightColor: colorScheme.onSurface.withAlpha(10),
-                ),
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: Icon(Icons.copy_rounded, size: 18, color: colorScheme.onSurfaceVariant),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: url));
+                  OmniToast.showInfo(context, 'URL copied to clipboard');
+                },
               ),
+            ],
+          ),
+        if (url.isNotEmpty && (hasTitle || remainingText.isNotEmpty))
+          const SizedBox(height: 8),
+        if (hasTitle)
+          SelectableText(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colorScheme.onSurface,
+              letterSpacing: -0.3,
+              height: 1.2,
             ),
-
-            // 4. Content overlay (Title, tags, meta) anchored to bottom
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: _buildContent(context, colorScheme, theme),
+          ),
+        if (hasTitle && remainingText.isNotEmpty)
+          const SizedBox(height: 4),
+        if (remainingText.isNotEmpty)
+          SelectableText(
+            remainingText,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
-
-            // 5. Action Buttons Top Right
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          ),
+        const SizedBox(height: 12),
+        // Footer (Tags, Time, Horiz icon) uses the same structure from _buildContent
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
-                  if (type == TimelineCardType.code || type == TimelineCardType.link)
-                    GestureDetector(
-                      onTap: () {
-                        final textToCopy = body ?? title;
-                        if (textToCopy.isNotEmpty) {
-                          Clipboard.setData(ClipboardData(text: textToCopy));
-                          OmniToast.showInfo(context, 'Copied to clipboard');
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface.withAlpha(200),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.copy_rounded,
-                          color: colorScheme.onSurface,
-                          size: 18,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: tagColor?.withAlpha(40) ?? colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      tag,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: tagColor ?? colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.monitor_rounded,
+                        size: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        timeAgo,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                  if (onTogglePin != null)
-                    GestureDetector(
-                      onTap: onTogglePin,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface.withAlpha(isPinned ? 200 : 200),
-                          shape: BoxShape.circle,
+                      if (syncStatus == CardSyncStatus.pending) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 12,
+                          color: colorScheme.onSurfaceVariant,
                         ),
-                        child: Icon(
-                          isPinned ? Icons.star_rounded : Icons.star_border_rounded,
-                          color: isPinned ? Colors.amber : colorScheme.onSurface,
-                          size: 18,
+                      ] else if (syncStatus == CardSyncStatus.error) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 12,
+                          color: colorScheme.error,
                         ),
-                      ),
-                    ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
-
-            // 6. Selection Overlay Checkmark
-            if (isSelected)
-              Positioned(
-                top: 12,
-                left: 12,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(40),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+            if (onEdit != null || onDelete != null)
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withAlpha(150),
+                  shape: BoxShape.circle,
+                ),
+                child: PopupMenuButton<String>(
+                  icon: Icon(Icons.more_horiz_rounded, size: 20, color: colorScheme.onSurface),
+                  padding: EdgeInsets.zero,
+                  position: PopupMenuPosition.under,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (value) {
+                    if (value == 'edit') onEdit?.call();
+                    if (value == 'delete') onDelete?.call();
+                  },
+                  itemBuilder: (context) => [
+                    if (onEdit != null)
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_rounded, size: 20, color: colorScheme.onSurfaceVariant),
+                            const SizedBox(width: 12),
+                            const Text('Edit'),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.check_rounded,
-                    color: colorScheme.onPrimary,
-                    size: 20,
-                  ),
+                    if (onDelete != null)
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_rounded, size: 20, color: colorScheme.error),
+                            const SizedBox(width: 12),
+                            Text('Delete', style: TextStyle(color: colorScheme.error)),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
           ],
         ),
-      ),
+      ],
     );
   }
 }
