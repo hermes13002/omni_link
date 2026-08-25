@@ -9,6 +9,7 @@ class UserResponse(BaseModel):
     id: PrefixedUserId
     email: EmailStr
     display_name: str | None
+    has_password: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}

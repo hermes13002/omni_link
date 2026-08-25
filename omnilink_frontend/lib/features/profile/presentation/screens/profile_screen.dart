@@ -152,9 +152,9 @@ class ProfileScreen extends StatelessWidget {
                             const Divider(height: 1),
                             ListTile(
                               leading: Icon(Icons.lock_rounded, color: colorScheme.primary),
-                              title: const Text('Change Password'),
+                              title: Text(user.hasPassword ? 'Change Password' : 'Set Password'),
                               trailing: const Icon(Icons.chevron_right_rounded),
-                              onTap: () => _showChangePasswordDialog(context),
+                              onTap: () => _showChangePasswordDialog(context, user.hasPassword),
                             ),
                           ],
                         ),
@@ -329,22 +329,24 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _showChangePasswordDialog(BuildContext context) {
+  void _showChangePasswordDialog(BuildContext context, bool hasPassword) {
     final oldPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => OmniGlassDialog(
-        title: const Text('Change Password'),
+        title: Text(hasPassword ? 'Change Password' : 'Set Password'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: oldPasswordController,
-              decoration: const InputDecoration(hintText: 'Old Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 8),
+            if (hasPassword) ...[
+              TextField(
+                controller: oldPasswordController,
+                decoration: const InputDecoration(hintText: 'Current Password'),
+                obscureText: true,
+              ),
+              const SizedBox(height: 8),
+            ],
             TextField(
               controller: newPasswordController,
               decoration: const InputDecoration(hintText: 'New Password'),
@@ -356,18 +358,18 @@ class ProfileScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
-              if (oldPasswordController.text.isNotEmpty && newPasswordController.text.isNotEmpty) {
+              if ((!hasPassword || oldPasswordController.text.isNotEmpty) && newPasswordController.text.isNotEmpty) {
                 context.read<AuthBloc>().add(AuthChangePasswordRequested(
-                  oldPasswordController.text, 
+                  hasPassword ? oldPasswordController.text : "", 
                   newPasswordController.text
                 ));
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password changed successfully')),
+                  SnackBar(content: Text(hasPassword ? 'Password changed successfully' : 'Password set successfully')),
                 );
               }
             },
-            child: const Text('Change'),
+            child: Text(hasPassword ? 'Change' : 'Set'),
           ),
         ],
       ),
