@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'omni_glass_container.dart';
 
 class OmniTextField extends StatefulWidget {
   final String? hintText;
@@ -69,6 +70,81 @@ class _OmniTextFieldState extends State<OmniTextField> {
         ? colorScheme.outlineVariant.withValues(alpha: 0.5) 
         : colorScheme.outlineVariant;
 
+    Widget textField = TextFormField(
+      controller: widget.controller,
+      obscureText: _obscureText,
+      keyboardType: widget.keyboardType,
+      autofocus: widget.autofocus,
+      maxLength: widget.maxLength,
+      validator: widget.validator,
+      onChanged: widget.onChanged,
+      style: textTheme.bodyLarge?.copyWith(
+        color: colorScheme.onSurface,
+      ),
+      cursorColor: colorScheme.primaryContainer,
+      decoration: InputDecoration(
+        hintText: widget.hintText,
+        hintStyle: textTheme.bodyLarge?.copyWith(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        ),
+        prefixIcon: widget.prefixIcon != null
+            ? Icon(widget.prefixIcon, color: colorScheme.onSurfaceVariant)
+            : null,
+        suffixIcon: widget.isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+              )
+            : widget.suffixIcon != null
+                ? IconButton(
+                    icon: Icon(widget.suffixIcon, color: colorScheme.onSurfaceVariant),
+                    onPressed: widget.onSuffixPressed,
+                  )
+                : null,
+        filled: true,
+        fillColor: widget.isSearch ? Colors.transparent : colorScheme.surfaceContainerLowest,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        border: widget.isSearch ? InputBorder.none : OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: outlineColor),
+        ),
+        enabledBorder: widget.isSearch ? InputBorder.none : OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: outlineColor),
+        ),
+        focusedBorder: widget.isSearch ? InputBorder.none : OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: colorScheme.primaryContainer),
+        ),
+        errorBorder: widget.isSearch ? InputBorder.none : OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+        focusedErrorBorder: widget.isSearch ? InputBorder.none : OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: colorScheme.error),
+        ),
+      ),
+    );
+
+    if (widget.isSearch) {
+      textField = OmniGlassContainer(
+        borderRadius: 24,
+        backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(100),
+        child: textField,
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -82,72 +158,7 @@ class _OmniTextFieldState extends State<OmniTextField> {
           ),
           const SizedBox(height: 8),
         ],
-        TextFormField(
-          controller: widget.controller,
-          obscureText: _obscureText,
-          keyboardType: widget.keyboardType,
-          autofocus: widget.autofocus,
-          maxLength: widget.maxLength,
-          validator: widget.validator,
-          onChanged: widget.onChanged,
-          style: textTheme.bodyLarge?.copyWith(
-            color: colorScheme.onSurface,
-          ),
-          cursorColor: colorScheme.primaryContainer,
-          decoration: InputDecoration(
-            hintText: widget.hintText,
-            hintStyle: textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-            prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, color: colorScheme.onSurfaceVariant)
-                : null,
-            suffixIcon: widget.isPassword
-                ? IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
-                    },
-                  )
-                : widget.suffixIcon != null
-                    ? IconButton(
-                        icon: Icon(widget.suffixIcon, color: colorScheme.onSurfaceVariant),
-                        onPressed: widget.onSuffixPressed,
-                      )
-                    : null,
-            filled: true,
-            fillColor: widget.isSearch ? colorScheme.surfaceContainerLow : colorScheme.surfaceContainerLowest,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
-              borderSide: BorderSide(color: outlineColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
-              borderSide: BorderSide(color: outlineColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
-              borderSide: BorderSide(color: colorScheme.primaryContainer),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
-              borderSide: BorderSide(color: colorScheme.error),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.isSearch ? 24 : 8),
-              borderSide: BorderSide(color: colorScheme.error),
-            ),
-          ),
-        ),
+        textField,
       ],
     );
   }

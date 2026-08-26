@@ -12,8 +12,10 @@ class OmniBottomNav extends StatelessWidget {
     
     return OmniGlassContainer(
       borderRadius: 0,
-      backgroundColor: colorScheme.surfaceContainerLowest.withAlpha(204),
-      border: const Border(top: BorderSide.none),
+      backgroundColor: colorScheme.surfaceContainerHighest.withAlpha(150),
+      border: Border(
+        top: BorderSide(color: Colors.white.withAlpha(30), width: 1),
+      ),
       child: BottomNavigationBar(
         elevation: 0,
         backgroundColor: Colors.transparent,

@@ -24,7 +24,8 @@ class SseClient {
 
     final secret = await _deviceRepository.getDeviceSecret();
     if (secret == null) {
-      debugPrint('Cannot connect to SSE: device secret is null');
+      debugPrint('Cannot connect to SSE: device secret is null, will retry');
+      _reconnect();
       return;
     }
 

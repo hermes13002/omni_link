@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:isar/isar.dart';
+import 'dart:convert';
 import 'package:omnilink_frontend/core/events/event_bus.dart';
 
 import '../../../../core/network/dio_client.dart';
 import '../../data/cards_api.dart';
-import '../../data/models/isar_models.dart';
 import 'timeline_event.dart';
 import 'timeline_state.dart';
 import '../../data/models/card_model.dart';
@@ -15,7 +14,7 @@ import '../../data/models/card_model.dart';
 class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
   final CardsApi _cardsApi;
   final LocalDatabase _localDb;
-  late final Isar? _isar = _localDb.isar;
+  late final _prefs = _localDb.prefs;
   final GlobalEventBus _eventBus;
   StreamSubscription? _eventSubscription;
 
@@ -50,30 +49,31 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     TimelineLoadRequested event,
     Emitter<TimelineState> emit,
   ) async {
-    // load from local Isar cache
-    if (_isar != null) {
-      try {
-        final isarCards = await _isar.isarCards.where().findAll();
-        var localCards = isarCards.map((c) => c.toModel()).toList();
+    // load from local SharedPreferences cache
+    try {
+      final cachedString = _prefs.getString('cached_timeline');
+      if (cachedString != null) {
+        final List<dynamic> decoded = jsonDecode(cachedString);
+        var localCards = decoded.map((json) => CardModel.fromJson(json)).toList();
         localCards.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
       
-      if (event.cardType != null) localCards = localCards.where((c) => c.cardType == event.cardType).toList();
-      if (event.pinned != null) localCards = localCards.where((c) => c.pinned == event.pinned).toList();
-      if (event.tagId != null) localCards = localCards.where((c) => c.tags.any((t) => t.id == event.tagId)).toList();
-      if (event.searchQuery != null && event.searchQuery!.isNotEmpty) {
-        final q = event.searchQuery!.toLowerCase();
-        localCards = localCards.where((c) => (c.title?.toLowerCase().contains(q) == true) || (c.body?.toLowerCase().contains(q) == true)).toList();
-      }
+        if (event.cardType != null) localCards = localCards.where((c) => c.cardType == event.cardType).toList();
+        if (event.pinned != null) localCards = localCards.where((c) => c.pinned == event.pinned).toList();
+        if (event.tagId != null) localCards = localCards.where((c) => c.tags.any((t) => t.id == event.tagId)).toList();
+        if (event.searchQuery != null && event.searchQuery!.isNotEmpty) {
+          final q = event.searchQuery!.toLowerCase();
+          localCards = localCards.where((c) => (c.title?.toLowerCase().contains(q) == true) || (c.body?.toLowerCase().contains(q) == true)).toList();
+        }
 
-      if (localCards.isNotEmpty) {
-        emit(TimelineLoaded(localCards));
-      } else if (state is! TimelineLoaded) {
-        emit(TimelineLoading());
-      }
-      } catch (e) {
+        if (localCards.isNotEmpty) {
+          emit(TimelineLoaded(localCards));
+        } else if (state is! TimelineLoaded) {
+          emit(TimelineLoading());
+        }
+      } else {
         if (state is! TimelineLoaded) emit(TimelineLoading());
       }
-    } else {
+    } catch (e) {
       if (state is! TimelineLoaded) emit(TimelineLoading());
     }
 
@@ -86,14 +86,9 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
         search: event.searchQuery,
       );
       
-      // update Isar cache
-      if (_isar != null) {
-        await _isar!.writeTxn(() async {
-          if (event.cardType == null && event.tagId == null && event.pinned == null && (event.searchQuery == null || event.searchQuery!.isEmpty)) {
-            await _isar!.isarCards.clear();
-          }
-          await _isar!.isarCards.putAll(cards.map((c) => IsarCard.fromModel(c)).toList());
-        });
+      // update SharedPreferences cache
+      if (event.cardType == null && event.tagId == null && event.pinned == null && (event.searchQuery == null || event.searchQuery!.isEmpty)) {
+        await _prefs.setString('cached_timeline', jsonEncode(cards.map((c) => c.toJson()).toList()));
       }
 
       emit(TimelineLoaded(cards));
@@ -216,13 +211,13 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
           event.cardIds.map((id) => _cardsApi.deleteCard(id)),
         );
         
-        // Remove from Isar database
-        if (_isar != null) {
-          await _isar!.writeTxn(() async {
-            for (final id in event.cardIds) {
-              await _isar!.isarCards.filter().idEqualTo(id).deleteAll();
-            }
-          });
+        // Remove from SharedPreferences database
+        final cachedString = _prefs.getString('cached_timeline');
+        if (cachedString != null) {
+          final List<dynamic> decoded = jsonDecode(cachedString);
+          var cachedCards = decoded.map((json) => CardModel.fromJson(json)).toList();
+          cachedCards.removeWhere((c) => event.cardIds.contains(c.id));
+          await _prefs.setString('cached_timeline', jsonEncode(cachedCards.map((c) => c.toJson()).toList()));
         }
       } catch (e) {
         // Revert on failure

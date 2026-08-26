@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class OmniTopBar extends StatelessWidget implements PreferredSizeWidget {
   const OmniTopBar({super.key});

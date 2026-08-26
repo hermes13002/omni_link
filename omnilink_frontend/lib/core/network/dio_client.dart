@@ -1,19 +1,15 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
-import 'package:isar/isar.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import '../../features/timeline/data/models/isar_models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'interceptors/auth_interceptor.dart';
 import 'package:flutter/foundation.dart';
 import 'interceptors/envelope_interceptor.dart';
 
 class LocalDatabase {
-  final Isar? isar;
-  LocalDatabase(this.isar);
+  final SharedPreferences prefs;
+  LocalDatabase(this.prefs);
 }
 
 @module
@@ -21,28 +17,8 @@ abstract class NetworkModule {
   @preResolve
   @singleton
   Future<LocalDatabase> get database async {
-    if (kIsWeb) return LocalDatabase(null);
-
-    final dir = await getApplicationDocumentsDirectory();
-
-    try {
-      final isar = await Isar.open([IsarCardSchema], directory: dir.path);
-      return LocalDatabase(isar);
-    } catch (e) {
-      // In case of schema mismatch during development (Collection id is invalid),
-      // clear the corrupted/outdated db and try again.
-      try {
-        final dbFile = File('${dir.path}/default.isar');
-        if (dbFile.existsSync()) dbFile.deleteSync();
-        final lockFile = File('${dir.path}/default.isar.lock');
-        if (lockFile.existsSync()) lockFile.deleteSync();
-
-        final isar = await Isar.open([IsarCardSchema], directory: dir.path);
-        return LocalDatabase(isar);
-      } catch (e2) {
-        rethrow;
-      }
-    }
+    final prefs = await SharedPreferences.getInstance();
+    return LocalDatabase(prefs);
   }
 
   @lazySingleton

@@ -165,8 +165,18 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                           ));
                           await Future.delayed(const Duration(milliseconds: 800));
                         },
-                        child: MasonryGridView.count(
-                          crossAxisCount: 2,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            int crossAxisCount = 2;
+                            if (constraints.maxWidth > 1200) {
+                              crossAxisCount = 5;
+                            } else if (constraints.maxWidth > 900) {
+                              crossAxisCount = 4;
+                            } else if (constraints.maxWidth > 600) {
+                              crossAxisCount = 3;
+                            }
+                            return MasonryGridView.count(
+                              crossAxisCount: crossAxisCount,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
                           padding: const EdgeInsets.all(16.0).copyWith(bottom: 100),
@@ -181,7 +191,8 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                                   type: _mapCardType(card),
                                   cardId: card.id,
                                   title: card.title ?? card.body ?? 'Untitled',
-                                  subtitle: card.fileSizeBytes != null ? '${(card.fileSizeBytes! / 1024).round()} KB' : 'Unknown',
+                                  subtitle: card.body ?? '',
+                                  fileSizeBytes: card.fileSizeBytes,
                                   timeAgo: _timeAgo(card.updatedAt),
                                   tag: card.tags.isNotEmpty ? '#${card.tags.first.name}' : '#general',
                                   tagColor: colorScheme.secondary,
@@ -238,8 +249,9 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                               ),
                             );
                           },
-                        ),
-                      );
+                        );
+                      },
+                    ));
                     }
                     return const SizedBox.shrink();
                   },
