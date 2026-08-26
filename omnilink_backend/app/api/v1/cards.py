@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, UploadFile, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
@@ -22,6 +22,7 @@ router = APIRouter(prefix="/cards", tags=["cards"])
 
 @router.get("", response_model=ApiResponse[CardListResponse])
 async def list_cards(
+    response: Response,
     card_type: CardType | None = Query(None),
     tag_id: PrefixedTagId | None = Query(None),
     pinned: bool | None = Query(None),
@@ -31,6 +32,9 @@ async def list_cards(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ApiResponse[CardListResponse]:
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     return ApiResponse(data=await card_service.list_cards(
         current_user.id, db, card_type, tag_id, pinned, search, page, page_size
     ))

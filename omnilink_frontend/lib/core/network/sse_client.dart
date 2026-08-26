@@ -68,7 +68,7 @@ class SseClient {
               try {
                 final decoded = jsonDecode(dataStr);
                 if (decoded is Map<String, dynamic>) {
-                  final payload = decoded['payload'];
+                  final eventType = decoded['event'];
                   final targetDeviceIds = decoded['target_device_ids'] as List<dynamic>?;
 
                   // If this event is targeted at specific devices, check if we are one of them
@@ -77,12 +77,10 @@ class SseClient {
                     isTargetedAtMe = _currentDeviceId != null && targetDeviceIds.contains(_currentDeviceId);
                   }
 
-                  if (isTargetedAtMe && payload is Map<String, dynamic> && payload['type'] == 'ping') {
-                    final message = payload['message'] ?? 'Ping received!';
-                    OmniToast.showInfo(null, message);
-                  } else {
-                    // It's a broadcast event (like new card) or targeted at us, trigger reload
-                    if (isTargetedAtMe || payload is Map<String, dynamic> && payload['type'] != 'ping') {
+                  if (isTargetedAtMe) {
+                    if (eventType == 'ping') {
+                      OmniToast.showInfo(null, 'Ping received!');
+                    } else {
                       _eventBus.fire('reload');
                     }
                   }

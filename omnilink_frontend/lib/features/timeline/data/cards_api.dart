@@ -25,6 +25,7 @@ class CardsApi {
     if (tagId != null) query['tag_id'] = tagId;
     if (pinned != null) query['pinned'] = pinned;
     if (search != null && search.isNotEmpty) query['search'] = search;
+    query['_t'] = DateTime.now().millisecondsSinceEpoch;
 
     final response = await _dio.get('/api/v1/cards', queryParameters: query);
     final items = response.data['items'] as List<dynamic>;
