@@ -27,6 +27,7 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
     on<TimelineCardFailed>(_onCardFailed);
     on<TimelineTogglePinRequested>(_onTogglePinRequested);
     on<TimelineDeleteCardsRequested>(_onDeleteCardsRequested);
+    on<TimelineCardRetryRequested>(_onRetryRequested);
 
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event == 'reload') {
@@ -223,6 +224,53 @@ class TimelineBloc extends Bloc<TimelineEvent, TimelineState> {
         // Revert on failure
         emit(TimelineError("Failed to delete selected cards: $e"));
         emit(TimelineLoaded(currentCards));
+      }
+    }
+  }
+
+  Future<void> _onRetryRequested(
+    TimelineCardRetryRequested event,
+    Emitter<TimelineState> emit,
+  ) async {
+    if (state is TimelineLoaded) {
+      final currentCards = (state as TimelineLoaded).cards;
+      
+      // Update status to pending
+      final optimisticCards = currentCards.map((c) {
+        if (c.id == event.card.id) {
+          return c.copyWith(syncStatus: CardSyncStatus.pending);
+        }
+        return c;
+      }).toList();
+      emit(TimelineLoaded(optimisticCards));
+
+      try {
+        final tagIds = event.card.tags.map((t) => t.id).toList();
+        CardModel resolvedCard;
+
+        if (event.card.cardType == 'file') {
+          resolvedCard = await _cardsApi.createFileCard(
+            bytes: event.card.localBytes?.toList(),
+            fileName: event.card.title ?? 'file',
+            title: event.card.title,
+            tagIds: tagIds,
+          );
+        } else if (event.card.cardType == 'metadata') {
+          resolvedCard = await _cardsApi.createMetadataCard(
+            event.card.title ?? event.card.body ?? '',
+            body: event.card.body,
+            tagIds: tagIds,
+          );
+        } else {
+          resolvedCard = await _cardsApi.createTextCard(
+            event.card.body ?? '',
+            title: event.card.title,
+            tagIds: tagIds,
+          );
+        }
+        add(TimelineCardResolved(event.card.id, resolvedCard));
+      } catch (e) {
+        add(TimelineCardFailed(event.card.id, e.toString()));
       }
     }
   }

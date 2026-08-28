@@ -324,14 +324,20 @@ class OmniTimelineCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (type == TimelineCardType.image)
-          AspectRatio(
-            aspectRatio: _getCardAspectRatio(),
-            child: _buildBackground(context, colorScheme),
+          Flexible(
+            fit: FlexFit.loose,
+            child: AspectRatio(
+              aspectRatio: _getCardAspectRatio(),
+              child: _buildBackground(context, colorScheme),
+            ),
           ),
         if (type == TimelineCardType.link)
-          AspectRatio(
-            aspectRatio: 1.5,
-            child: _buildBackground(context, colorScheme),
+          Flexible(
+            fit: FlexFit.loose,
+            child: AspectRatio(
+              aspectRatio: 1.5,
+              child: _buildBackground(context, colorScheme),
+            ),
           ),
         if (type == TimelineCardType.file || type == TimelineCardType.pdf)
           SizedBox(
@@ -375,10 +381,12 @@ class OmniTimelineCard extends StatelessWidget {
           border: Border.all(
             color: isSelected 
                 ? colorScheme.primary 
-                : (theme.brightness == Brightness.dark 
-                    ? Colors.white.withAlpha(60) 
-                    : colorScheme.outlineVariant.withAlpha(100)),
-            width: isSelected ? 3.0 : 1.5,
+                : syncStatus == CardSyncStatus.error
+                    ? colorScheme.error.withAlpha(200)
+                    : (theme.brightness == Brightness.dark 
+                        ? Colors.white.withAlpha(60) 
+                        : colorScheme.outlineVariant.withAlpha(100)),
+            width: isSelected ? 3.0 : (syncStatus == CardSyncStatus.error ? 2.0 : 1.5),
           ),
           boxShadow: [
             BoxShadow(

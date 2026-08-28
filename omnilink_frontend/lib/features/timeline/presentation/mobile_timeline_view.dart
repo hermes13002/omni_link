@@ -227,6 +227,35 @@ class _MobileTimelineViewState extends State<MobileTimelineView> {
                                     });
                                   },
                                   onTap: () {
+                                    if (card.syncStatus == CardSyncStatus.error) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        builder: (ctx) => SafeArea(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              ListTile(
+                                                leading: Icon(Icons.refresh_rounded, color: colorScheme.primary),
+                                                title: const Text('Retry Upload'),
+                                                onTap: () {
+                                                  Navigator.pop(ctx);
+                                                  context.read<TimelineBloc>().add(TimelineCardRetryRequested(card));
+                                                },
+                                              ),
+                                              ListTile(
+                                                leading: Icon(Icons.delete_rounded, color: colorScheme.error),
+                                                title: Text('Delete', style: TextStyle(color: colorScheme.error)),
+                                                onTap: () {
+                                                  Navigator.pop(ctx);
+                                                  context.read<TimelineBloc>().add(TimelineDeleteCardsRequested([card.id]));
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
                                     if (_selectedCardIds.isNotEmpty) {
                                       setState(() {
                                         if (_selectedCardIds.contains(card.id)) {

@@ -83,3 +83,12 @@ class TimelineDeleteCardsRequested extends TimelineEvent {
   @override
   List<Object?> get props => [cardIds];
 }
+
+class TimelineCardRetryRequested extends TimelineEvent {
+  final CardModel card;
+
+  const TimelineCardRetryRequested(this.card);
+
+  @override
+  List<Object?> get props => [card];
+}
